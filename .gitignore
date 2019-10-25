@@ -1,0 +1,7 @@
+# Python 3
+__pycache__
+.noseids
+
+
+# Visual Studio Code
+.vscode
