@@ -1,0 +1,4 @@
+[
+  "tests/models/test_inc_dec.py::test_increment",
+  "tests/models/test_inc_dec.py::test_decrement"
+]
