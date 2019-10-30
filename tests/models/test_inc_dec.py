@@ -1,4 +1,4 @@
-import src.PKPD.models.inc_dec as inc_dec    # The code to test
+import PKPD.models.inc_dec as inc_dec    # The code to test
 
 import unittest
 from hypothesis import given, settings
