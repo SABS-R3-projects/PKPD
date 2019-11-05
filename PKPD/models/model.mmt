@@ -13,12 +13,12 @@ SubcutaneousDosing.y3 = 0
 time = 0 bind time
 dose = 0 bind pace
 
-CL = 0
-Vc = 0
-Vp1 = 0
-Vp2 = 0
-Qp1 = 0
-Qp2 = 0
+CL = 0 [mL/h] : clearance
+Vc = 0 [mL] : central component volume
+Vp1 = 0 [mL] : peripheral 1 volume
+Vp2 = 0 [mL] : peripheral 2 volume
+Qp1 = 0 [mL/h] : flow rate to peripheral 1
+Qp2 = 0 [mL/h] : flow rate to peripheral 2
 
 dot(y1) = dose - y1 * CL / Vc - Qp1 * (y1 / Vc - y2 / Vp1) - Qp2 * (y1 / Vc - y3 / Vp2)
 dot(y2) = Qp1 * (y1 / Vc - y2 / Vp1)

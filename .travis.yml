@@ -4,6 +4,10 @@ python:
   - "3.7"
   - "3.8"
 # command to install dependencies
+
+before_install:
+  - sudo apt-get install -y libsundials-serial-dev;
+
 install:
   - pip install -r requirements.txt
   - pip install --upgrade pip
@@ -15,7 +19,8 @@ install:
 
 
 before_script:
-- python --version
+  - python --version
+  - python -m myokit system
 
 # Note that default timeout is 10 minutes
 # This can be changed with travis_wait, but that leads to
