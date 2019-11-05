@@ -6,6 +6,28 @@ python:
 # command to install dependencies
 install:
   - pip install -r requirements.txt
-# command to run tests
+  - pip install --upgrade pip
+  - pip install .
+  - if [[ $PINTS_DOCS == true ]]; then pip install .[docs]; fi;
+  - if [[ $PINTS_STYLE == true ]]; then pip install .[dev]; fi;
+  - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then pip install .[dev]; fi;
+  - if [[ $PINTS_COVER == true ]]; then pip install coverage codecov; fi;
+
+
+before_script:
+- python --version
+
+# Note that default timeout is 10 minutes
+# This can be changed with travis_wait, but that leads to
+# issues with debug output:
+# https://github.com/travis-ci/travis-ci/issues/5716
 script:
   - nose
+  - if [[ $PINTS_UNIT == true ]]; then python run-tests.py --unit; fi;
+  - if [[ $PINTS_DOCS == true ]]; then python run-tests.py --doctest; fi;
+  - if [[ $PINTS_STYLE == true ]]; then python -m flake8; fi;
+  - if [[ $PINTS_COVER == true ]]; then coverage run run-tests.py --unit; fi;
+  - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then travis_wait 120 python run-tests.py --books; fi;
+
+after_success:
+  - if [[ $PINTS_COVER == true ]]; then codecov; fi;
