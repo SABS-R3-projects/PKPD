@@ -1,38 +1,18 @@
 language: python
+
 python:
   - "3.6"      # current default Python on Travis CI
   - "3.7"
   - "3.8"
-# command to install dependencies
-
-before_install:
-  - sudo apt-get install -y libsundials-serial-dev;
 
 install:
-  - pip install -r requirements.txt
-  - pip install --upgrade pip
-  - pip install .
-  - if [[ $PINTS_DOCS == true ]]; then pip install .[docs]; fi;
-  - if [[ $PINTS_STYLE == true ]]; then pip install .[dev]; fi;
-  - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then pip install .[dev]; fi;
-  - if [[ $PINTS_COVER == true ]]; then pip install coverage codecov; fi;
+  - pip install unittest, hypothesis
+# reqs for myokit below
+  - pip install scipy, sympy, pyqt5, matplotlib
+  - apt-get install libsundials-dev
+  - pip install myokit
+# reqs for pints below
+  - pip install numpy, cma, tabulate
 
-
-before_script:
-  - python --version
-  - python -m myokit system
-
-# Note that default timeout is 10 minutes
-# This can be changed with travis_wait, but that leads to
-# issues with debug output:
-# https://github.com/travis-ci/travis-ci/issues/5716
 script:
-  - nose
-  - if [[ $PINTS_UNIT == true ]]; then python run-tests.py --unit; fi;
-  - if [[ $PINTS_DOCS == true ]]; then python run-tests.py --doctest; fi;
-  - if [[ $PINTS_STYLE == true ]]; then python -m flake8; fi;
-  - if [[ $PINTS_COVER == true ]]; then coverage run run-tests.py --unit; fi;
-  - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then travis_wait 120 python run-tests.py --books; fi;
-
-after_success:
-  - if [[ $PINTS_COVER == true ]]; then codecov; fi;
+  - python -m unittest discover test
