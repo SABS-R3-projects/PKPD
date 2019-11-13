@@ -3,6 +3,14 @@ __pycache__
 .noseids
 .hypothesis
 
-
 # Visual Studio Code
 .vscode
+
+# DS
+.DS_Store
+
+# Virtual environment
+env
+
+# GUI C/C++ cache
+src
