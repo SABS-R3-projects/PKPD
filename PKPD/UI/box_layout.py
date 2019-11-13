@@ -14,7 +14,7 @@ Last edited: August 2017
 """
 
 import sys
-from PyQt5.QtWidgets import (QWidget, QPushButton, 
+from PyQt5.QtWidgets import (QWidget, QPushButton,
     QHBoxLayout, QVBoxLayout, QApplication)
 
 
@@ -32,8 +32,8 @@ class Example(QWidget):
         cancelButton = QPushButton("Cancel")
 
         hbox = QHBoxLayout()
-        hbox.addWidget(okButton)
         hbox.addStretch(1)
+        hbox.addWidget(okButton)
         hbox.addWidget(cancelButton)
 
         vbox = QVBoxLayout()
