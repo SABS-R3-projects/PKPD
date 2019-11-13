@@ -47,9 +47,9 @@ class Example(QWidget):
 
         grid.addWidget(review, 3, 0)
         grid.addWidget(reviewEdit, 3, 1, 5, 1)
-        
-        self.setLayout(grid) 
-        
+
+        self.setLayout(grid)
+
         self.setGeometry(300, 300, 550, 500)
         self.setWindowTitle('Review')    
         self.show()
