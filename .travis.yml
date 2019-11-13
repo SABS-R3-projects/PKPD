@@ -9,10 +9,9 @@ install:
   - pip install hypothesis
 # reqs for myokit below
   - pip install scipy sympy pyqt5 matplotlib
-  - apt-get install libsundials-dev
   - pip install myokit
 # reqs for pints below
   - pip install numpy cma tabulate
 
 script:
-  - python -m unittest discover test
+  - pytest
