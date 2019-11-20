@@ -12,6 +12,9 @@ class Model(AbstractModel):
         # List of Initial States
         self.initial_values = self.model.state()
 
+        #Name of Central Compartment
+        self.central_compartment_name = next(self.model.states()).qname()
+
         #Number of States
         self.dimension = len(self.initial_values)
 
@@ -43,9 +46,12 @@ class Model(AbstractModel):
         """
         self.protocol = protocol
 
-    def set_params(self, params):
-        # set parameter values
-        raise NotImplementedError
+    def set_params(self, **params):
+        # Input as keyword args/dictionary? Output if incorrect?
+        for name, value in params.items():
+            if name in self.params: # check variable exists
+                self.params[name] = value # update attributes
+                self.model.set_value(name, value) # update model
 
     def get_mmt_file(self):
         return self.mmtfile
@@ -59,19 +65,17 @@ class Model(AbstractModel):
     def get_protocol(self):
        return self.protocol
 
-    def get_params(self):
+    def get_params(*args):
+        # Could add function to return specific parameter?
         return self.params
 
-    def solve(self):
-        # use myokit to solve problem
-        raise NotImplementedError
+    def solve(self, duration, state_name = 'bolus.y_c', log_times = None):
+
+        self.sim = myokit.Simulation(self.model, self.protocol)
+        self.results = self.sim.run(duration, log=['engine.time', state_name], log_times=log_times)
 
     def get_solution(self):
-        # gets the solution
-        raise NotImplementedError
+        return self.results
 
-
-
-    # Extra Functions
 
 
