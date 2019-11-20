@@ -14,3 +14,6 @@ env
 
 # GUI C/C++ cache
 src
+
+# pytest
+.pytest_cache
