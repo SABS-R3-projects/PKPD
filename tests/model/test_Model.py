@@ -1,13 +1,13 @@
 import unittest
 from PKPD.model import model
 import matplotlib.pyplot as plt
+import myokit
 import numpy as np
 import os
 
 
 class TestModel(unittest.TestCase):
 
-    # file_name = 'PKPD/mmt/one_compartment.mmt'
     file_name = '../../PKPD/mmt/one_compartment.mmt'
     models = model.Model()
 
@@ -73,5 +73,3 @@ class TestModel(unittest.TestCase):
         plt.show()
         self.assertLess(np.max(error[:330]), 1e-8)
 
-    def test_get_solution(self):
-        pass

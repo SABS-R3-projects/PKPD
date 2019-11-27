@@ -26,7 +26,7 @@ class AbstractModel(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def set_protocol(self):
+    def set_protocol(self, protocol):
         # set myokit protocol
         raise NotImplementedError
 
@@ -36,7 +36,7 @@ class AbstractModel(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_mmt_file(self, filename):
+    def get_mmt_file(self):
         # get mmt file
         raise NotImplementedError
 
