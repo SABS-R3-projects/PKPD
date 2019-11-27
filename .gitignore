@@ -14,3 +14,14 @@ env
 
 # GUI C/C++ cache
 src
+
+# pytest
+.pytest_cache
+
+# build and dist
+build
+dist
+PKPD.egg-info
+
+# PINTS
+pints

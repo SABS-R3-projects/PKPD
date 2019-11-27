@@ -7,11 +7,8 @@ python:
 
 install:
   - pip install hypothesis
-# reqs for myokit below
-  - pip install scipy sympy pyqt5 matplotlib
-  - pip install myokit
-# reqs for pints below
-  - pip install numpy cma tabulate
+  # install dependencies.
+  - pip install .
 
 script:
   - pytest
