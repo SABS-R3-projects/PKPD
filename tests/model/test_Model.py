@@ -33,7 +33,7 @@ class TestModel(unittest.TestCase):
         pass
 
     def test_set_protocol(self, protocol):
-        pass
+        model.set_protocol()
 
     def test_set_params(self):
         qname = 'param.CL'
