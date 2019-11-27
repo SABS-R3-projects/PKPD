@@ -1,4 +1,4 @@
-from abstractModel import AbstractModel
+from PKPD.model.abstractModel import AbstractModel
 import myokit
 
 class Model(AbstractModel):
