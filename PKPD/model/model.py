@@ -1,4 +1,4 @@
-from abstractModel import AbstractModel
+from PKPD.model.abstractModel import AbstractModel
 import myokit
 
 class Model(AbstractModel):
@@ -19,7 +19,8 @@ class Model(AbstractModel):
         self.dimension = len(self.initial_values)
 
         #Dictionary of Parameters
-        self.params = {var.qname(): var.eval() for var in self.model.variables()}
+        self.parameter_component_name = 'param'
+        self.params = {var.qname(): var.eval() for var in self.model.get(self.parameter_component_name).variables()}
 
     def set_mmt_file(self, filename):
         self.mmtfile = filename
@@ -49,9 +50,9 @@ class Model(AbstractModel):
     def set_params(self, **params):
         # Input as keyword args/dictionary? Output if incorrect?
         for name, value in params.items():
-            if name in self.params: # check variable exists
-                self.params[name] = value # update attributes
-                self.model.set_value(name, value) # update model
+            if (self.parameter_component_name + '.' + name) in self.params: # check variable exists
+                self.params[self.parameter_component_name + '.' + name] = value # update attributes
+                self.model.set_value(self.parameter_component_name + '.' + name, value) # update model
 
     def get_mmt_file(self):
         return self.mmtfile
@@ -65,7 +66,7 @@ class Model(AbstractModel):
     def get_protocol(self):
        return self.protocol
 
-    def get_params(*args):
+    def get_params(self):
         # Could add function to return specific parameter?
         return self.params
 
