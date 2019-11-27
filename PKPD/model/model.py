@@ -70,14 +70,14 @@ class Model(AbstractModel):
         # Could add function to return specific parameter?
         return self.params
 
-    def solve(self, duration, state_name = 'bolus.y_c', log_times = None):
+    def solve(self, duration, log_times=None, abs_tol=1e-11, rel_tol=1e-11):
 
         self.sim = myokit.Simulation(self.model, self.protocol)
-        self.sim.set_tolerance(abs_tol=1e-11, rel_tol=1e-11)
-        self.results = self.sim.run(duration, log=['engine.time', state_name], log_times=log_times)
+        self.sim.set_tolerance(abs_tol=abs_tol, rel_tol=rel_tol)
+        self.results = self.sim.run(duration, log_times=log_times)
 
-    def get_solution(self):
-        return self.results
+    def get_solution(self, state_name):
+        return self.results.get(state_name)
 
 
 
