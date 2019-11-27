@@ -84,8 +84,9 @@ setup(
         'numpy>=1.8',
         'scipy>=0.14',
         'pyqt5>=5.9',
-        'myokit>=1.29',
+        'sympy',
         'matplotlib>=1.5',
+        'myokit>=1.29',
         'tabulate',
     ]
 )
