@@ -63,8 +63,8 @@ setup(
     license='BSD 3-clause license',
 
     # Maintainer information
-    #maintainer='David Augustin, Rebecca Rumney, Barnum Swannell, Simon Marchant',
-    #maintainer_email='david.augustin@dtc.ox.ac.uk',
+    maintainer='David Augustin, Rebecca Rumney, Barnum Swannell, Simon Marchant',
+    maintainer_email='david.augustin@dtc.ox.ac.uk',
     url='https://github.com/SABS-R3-projects/PKPD.git',
 
     # customised commands
