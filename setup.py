@@ -73,7 +73,7 @@ setup(
     },
 
     # Packages to include
-    packages=find_packages(include=('PKPD',)),
+    packages=find_packages(include=('PKPD','PKPD.*')),
 
     # install PINTS
     #scripts=['setup_scripts/install_pints.py'],
@@ -83,7 +83,7 @@ setup(
         'cma>=2',
         'numpy>=1.8',
         'scipy>=0.14',
-        'pyqt5>=5.9',
+        'pyqt5==5.9.2',
         'sympy',
         'matplotlib>=1.5',
         'myokit>=1.29',

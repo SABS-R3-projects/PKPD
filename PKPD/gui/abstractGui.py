@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod, ABCMeta
 from PyQt5.QtWidgets import QMainWindow
 
 class AbstractMainWindow(QMainWindow):
