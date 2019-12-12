@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import myokit
 import numpy as np
 import os
-
+import os
 
 class TestModel(unittest.TestCase):
 
@@ -13,6 +13,7 @@ class TestModel(unittest.TestCase):
 
     def setUp(self) -> None:
         self.models.mmtfile = '../../PKPD/mmt/one_compartment.mmt'
+        print(os.getcwd())
         self.models.read_mmt_file()
 
     def test_read_mmt_file(self):
