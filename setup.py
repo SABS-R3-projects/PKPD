@@ -86,7 +86,6 @@ setup(
         'pyqt5>=5.9',
         'sympy',
         'matplotlib>=1.5',
-        'libsundials-serial-dev',
         'myokit>=1.29',
         'tabulate',
 
