@@ -8,11 +8,11 @@ import os
 
 class TestModel(unittest.TestCase):
 
-    file_name = '../../PKPD/mmt/one_compartment.mmt'
+    file_name = 'PKPD/mmt/one_compartment.mmt'
     models = model.Model()
 
     def setUp(self) -> None:
-        self.models.mmtfile = '../../PKPD/mmt/one_compartment.mmt'
+        self.models.mmtfile = file_name
         self.models.read_mmt_file()
 
     def test_read_mmt_file(self):
