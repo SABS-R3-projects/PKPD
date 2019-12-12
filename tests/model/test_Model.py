@@ -12,8 +12,7 @@ class TestModel(unittest.TestCase):
     models = model.Model()
 
     def setUp(self) -> None:
-        self.models.mmtfile = '../../PKPD/mmt/one_compartment.mmt'
-        print(os.getcwd())
+        self.models.mmtfile = 'PKPD/mmt/one_compartment.mmt'
         self.models.read_mmt_file()
 
     def test_read_mmt_file(self):
