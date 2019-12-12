@@ -73,7 +73,7 @@ class AbstractSingleOutputProblem(SingleOutputProblem):
         super(AbstractSingleOutputProblem, self).__init__(model, times, values)
 
     def find_optimal_parameter(self):
-        """Find point in parameter space that optimise objective function, i.e. find the set of parameters that minimise the
+        """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the
         distance of the model to the data with respect to the objective function.
         """
         raise NotImplementedError
