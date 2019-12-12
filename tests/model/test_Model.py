@@ -8,8 +8,8 @@ import os
 
 class TestModel(unittest.TestCase):
 
-    self.file_name = 'PKPD/mmt/one_compartment.mmt'
-    self.models = model.Model()
+    file_name = 'PKPD/mmt/one_compartment.mmt'
+    models = model.Model()
 
     def setUp(self) -> None:
         self.models.mmtfile = '../../PKPD/mmt/one_compartment.mmt'
