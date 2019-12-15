@@ -11,8 +11,8 @@ from PKPD.gui.mainWindow import MainWindow
 class TestMainWindow(unittest.TestCase):
     """Tests the methods of the MainWindow class.
     """
-    #@given(desktop_dimension=strategies.lists(strategies.integers(min_value=200), min_size=2, max_size=2))
-    def test_set_window_size(self, desktop_dimension=[1080, 1080]):
+    @given(desktop_dimension=strategies.lists(strategies.integers(min_value=200), min_size=2, max_size=2))
+    def test_set_window_size(self, desktop_dimension):
         """Tests whether the resulting main window size obeys the aspect ratio 5/4 and whether either the width is 3/4 of the sreen
         width or the height is equal the screen height.
 
