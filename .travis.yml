@@ -12,5 +12,9 @@ install:
   # install dependencies.
   - pip install .
 
+# allow gui output
+services:
+  - xvfb
+
 script:
   - pytest
