@@ -14,4 +14,3 @@ install:
 
 script:
   - pytest
-  - hypothesis
