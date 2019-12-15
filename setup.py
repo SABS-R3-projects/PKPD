@@ -73,7 +73,7 @@ setup(
     },
 
     # Packages to include
-    packages=find_packages(include=('PKPD','PKPD.*')),
+    packages=find_packages(include=('PKPD',)),
 
     # install PINTS
     #scripts=['setup_scripts/install_pints.py'],

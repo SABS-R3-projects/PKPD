@@ -4,6 +4,9 @@ python:
   - "3.6"      # current default Python on Travis CI
   - "3.7"
 
+before_install:
+  - sudo apt-get install -y libsundials-serial-dev;
+
 install:
   - pip install hypothesis
   # install dependencies.
