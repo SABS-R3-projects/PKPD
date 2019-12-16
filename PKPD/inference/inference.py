@@ -3,7 +3,49 @@ from typing import List
 import numpy as np
 import pints
 
+from PKPD.model.model import Model
 from PKPD.inference.abstractInference import AbstractSingleOutputProblem
+
+
+class Myokit2PintsModelWrapper(pints.ForwardModel):
+    def __init__(self, Model):
+        super(Myokit2PintsModelWrapper, self).__init__()
+        self.myokit_model = Model
+        self.model_param_keys = self._get_keys()
+        self.n_initial_conditions = len(self.myokit_model.get_initial_values())
+
+    def _get_keys(self):
+        """Returns model parameter names in alphabetical order.
+
+        Returns:
+            {List} -- List of strings with the keys of the model parameters.
+        """
+        return sorted(self.myokit_model.get_params())
+
+    def n_parameters(self):
+        n_model_params = len(self.model_param_keys)
+        return n_model_params + self.n_initial_conditions
+
+    def simulate(self, parameters, times):
+        initial_conditions = parameters[:self.n_initial_conditions]
+        model_parameters = dict(zip(self.model_param_keys,
+                                    parameters[self.n_initial_conditions:]
+                                    )
+                                )
+        self.myokit_model.set_params(model_parameters)
+        self.myokit_model.set_initial_values(initial_conditions)
+
+        # duration of simulation
+        duration = times[-1] - times[0]
+        # name of compartment
+        main_compartment = next(self.myokit_model.model.states()).qname()
+
+        self.myokit_model.solve(duration=duration, log_times=times)
+        _, values = self.myokit_model.get_solution(main_compartment)
+
+        return values
+
+
 
 class SingleOutputProblem(AbstractSingleOutputProblem):
     """SingleOutputProblem according to pints https://pints.readthedocs.io/. Default objective function
