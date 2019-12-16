@@ -88,5 +88,6 @@ setup(
         'matplotlib>=1.5',
         'myokit>=1.29',
         'tabulate',
+
     ]
 )

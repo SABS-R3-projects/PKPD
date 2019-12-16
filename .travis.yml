@@ -5,6 +5,9 @@ python:
   - "3.7"
   - "3.8"
 
+before_install:
+  - sudo apt-get install -y libsundials-serial-dev;
+
 install:
   - pip install hypothesis
   # install dependencies.
