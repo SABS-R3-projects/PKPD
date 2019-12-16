@@ -1,69 +1,5 @@
 from pints import SingleOutputProblem
 
-# class AbstractInference(ABC):
-#     def __init__(self):
-#         pass
-
-#     @abstractmethod
-#     def infer_parameters(self):
-#         # infer the parameters
-#         raise NotImplementedError
-
-#     @abstractmethod
-#     def set_objective_func(self):
-#         # set the function that should be minimised, takes string input eg least squares
-#         raise NotImplementedError
-
-#     @abstractmethod
-#     def find_optima(self):
-#         # find the optimum for stuff
-#         raise NotImplementedError
-
-#     @abstractmethod
-#     def find_posterior(self):
-#         # find the posterior
-#         raise NotImplementedError
-
-#     @abstractmethod
-#     def set_optimiser(self):
-#         # set the method used for optimisation (used in find_optima)
-#         raise NotImplementedError
-
-#     @abstractmethod
-#     def set_sampling_method(self):
-#         # set algorithm, eg MCMC, in pints
-#         raise NotImplementedError
-
-#     @abstractmethod
-#     def set_initial_values(self):
-#         # set the initial values
-#         raise NotImplementedError
-
-#     @abstractmethod
-#     def set_prior(self):
-#         # set the prior
-#         raise NotImplementedError
-
-#     @abstractmethod
-#     def set_bounds(self):
-#         # set the boundaries (if separately to prior)
-#         raise NotImplementedError
-
-#     @abstractmethod
-#     def load_data(self):
-#         # take data from data class
-#         raise NotImplementedError
-
-#     @abstractmethod
-#     def fix_parameters(self):
-#         # tell it which parameters to fix the values of
-#         raise NotImplementedError
-
-#     @abstractmethod
-#     def log_inferred_parameters(self):
-#         # save the parameters that have been inferred
-#         raise NotImplementedError
-
 class AbstractSingleOutputProblem(SingleOutputProblem):
     """Abstract wrapper around pints.SingleOutputProblem. A SingleOutputProblem represents an inference problem where a model is fit
     to a single time series, such as measured from a system with a single output. For more information see pints documentation
@@ -88,5 +24,10 @@ class AbstractSingleOutputProblem(SingleOutputProblem):
     def set_optimiser(self):
         """Sets method to minimise objective function. Allowed methods are those implemented in pints, i.e. CMA-ES, Nelder-Mead,
         PSO, SNES, xNES. For more information see pints documentation https://pints.readthedocs.io/.
+        """
+        raise NotImplementedError
+
+    def get_estimate(self):
+        """Returns the estimated parameters as well as their objective function score.
         """
         raise NotImplementedError

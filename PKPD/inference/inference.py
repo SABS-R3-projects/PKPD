@@ -29,6 +29,10 @@ class SingleOutputProblem(AbstractSingleOutputProblem):
         self.initial_parameter_uncertainty = None
         self.parameter_boundaries = None
 
+        self.estimated_parameters = None
+        self.objective_score = None
+
+
     def find_optimal_parameter(self, initial_parameter: np.ndarray) -> None:
         """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the
         distance of the model to the data with respect to the objective function.
@@ -51,10 +55,8 @@ class SingleOutputProblem(AbstractSingleOutputProblem):
         """Sets the objective function which is minimised to find the optimal parameter set.
 
         Arguments:
-            objective_function {pints.ErrorMeasure} -- [description]
-        
-        Raises:
-            ValueError: [description]
+            objective_function {pints.ErrorMeasure} -- Valid objective functions are [MeanSquaredError,
+            RootMeanSquaredError, SumOfSquaresError] in pints.
         """
         valid_obj_func = [pints.MeanSquaredError, pints.RootMeanSquaredError, pints.SumOfSquaresError]
 
@@ -64,6 +66,11 @@ class SingleOutputProblem(AbstractSingleOutputProblem):
         self.objective_function = objective_function
 
     def set_optimiser(self, optimiser: pints.Optimiser) -> None:
+        """Sets the optimiser to find the "global" minimum of the objective function.
+
+        Arguments:
+            optimiser {pints.Optimiser} -- Valid optimisers are [CMAES, NelderMead, PSO, SNES, XNES] in pints.
+        """
         valid_optimisers = [pints.CMAES, pints.NelderMead, pints.PSO, pints.SNES, pints.XNES]
 
         if optimiser not in valid_optimisers:
@@ -72,6 +79,13 @@ class SingleOutputProblem(AbstractSingleOutputProblem):
         self.optimiser = optimiser
 
     def get_estimate(self) -> List:
+        """Returns the estimated parameters that minimise the objective function.
+
+        Returns:
+            List -- [estimated parameter, corresponding score of the objective function]
+        """
+        if self.estimated_parameters is None:
+            raise ValueError('The estimated parameter is None. Try to run the `find_optimal_parameter` routine again?')
         return [self.estimated_parameters, self.objective_score]
 
 
