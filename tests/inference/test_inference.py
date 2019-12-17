@@ -117,7 +117,8 @@ class TestSingleOutputProblem(unittest.TestCase):
         initial_parameters = np.array([25.1, 3.1, 5.1])
 
         # solve inverse problem
-        problem.set_max_unchanged_iterations(iterations=10, threshold=1e-5)
+        problem.set_max_unchanged_iterations(iterations=15, threshold=1e-5)
+        problem.set_optimiser(optimiser=pints.XNES)
         problem.find_optimal_parameter(initial_parameter=initial_parameters)
         initial_values, model_parameters, _ = problem.get_estimate()
 
