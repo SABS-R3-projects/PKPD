@@ -85,7 +85,7 @@ class TestSingleOutputProblem(unittest.TestCase):
     myokit_model.mmtfile = file_name
     myokit_model.read_mmt_file()
 
-    times = np.linspace(0.0, 24.0, 1000)
+    times = np.linspace(0.0, 24.0, 10000)
     duration = times[-1] - times[0] + 1 # plus 1 to keep final time step
 
     # Solve myokit model
@@ -117,7 +117,7 @@ class TestSingleOutputProblem(unittest.TestCase):
         initial_parameters = np.array([25.1, 3.1, 5.1])
 
         # solve inverse problem
-        problem.set_max_unchanged_iterations(iterations=15, threshold=1e-5)
+        problem.set_max_unchanged_iterations(iterations=15, threshold=1e-8)
         problem.set_optimiser(optimiser=pints.XNES)
         problem.find_optimal_parameter(initial_parameter=initial_parameters)
         initial_values, model_parameters, _ = problem.get_estimate()
