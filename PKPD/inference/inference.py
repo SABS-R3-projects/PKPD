@@ -4,7 +4,7 @@ import numpy as np
 import pints
 
 from PKPD.model.model import Model
-from PKPD.inference.abstractInference import AbstractSingleOutputProblem
+from PKPD.inference.abstractInference import AbstractSingleOutputInverseProblem
 
 
 class Myokit2PintsModelWrapper(pints.ForwardModel):
@@ -38,7 +38,8 @@ class Myokit2PintsModelWrapper(pints.ForwardModel):
             {int} -- number of parameters for optimisation.
         """
         n_model_params = len(self.model_param_keys)
-        return n_model_params + self.n_initial_conditions
+        n_params = n_model_params + self.n_initial_conditions
+        return n_params
 
     def simulate(self, parameters:np.ndarray, times:np.ndarray):
         """Solves the forward problem using the myokit model.
@@ -50,11 +51,7 @@ class Myokit2PintsModelWrapper(pints.ForwardModel):
         Returns:
             {np.ndarray} -- state values corresponding to the input times.
         """
-        initial_conditions = parameters[:self.n_initial_conditions]
-        model_parameters = dict(zip(self.model_param_keys,
-                                    parameters[self.n_initial_conditions:]
-                                    )
-                                )
+        initial_conditions, model_parameters = self._split_parameters(parameters)
         self.myokit_model.set_params(model_parameters)
         self.myokit_model.set_initial_values(initial_conditions)
 
@@ -68,10 +65,26 @@ class Myokit2PintsModelWrapper(pints.ForwardModel):
 
         return np.array(values)
 
+    def _split_parameters(self, parameters:np.ndarray):
+        """Separates the parameters for optimisation back into intitial
+        values of the state and model parameters.
+
+        Arguments:
+            parameters {nd.array} -- Parameters that are optimised.
+
+        Return:
+            {List} -- [initial conditions, model parameters]
+        """
+        initial_conditions = parameters[:self.n_initial_conditions]
+        model_parameters = dict(zip(self.model_param_keys,
+                                    parameters[self.n_initial_conditions:]
+                                    )
+                                )
+        return [initial_conditions, model_parameters]
 
 
-class SingleOutputProblem(AbstractSingleOutputProblem):
-    """SingleOutputProblem according to pints https://pints.readthedocs.io/. Default objective function
+class SingleOutputInverseProblem(AbstractSingleOutputInverseProblem):
+    """Single output inverse problem based on pints.SingleOutputProblem https://pints.readthedocs.io/. Default objective function
     is pints.SumOfSquaresError and default optimiser is pints.CMAES.
     """
     def __init__(self, model: pints.ForwardModel, times: np.ndarray, values: np.ndarray):
@@ -87,12 +100,13 @@ class SingleOutputProblem(AbstractSingleOutputProblem):
         Return:
             None
         """
-        super(SingleOutputProblem, self).__init__(model, times, values)
-
-        self.objective_function = pints.SumOfSquaresError
+        self.problem = pints.SingleOutputProblem(model, times, values)
+        self.objective_function = pints.SumOfSquaresError(self.problem)
         self.optimiser = pints.CMAES
         self.initial_parameter_uncertainty = None
         self.parameter_boundaries = None
+        self.iterations = 200 # default value from pints
+        self.threshold = 1e-11 # default value from pints
 
         self.estimated_parameters = None
         self.objective_score = None
@@ -113,6 +127,8 @@ class SingleOutputProblem(AbstractSingleOutputProblem):
                                               sigma0=self.initial_parameter_uncertainty,
                                               boundaries=self.parameter_boundaries,
                                               method=self.optimiser)
+        optimisation.set_max_unchanged_iterations(iterations=self.iterations,
+                                                  threshold=self.threshold)
 
         self.estimated_parameters, self.objective_score = optimisation.run()
 
@@ -128,7 +144,7 @@ class SingleOutputProblem(AbstractSingleOutputProblem):
         if objective_function not in valid_obj_func:
             raise ValueError('Objective function is not supported.')
 
-        self.objective_function = objective_function
+        self.objective_function = objective_function(self.problem)
 
     def set_optimiser(self, optimiser: pints.Optimiser) -> None:
         """Sets the optimiser to find the "global" minimum of the objective function.
@@ -147,11 +163,23 @@ class SingleOutputProblem(AbstractSingleOutputProblem):
         """Returns the estimated parameters that minimise the objective function.
 
         Returns:
-            List -- [estimated parameter, corresponding score of the objective function]
+            List -- [initial condition, model parameters, corresponding score of the objective function]
         """
         if self.estimated_parameters is None:
             raise ValueError('The estimated parameter is None. Try to run the `find_optimal_parameter` routine again?')
-        return [self.estimated_parameters, self.objective_score]
+        initial_conditions, model_parameters = self.problem._model._split_parameters(self.estimated_parameters)
+
+        return [initial_conditions, model_parameters, self.objective_score]
+
+    def set_max_unchanged_iterations(self, iterations=200, threshold=1e-11):
+        """Setting the convergence criterion of the optimisation controller
+
+        Arguments:
+            iterations {int} -- Number of iterations in objective function does not change. (default: {200})
+            threshold {[type]} -- Precision for objective scores. (default: {1e-11})
+        """
+        self.iterations = iterations
+        self.threshold = threshold
 
 
 

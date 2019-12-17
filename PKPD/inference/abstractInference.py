@@ -1,13 +1,10 @@
 from pints import SingleOutputProblem
 
-class AbstractSingleOutputProblem(SingleOutputProblem):
+class AbstractSingleOutputInverseProblem(object):
     """Abstract wrapper around pints.SingleOutputProblem. A SingleOutputProblem represents an inference problem where a model is fit
     to a single time series, such as measured from a system with a single output. For more information see pints documentation
     https://pints.readthedocs.io/.
     """
-    def __init__(self, model, times, values):
-        super(AbstractSingleOutputProblem, self).__init__(model, times, values)
-
     def find_optimal_parameter(self):
         """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the
         distance of the model to the data with respect to the objective function.
@@ -31,3 +28,9 @@ class AbstractSingleOutputProblem(SingleOutputProblem):
         """Returns the estimated parameters as well as their objective function score.
         """
         raise NotImplementedError
+
+    def set_max_unchanged_iterations(self):
+        """Sets convergence criterion of the optimisation method. Input is the maximum number of iterations
+        for which the objective score is allowed to remain unchanged to be considered being converged. It also
+        takes the precision when two number are considered to be unchanged.
+        """

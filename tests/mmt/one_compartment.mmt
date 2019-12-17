@@ -10,7 +10,7 @@ time = 0 bind time
 [bolus]
 use param.V_c as V_c
 use param.CL as CL
-dot(y_c) = engine.repeat_dose_rate - y_c * CL / V_c
+dot(y_c) = V_c * engine.repeat_dose_rate - y_c * CL
 
 [param]
 CL = 3 [m^3/s (2.777777777777775e-10)] : Clearance rate
