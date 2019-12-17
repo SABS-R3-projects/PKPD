@@ -47,12 +47,12 @@ class Model(AbstractModel):
         """
         self.protocol = protocol
 
-    def set_params(self, **params):
+    def set_params(self, params):
         # Input as keyword args/dictionary? Output if incorrect?
         for name, value in params.items():
-            if (self.parameter_component_name + '.' + name) in self.params: # check variable exists
-                self.params[self.parameter_component_name + '.' + name] = value # update attributes
-                self.model.set_value(self.parameter_component_name + '.' + name, value) # update model
+            if name in self.params: # check variable exists
+                self.params[name] = value # update attributes
+                self.model.set_value(name, value) # update model
 
     def get_mmt_file(self):
         return self.mmtfile

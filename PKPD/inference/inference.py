@@ -8,9 +8,17 @@ from PKPD.inference.abstractInference import AbstractSingleOutputProblem
 
 
 class Myokit2PintsModelWrapper(pints.ForwardModel):
-    def __init__(self, Model):
+    """Wrapper of the myokit forward model to a pints forward model
+    for compatibility with pints inference tools.
+    """
+    def __init__(self, model:Model):
+        """Initiates the wrapped model.
+
+        Arguments:
+            model {Model} -- Myokit model.
+        """
         super(Myokit2PintsModelWrapper, self).__init__()
-        self.myokit_model = Model
+        self.myokit_model = model
         self.model_param_keys = self._get_keys()
         self.n_initial_conditions = len(self.myokit_model.get_initial_values())
 
@@ -23,10 +31,25 @@ class Myokit2PintsModelWrapper(pints.ForwardModel):
         return sorted(self.myokit_model.get_params())
 
     def n_parameters(self):
+        """Returns number of parameters to be fitted in the model, i.e. the mnodel
+        parameters and the initial conditions.
+
+        Returns:
+            {int} -- number of parameters for optimisation.
+        """
         n_model_params = len(self.model_param_keys)
         return n_model_params + self.n_initial_conditions
 
-    def simulate(self, parameters, times):
+    def simulate(self, parameters:np.ndarray, times:np.ndarray):
+        """Solves the forward problem using the myokit model.
+
+        Arguments:
+            parameters {np.ndarray} -- parameters of the model for optimisation.
+            times {np.ndarray} -- times at which the simulation is evaluated.
+        
+        Returns:
+            {np.ndarray} -- state values corresponding to the input times.
+        """
         initial_conditions = parameters[:self.n_initial_conditions]
         model_parameters = dict(zip(self.model_param_keys,
                                     parameters[self.n_initial_conditions:]
@@ -35,15 +58,15 @@ class Myokit2PintsModelWrapper(pints.ForwardModel):
         self.myokit_model.set_params(model_parameters)
         self.myokit_model.set_initial_values(initial_conditions)
 
-        # duration of simulation
-        duration = times[-1] - times[0]
+        # duration of simulation (plus 1 to keep the final time step)
+        duration = times[-1] - times[0] + 1
         # name of compartment
-        main_compartment = next(self.myokit_model.model.states()).qname()
+        main_compartment = self.myokit_model.central_compartment_name
 
         self.myokit_model.solve(duration=duration, log_times=times)
-        _, values = self.myokit_model.get_solution(main_compartment)
+        values = self.myokit_model.get_solution(main_compartment)
 
-        return values
+        return np.array(values)
 
 
 

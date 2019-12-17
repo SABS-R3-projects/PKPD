@@ -42,24 +42,33 @@ class TestMyokit2PintsModelWrapper(unittest.TestCase):
         myokit_model.read_mmt_file()
 
         times = np.linspace(0.0, 24.0, 1000)
-        duration = times[-1] - times[0]
+        duration = times[-1] - times[0] + 1 # plus 1 to keep final time step
 
-        state_names = [state.qname() for state in myokit_model.model.states()]
-
-        # Myokit
+        # Solve myokit model
         myokit_model.solve(duration=duration, log_times=times)
-
         np_myokit_times = np.array(myokit_model.get_solution('engine.time'))
-        print('times: ', np.array(myokit_model.get_solution('engine.time')).shape)
-        print('values: ', myokit_model.get_solution(myokit_model.central_compartment_name))
-        for state in myokit_model.model.states():
-            print(state.qname())
-        print('times: ', times[:-1].shape)
+        np_myokit_state_values = np.array(myokit_model.get_solution(myokit_model.central_compartment_name))
 
-        # Wrapped Model
-        # something is wring here!!! Continue checking the wrapping and then go on
-        # with find optimal values.
-        assert np.testing.assert_approx_equal(times[:-1], np_myokit_times)
+        # Wrapped model
+        wrapped_model = inference.Myokit2PintsModelWrapper(myokit_model)
+
+        ## get model parameters to run the simulation in the wrapped model
+        # initial conditions by construction come first
+        parameters = myokit_model.get_initial_values()
+        # append model parameters
+        params_keys = wrapped_model.model_param_keys
+        param_dict = myokit_model.get_params()
+        for param in params_keys:
+            value = param_dict[param]
+            parameters.append(value)
+
+        # solve wrapped model
+        state_values = wrapped_model.simulate(parameters, times)
+
+        # assert times are matching
+        assert np.allclose(times, np_myokit_times, atol=1e-07)
+        # assert solutions are matching
+        assert np.allclose(state_values, np_myokit_state_values, atol=1e-07)
 
 
 

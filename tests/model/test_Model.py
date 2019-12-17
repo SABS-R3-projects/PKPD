@@ -45,7 +45,7 @@ class TestModel(unittest.TestCase):
     def test_set_get_params(self):
         qname = 'param.CL'
         value = 4.0
-        self.models.set_params(CL = value)
+        self.models.set_params({qname:value})
         self.assertEqual(self.models.model.get(qname).eval(), value)
         param_dict = {'param.CL': 4.0, 'param.V_c' : 5.0}
         self.assertEqual(param_dict, self.models.get_params())
