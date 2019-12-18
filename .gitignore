@@ -25,3 +25,6 @@ PKPD.egg-info
 
 # PINTS
 pints
+
+# profiling output
+tests/model/profile_solve
