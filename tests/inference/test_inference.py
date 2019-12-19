@@ -14,7 +14,7 @@ class TestSingleOutputProblem(unittest.TestCase):
     ## Test case I: One Compartment Model
     # generating data
     file_name = 'PKPD/mmt/one_compartment.mmt'
-    one_comp_model = m.Model(file_name)
+    one_comp_model = m.SingleOutputModel(file_name)
     true_parameters_one_comp_model = [20, 2, 4] # [bolus.y_c, param.CL, param.V_c]
 
     times = np.linspace(0.0, 24.0, 10000)

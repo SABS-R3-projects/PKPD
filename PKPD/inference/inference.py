@@ -104,15 +104,15 @@ class SingleOutputInverseProblem(AbstractSingleOutputInverseProblem):
         Return:
             {Dict} -- Estimated parameter values with their name as key.
         """
-        state_dimension = self.problem._model.state_dimension
-        state_names = self.problem._model.state_names
+        state_dimension = 1
+        state_name = self.problem._model.state_name
         parameter_names = self.problem._model.parameter_names
 
         parameter_dict = {}
         # Note that the estimated parameters are [inital values, model parameter].
         for parameter_id, value in enumerate(estimated_parameter):
             if parameter_id < state_dimension:
-                parameter_dict[state_names[parameter_id]] = value
+                parameter_dict[state_name] = value
             else:
                 reset_id = parameter_id-state_dimension
                 parameter_dict[parameter_names[reset_id]] = value
