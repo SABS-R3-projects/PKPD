@@ -12,23 +12,20 @@ class TestModel(unittest.TestCase):
     """
     # Test case I: 1-compartment model
     file_name = 'PKPD/mmt/one_compartment.mmt'
-    one_comp_model = m.Model(file_name)
+    one_comp_model = m.SingleOutputModel(file_name)
 
     def test_init(self):
         """Tests whether the Model class initialises as expected.
         """
         # Test case I: 1-compartment model
         ## expected:
-        state_dimension = 1
-        state_names = ['bolus.y_c']
+        state_name = 'bolus.y_c'
         parameter_names = ['param.CL', 'param.V_c']
         number_model_parameters = 2
         number_parameters_to_fit = 3
 
         ## assert initilised values coincide
-        assert state_dimension == self.one_comp_model.state_dimension
-        for state_id, state in enumerate(self.one_comp_model.state_names):
-            assert state_names[state_id] == state
+        assert state_name == self.one_comp_model.state_name
         for parameter_id, parameter in enumerate(self.one_comp_model.parameter_names):
             assert parameter_names[parameter_id] == parameter
         assert number_model_parameters == self.one_comp_model.number_model_parameters

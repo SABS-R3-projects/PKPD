@@ -4,9 +4,10 @@ import numpy as np
 from PKPD.model.abstractModel import AbstractModel
 
 
-class Model(AbstractModel):
+class SingleOutputModel(AbstractModel):
     """Model class inheriting from pints.ForwardModel. To solve the forward problem methods from the
-    myokit package are employed.
+    myokit package are employed. The sole difference to the MultiOutputProblem is that the simulate method
+    returns a 1d array instead of a 2d array.
     """
     def __init__(self, mmtfile:str) -> None:
         """Initialises the model class.
@@ -15,14 +16,16 @@ class Model(AbstractModel):
             mmtfile {str} -- Path to the mmtfile defining the model and the protocol.
         """
         model, protocol, _ = myokit.load(mmtfile)
-        self.state_dimension = len(model.state())
-        if self.state_dimension > 1:
-            raise NotImplementedError('Currently only one dimensional states are suported.')
-        self.state_names = [next(model.states()).qname() for _ in range(self.state_dimension)]
+        state_dimension = len(model.state())
+        if state_dimension > 1:
+            raise NotImplementedError(
+                'The output seems to be multi-dimensional. You might want to try a MultiOutputProblem instead.'
+                )
+        self.state_name = next(model.states()).qname()
         # TODO: automate name 'param'
         self.parameter_names = sorted([var.qname() for var in model.get('param').variables()])
         self.number_model_parameters = len(self.parameter_names)
-        self.number_parameters_to_fit = self.state_dimension + self.number_model_parameters
+        self.number_parameters_to_fit = 1 + self.number_model_parameters
         self.simulation = myokit.Simulation(model, protocol)
 
 
@@ -42,7 +45,7 @@ class Model(AbstractModel):
         Returns:
             int -- Dimensionality of the output.
         """
-        return self.state_dimension
+        return 1
 
 
     def simulate(self, parameters:np.ndarray, times:np.ndarray) -> np.ndarray:
@@ -59,19 +62,18 @@ class Model(AbstractModel):
         self._set_parameters(parameters)
 
         # duration is the last time point plus an increment to iclude the last time step.
-        result = self.simulation.run(duration=times[-1]+1, log=self.state_names, log_times = times)
+        result = self.simulation.run(duration=times[-1]+1, log=[self.state_name], log_times = times)
 
-        #return result.get(self.state_names[0])
-        return result[self.state_names[0]]
+        return result[self.state_name]
 
 
     def _set_parameters(self, parameters:np.ndarray) -> None:
         """Internal helper method to set the parameters of the forward model.
 
         Arguments:
-            parameters {np.ndarray} -- Parameters of the model. By convention [initial conditions, model parameters].
+            parameters {np.ndarray} -- Parameters of the model. By convention [initial condition, model parameters].
         """
-        self.simulation.set_state(parameters[:self.state_dimension])
-        for param_id, value in enumerate(parameters[self.state_dimension:]):
+        self.simulation.set_state(parameters[:1])
+        for param_id, value in enumerate(parameters[1:]):
             self.simulation.set_constant(self.parameter_names[param_id], value)
 
