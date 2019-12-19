@@ -26,5 +26,6 @@ PKPD.egg-info
 # PINTS
 pints
 
-# profiling output
-tests/model/profile_solve
+# profiling outputs
+tests/inference/profile_find_optimal_parameters
+

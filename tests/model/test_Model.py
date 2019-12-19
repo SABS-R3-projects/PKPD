@@ -75,6 +75,3 @@ class TestModel(unittest.TestCase):
         model_result = self.one_comp_model.simulate(parameters, times)
 
         assert np.equal(expected_result, model_result)
-
-
-
