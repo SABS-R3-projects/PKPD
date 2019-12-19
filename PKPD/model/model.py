@@ -3,14 +3,6 @@ import numpy as np
 
 from PKPD.model.abstractModel import AbstractModel
 
-### TODO for tomorrow:
-    # 1. test Model class
-    # 2. time performance (possible that there is no improvement, since single call)
-    # 3. connect this to inference class and see whether it works faster now
-    # 4. write abstractMode class
-    # 5. document everything
-    # 6. move on to MCMC sampling
-
 
 class Model(AbstractModel):
     """Model class inheriting from pints.ForwardModel. To solve the forward problem methods from the
