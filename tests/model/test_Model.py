@@ -1,76 +1,77 @@
 import unittest
-from PKPD.model import model
-import matplotlib.pyplot as plt
+
 import myokit
 import numpy as np
-import os
+
+from PKPD.model import model as m
+
 
 
 class TestModel(unittest.TestCase):
-
+    """Tests the functionality of all methods of the Model class.
+    """
+    # Test case I: 1-compartment model
     file_name = 'PKPD/mmt/one_compartment.mmt'
-    models = model.Model()
+    one_comp_model = m.Model(file_name)
 
-    def setUp(self) -> None:
-        self.models.mmtfile = 'PKPD/mmt/one_compartment.mmt'
-        self.models.read_mmt_file()
+    def test_init(self):
+        """Tests whether the Model class initialises as expected.
+        """
+        # Test case I: 1-compartment model
+        ## expected:
+        state_dimension = 1
+        state_names = ['bolus.y_c']
+        parameter_names = ['param.CL', 'param.V_c']
+        number_model_parameters = 2
+        number_parameters_to_fit = 3
 
-    def test_read_mmt_file(self):
-        self.assertTrue(self.models.initial_values)
-        self.assertTrue(self.models.central_compartment_name)
-        self.assertEqual(self.models.dimension, len(self.models.initial_values))
-        self.assertTrue(type(self.models.params) is dict)
+        ## assert initilised values coincide
+        assert state_dimension == self.one_comp_model.state_dimension
+        for state_id, state in enumerate(self.one_comp_model.state_names):
+            assert state_names[state_id] == state
+        for parameter_id, parameter in enumerate(self.one_comp_model.parameter_names):
+            assert parameter_names[parameter_id] == parameter
+        assert number_model_parameters == self.one_comp_model.number_model_parameters
+        assert number_parameters_to_fit == self.one_comp_model.number_parameters_to_fit
 
-    def test_set_get_mmt_file(self):
-        self.models.set_mmt_file('test')
-        self.assertTrue(self.models.mmtfile == 'test')
-        self.assertEqual(self.models.get_mmt_file(), 'test')
+    def test_n_parameters(self):
+        """Tests whether the n_parameter method returns the correct number of fit parameters.
+        """
+        # Test case I: 1-compartment model
+        ## expected
+        n_parameters = 3
 
-    def test_set_get_initial_values(self):
-        vals = self.models.get_initial_values()
-        new_vals = list(range(0,len(vals)))
-        self.models.set_initial_values(new_vals)
-        self.assertEqual(self.models.initial_values, new_vals)
-        self.assertEqual(self.models.model.state(), new_vals)
+        ## assert correct number of parameters is returned.
+        assert n_parameters == self.one_comp_model.n_parameters()
 
-    def test_set_get_model(self):
-        self.assertTrue(type(self.models.model) == myokit._model_api.Model)
-        self.assertEqual([n.qname() for n in self.models._get_model().variables()], [n.qname() for n in myokit.load(self.models.mmtfile)[0].variables()])
+    def test_n_outputs(self):
+        """Tests whether the n_outputs method returns the correct number of outputs.
+        """
+        # Test case I: 1-compartment model
+        ## expected
+        n_outputs = 1
 
-    def test_set_get_protocol(self):
-        #self.models.set_protocol('model.mmt')
-        #self.assertTrue(print(self.models.protocol) == '[[protocol]]\n# Level  Start    Length   Period   Multiplier\n1.0      0.0      0.1      0.0      0')
-        pass #not required yet
+        ## assert correct number of outputs.
+        assert n_outputs == self.one_comp_model.n_outputs()
 
-    def test_set_get_params(self):
-        qname = 'param.CL'
-        value = 4.0
-        self.models.set_params({qname:value})
-        self.assertEqual(self.models.model.get(qname).eval(), value)
-        param_dict = {'param.CL': 4.0, 'param.V_c' : 5.0}
-        self.assertEqual(param_dict, self.models.get_params())
+    def test_simulate(self):
+        """Tests whether the simulate method works as expected. Tests implicitly also whether
+        the _set_parameters method works properly.
+        """
+        # Test case I: 1-compartment model
+        parameters = [20, 2, 4] # different from initialsed parameters
+        times = np.arange(25)
 
-    def test_solve(self):
-        #Checks Max Error Pre Spike < 1e-8
-        t = np.linspace(0.0, 24.0, 1000)
-        self.models.set_initial_values([25.0])
-        self.models.solve(25.0, log_times=t)
-        CL = self.models.params['param.CL']
-        Vc = self.models.params['param.V_c']
-        y = sum([25 * np.heaviside(t - 8.0 * i, 1) * np.exp(-CL * (t - 8.0 * i) / Vc) for i in range(0, 4)])
-        #y = 25.0*np.exp(-CL*t/Vc)
-        #solution_t = self.models.get_solution('engine.time')
-        solution_y = self.models.get_solution(self.models.central_compartment_name)
-        # plt.figure(1)
-        # plt.title('Numerical and Exact Solution')
-        # plt.plot(solution_t, solution_y, 'x')
-        # plt.plot(t, y)
-        # plt.legend(['Numerical', 'Exact'])
-        # plt.show()
-        error = np.abs(y - solution_y)
-        # plt.figure(2)
-        # plt.title('Solution Error [Heaviside spikes]')
-        # plt.plot(t, error)
-        # plt.show()
-        self.assertLess(np.max(error[:330]), 1e-8)
+        ## expected
+        model, protocol, _ = myokit.load(self.file_name)
+        model.set_state([parameters[0]])
+        model.set_value('param.CL', parameters[1])
+        model.set_value('param.V_c', parameters[2])
+        simulation = myokit.Simulation(model, protocol)
+        myokit_result = simulation.run(duration=times[-1]+1, log=['bolus.y_c'], log_times = times)
+        expected_result = np.array(myokit_result)
 
+        ## assert that Model.simulate returns the same result.
+        model_result = self.one_comp_model.simulate(parameters, times)
+
+        assert np.equal(expected_result, model_result)

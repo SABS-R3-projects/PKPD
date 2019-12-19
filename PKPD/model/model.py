@@ -1,83 +1,80 @@
-from PKPD.model.abstractModel import AbstractModel
 import myokit
+import numpy as np
+
+from PKPD.model.abstractModel import AbstractModel
+
+### TODO for tomorrow:
+    # 1. test Model class
+    # 2. time performance (possible that there is no improvement, since single call)
+    # 3. connect this to inference class and see whether it works faster now
+    # 4. write abstractMode class
+    # 5. document everything
+    # 6. move on to MCMC sampling
+
 
 class Model(AbstractModel):
-    def read_mmt_file(self):
-        # calls self.mmtfile to read
-        # sets variables: initial values, myokit model, protocol, parameters, units
+    """Model class inheriting from pints.ForwardModel. To solve the forward problem methods from the
+    myokit package are employed.
+    """
+    def __init__(self, mmtfile:str) -> None:
+        """Initialises the model class.
 
-        #Set up Myokit Model
-        self._set_model()
-
-        # List of Initial States
-        self.initial_values = self.model.state()
-
-        #Name of Central Compartment
-        self.central_compartment_name = next(self.model.states()).qname()
-
-        #Number of States
-        self.dimension = len(self.initial_values)
-
-        #Dictionary of Parameters
-        self.parameter_component_name = 'param'
-        self.params = {var.qname(): var.eval() for var in self.model.get(self.parameter_component_name).variables()}
-
-    def set_mmt_file(self, filename):
-        self.mmtfile = filename
-
-    def set_initial_values(self, initial_values):
+        Arguments:
+            mmtfile {str} -- Path to the mmtfile defining the model and the protocol.
         """
-        Sets initial values (state) in myokit model
-        :param initial_values: list
-        :return:
+        model, protocol, _ = myokit.load(mmtfile)
+        self.state_dimension = len(model.state())
+        if self.state_dimension > 1:
+            raise NotImplementedError('Currently only one dimensional states are suported.')
+        self.state_names = [next(model.states()).qname() for _ in range(self.state_dimension)]
+        # TODO: automate name 'param'
+        self.parameter_names = sorted([var.qname() for var in model.get('param').variables()])
+        self.number_model_parameters = len(self.parameter_names)
+        self.number_parameters_to_fit = self.state_dimension + self.number_model_parameters
+        self.simulation = myokit.Simulation(model, protocol)
+
+    def n_parameters(self) -> int:
+        """Returns the number of parameters of the model, i.e. initial conditions and model
+        parameters.
+
+        Returns:
+            int -- Number of parameters.
         """
-        #Update in MyokitModel
-        self.model.set_state(initial_values)
+        return self.number_parameters_to_fit
 
-        #Update in Attributes
-        self.initial_values = self.model.state()
+    def n_outputs(self) -> None:
+        """Returns the dimension of the state variable.
 
-    def _set_model(self):
-        self.model, self.protocol, _ = myokit.load(self.mmtfile)
-
-    def set_protocol(self, protocol):
+        Returns:
+            int -- Dimensionality of the output.
         """
-        :param protocol: myokit protocol object
-        :return:
+        return self.state_dimension
+
+    def simulate(self, parameters:np.ndarray, times:np.ndarray) -> np.ndarray:
+        """Solves the forward problem and returns the state values evaluated at the times provided.
+
+        Arguments:
+            parameters {np.ndarray} -- Parameters of the model. By convention [initial conditions, model parameters].
+            times {np.ndarray} -- Times at which states will be evaluated.
+        
+        Returns:
+            [np.ndarray] -- State values evaluated at provided times.
         """
-        self.protocol = protocol
+        self.simulation.reset()
+        self._set_parameters(parameters)
 
-    def set_params(self, params):
-        # Input as keyword args/dictionary? Output if incorrect?
-        for name, value in params.items():
-            if name in self.params: # check variable exists
-                self.params[name] = value # update attributes
-                self.model.set_value(name, value) # update model
+        # duration is the last time point plus an increment to iclude the last time step.
+        result = self.simulation.run(duration=times[-1]+1, log=self.state_names, log_times = times)
 
-    def get_mmt_file(self):
-        return self.mmtfile
+        return np.array(result)
 
-    def get_initial_values(self):
-        return self.initial_values
+    def _set_parameters(self, parameters:np.ndarray) -> None:
+        """Internal helper method to set the parameters of the forward model.
 
-    def _get_model(self):
-        return self.model
-
-    def get_protocol(self):
-       return self.protocol
-
-    def get_params(self):
-        # Could add function to return specific parameter?
-        return self.params
-
-    def solve(self, duration, log_times=None, abs_tol=1e-11, rel_tol=1e-11):
-
-        self.sim = myokit.Simulation(self.model, self.protocol)
-        self.sim.set_tolerance(abs_tol=abs_tol, rel_tol=rel_tol)
-        self.results = self.sim.run(duration, log_times=log_times)
-
-    def get_solution(self, state_name):
-        return self.results.get(state_name)
-
-
+        Arguments:
+            parameters {np.ndarray} -- Parameters of the model. By convention [initial conditions, model parameters].
+        """
+        self.simulation.set_state(parameters[:self.state_dimension])
+        for param_id, value in enumerate(parameters[self.state_dimension:]):
+            self.simulation.set_constant(self.parameter_names[param_id], value)
 

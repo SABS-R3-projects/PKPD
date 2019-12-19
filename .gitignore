@@ -28,3 +28,4 @@ pints
 
 # profiling outputs
 tests/inference/profile_find_optimal_parameters
+
