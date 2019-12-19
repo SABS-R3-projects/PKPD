@@ -69,9 +69,9 @@ class TestModel(unittest.TestCase):
         model.set_value('param.V_c', parameters[2])
         simulation = myokit.Simulation(model, protocol)
         myokit_result = simulation.run(duration=times[-1]+1, log=['bolus.y_c'], log_times = times)
-        expected_result = np.array(myokit_result)
+        expected_result = myokit_result.get('bolus.y_c')
 
         ## assert that Model.simulate returns the same result.
         model_result = self.one_comp_model.simulate(parameters, times)
 
-        assert np.equal(expected_result, model_result)
+        assert np.array_equal(expected_result, model_result)

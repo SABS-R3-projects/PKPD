@@ -33,6 +33,7 @@ class Model(AbstractModel):
         self.number_parameters_to_fit = self.state_dimension + self.number_model_parameters
         self.simulation = myokit.Simulation(model, protocol)
 
+
     def n_parameters(self) -> int:
         """Returns the number of parameters of the model, i.e. initial conditions and model
         parameters.
@@ -42,6 +43,7 @@ class Model(AbstractModel):
         """
         return self.number_parameters_to_fit
 
+
     def n_outputs(self) -> None:
         """Returns the dimension of the state variable.
 
@@ -49,6 +51,7 @@ class Model(AbstractModel):
             int -- Dimensionality of the output.
         """
         return self.state_dimension
+
 
     def simulate(self, parameters:np.ndarray, times:np.ndarray) -> np.ndarray:
         """Solves the forward problem and returns the state values evaluated at the times provided.
@@ -66,7 +69,9 @@ class Model(AbstractModel):
         # duration is the last time point plus an increment to iclude the last time step.
         result = self.simulation.run(duration=times[-1]+1, log=self.state_names, log_times = times)
 
-        return np.array(result)
+        #return result.get(self.state_names[0])
+        return result[self.state_names[0]]
+
 
     def _set_parameters(self, parameters:np.ndarray) -> None:
         """Internal helper method to set the parameters of the forward model.

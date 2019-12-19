@@ -28,9 +28,3 @@ class AbstractSingleOutputInverseProblem(object):
         """Returns the estimated parameters as well as their objective function score.
         """
         raise NotImplementedError
-
-    def set_max_unchanged_iterations(self):
-        """Sets convergence criterion of the optimisation method. Input is the maximum number of iterations
-        for which the objective score is allowed to remain unchanged to be considered being converged. It also
-        takes the precision when two number are considered to be unchanged.
-        """
