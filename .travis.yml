@@ -3,7 +3,9 @@ language: python
 python:
   - "3.6"      # current default Python on Travis CI
   - "3.7"
-  - "3.8"
+
+before_install:
+  - sudo apt-get install -y libsundials-serial-dev;
 
 before_install:
   - sudo apt-get install -y libsundials-serial-dev;
@@ -12,6 +14,10 @@ install:
   - pip install hypothesis
   # install dependencies.
   - pip install .
+
+# allow gui output
+services:
+  - xvfb
 
 script:
   - pytest
