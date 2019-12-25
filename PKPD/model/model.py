@@ -144,7 +144,7 @@ class MultiOutputModel(AbstractModel):
         for state in self.state_names:
             result.append(output[state])
 
-        return np.array(result)
+        return np.array(result).transpose()
 
 
     def _set_parameters(self, parameters:np.ndarray) -> None:
