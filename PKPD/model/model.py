@@ -58,7 +58,7 @@ class SingleOutputModel(AbstractModel):
             times {np.ndarray} -- Times at which states will be evaluated.
 
         Returns:
-            [np.ndarray] -- State values evaluated at provided times.
+            [array] -- State values evaluated at provided times.
         """
         self.simulation.reset()
         self._set_parameters(parameters)
