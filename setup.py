@@ -52,7 +52,7 @@ class PINTS_installer(Command):
 setup(
     # Module name (lowercase)
     name='PKPD',
-    version='0.1dev',
+    version='0.3dev0',
 
     # Description
     description='Pharmacokinetics and pharmacodynamics modelling interface.',
@@ -73,21 +73,17 @@ setup(
     },
 
     # Packages to include
-    packages=find_packages(include=('PKPD',)),
-
-    # install PINTS
-    #scripts=['setup_scripts/install_pints.py'],
+    packages=find_packages(include=('PKPD','PKPD.*')),
 
     # List of dependencies
     install_requires=[
         'cma>=2',
         'numpy>=1.8',
         'scipy>=0.14',
-        'pyqt5==5.9.2',
+        'pyqt5==5.9',
         'sympy',
         'matplotlib>=1.5',
         'myokit>=1.29',
         'tabulate',
-
     ]
 )

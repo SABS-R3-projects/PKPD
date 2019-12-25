@@ -2,9 +2,9 @@ import sys
 
 from PyQt5 import QtCore, QtWidgets
 
-from PKPD.gui.abstractGui import AbstractMainWindow
+from PKPD.gui import abstractGui, home #import AbstractMainWindow
 
-class MainWindow(AbstractMainWindow):
+class MainWindow(abstractGui.AbstractMainWindow):
     """MainWindow class which sets up the general geometry and layout of the GUI.
     """
     def __init__(self, app):
@@ -17,10 +17,13 @@ class MainWindow(AbstractMainWindow):
         self.aspect_ratio = 5 / 4 # subjective aesthetical choice
         self.available_geometry = app.desktop().availableGeometry()
         _, _, self.desktop_width, self.desktop_height = self.available_geometry.getRect()
-
         self.size = self.size()
-
         self._set_window_size()
+
+        # set geometry of window.
+        self.top_bar = QtWidgets.QMenuBar()
+        self.tab_view = None
+        self.bottom_bar = QtWidgets.QStatusBar()
 
 
     def _set_window_size(self):
@@ -50,10 +53,37 @@ class MainWindow(AbstractMainWindow):
         )
 
 
+    def _set_geometry(self):
+        """Method which sets the layout of the main window"""
+        self._set_tab_structure()
+        self.setMenuBar(self.top_bar)
+        self.setCentralWidget(self.tab_view)
+        self.setStatusBar(self.bottom_bar)
+        # we can add more stuff here once the Program gets more complicated
+
+
+    def _set_tab_structure(self):
+        """Method which sets the structure of tabs within the window"""
+        self.tab_view = QtWidgets.QTabWidget()
+        for tab in self.tabs:
+            self.tab_view.addTab(tab, tab.name)
+
 
 if __name__ == '__main__':
 
+    # Create window instance
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow(app)
+
+    # add some content
+    window.top_bar.addMenu('File')
+    tab1, tab2 = home.TestTab("Model"), home.TestTab("Simulation")
+    window.tabs = [tab1, tab2]
+    version_number = QtWidgets.QLabel('Version: 0.0.0')
+    window.bottom_bar.addWidget(version_number)
+    window._set_geometry()
+    window.setWindowTitle('PKPD')
+
+    # show window
     window.show()
     sys.exit(app.exec_())
