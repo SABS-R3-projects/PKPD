@@ -52,7 +52,7 @@ class PINTS_installer(Command):
 setup(
     # Module name (lowercase)
     name='PKPD',
-    version='0.3dev0',
+    version='0.0dev0',
 
     # Description
     description='Pharmacokinetics and pharmacodynamics modelling interface.',
