@@ -134,9 +134,9 @@ class TestMultiOutputModel(unittest.TestCase):
         simulation = myokit.Simulation(model, protocol)
         myokit_result = simulation.run(duration=times[-1]+1, log=['bolus.y_c'], log_times = times)
         expected_result = myokit_result.get('bolus.y_c')
-        np_expected_result = np.array([expected_result]) # in MultiOutputModel results are stored in 2d array.
+        np_expected_result = np.array(expected_result)[:, np.newaxis] # in MultiOutputModel results are stored in 2d array.
 
         ## assert that Model.simulate returns the same result.
         model_result = self.one_comp_model.simulate(parameters, times)
-
-        assert np.array_equal(np_expected_result, model_result)
+   
+        assert np.allclose(np_expected_result, model_result)
