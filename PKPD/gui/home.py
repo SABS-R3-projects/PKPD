@@ -5,7 +5,7 @@ from PKPD.gui import abstractGui, mainWindow
 class HomeTab(abstractGui.AbstractHomeTab):
     """HomeTab class responsible for model and data management.
     """
-    def __init__(self, main_window:mainWindow.MainWindow):
+    def __init__(self, main_window):
         """Initialises the home tab.
         """
         super().__init__()

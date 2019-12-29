@@ -12,12 +12,15 @@ class MainWindow(abstractGui.AbstractMainWindow):
         """Initialises the main window.
         """
         super().__init__()
+        self.app = app
         self.window_title = 'Pharmacokinetics/Pharmacodynamics'
         self.version_number = QtWidgets.QLabel('Version: 0.0.0')
         self.producers = QtWidgets.QLabel('SABS R3')
         # variables needed across tabs
         self.model_file = None
         self.data_file = None
+        self.available_geometry = self.app.desktop().availableGeometry()
+        _, _, self.desktop_width, self.desktop_height = self.available_geometry.getRect()
         # set window size.
         self._set_window_size()
         # format icons/images
@@ -33,8 +36,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
         """
         width_coverage = 0.75 # subjective aesthetical choice
         aspect_ratio = 5 / 4 # subjective aesthetical choice
-        available_geometry = app.desktop().availableGeometry()
-        _, _, self.desktop_width, self.desktop_height = available_geometry.getRect()
 
         # sanity check
         if (self.desktop_width < 1) or (self.desktop_height < 1):
@@ -57,7 +58,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
             QtCore.Qt.LeftToRight,
             QtCore.Qt.AlignCenter,
             size,
-            available_geometry
+            self.available_geometry
             )
         )
 
