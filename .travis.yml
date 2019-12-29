@@ -7,11 +7,7 @@ python:
 before_install:
   - sudo apt-get install -y libsundials-serial-dev;
 
-before_install:
-  - sudo apt-get install -y libsundials-serial-dev;
-
 install:
-  - pip install hypothesis
   # install dependencies.
   - pip install .
 
