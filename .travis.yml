@@ -20,4 +20,4 @@ services:
   - xvfb
 
 script:
-  - pytest
+  - unittest
