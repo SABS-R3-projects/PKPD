@@ -97,7 +97,8 @@ class MultiOutputModel(AbstractModel):
             Warning(
                 'The output seems to be one-dimensional. For efficiency you might want to try a SingleOutputProblem instead.'
                 )
-        self.state_names = [next(model.states()).qname() for _ in range(self.state_dimension)]
+        model_states = model.states()
+        self.state_names = [next(model_states).qname() for _ in range(self.state_dimension)]
         # TODO: automate name 'param'
         self.parameter_names = sorted([var.qname() for var in model.get('param').variables()])
         self.number_model_parameters = len(self.parameter_names)

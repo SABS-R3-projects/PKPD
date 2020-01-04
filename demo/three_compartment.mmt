@@ -1,0 +1,42 @@
+# Three compartment example model.
+
+[[model]]
+name: Test PKPD three-compartment model.
+
+# Initial values
+SubcutaneousDosing.y0 = 10
+SubcutaneousDosing.y1 = 0
+SubcutaneousDosing.y2 = 0
+SubcutaneousDosing.y3 = 0
+
+[engine]
+repeat_dose_rate = 0 bind pace
+time = 0 bind time
+
+[SubcutaneousDosing]
+use param.ka as ka
+use param.CL as CL
+use param.Vc as Vc
+use param.Vp1 as Vp1
+use param.Vp2 as Vp2
+use param.Qp1 as Qp1
+use param.Qp2 as Qp2
+
+dot(y0) = engine.repeat_dose_rate - ka * y0
+dot(y1) = ka * y0 - y1 * CL / Vc - Qp1 * (y1 / Vc - y2 / Vp1) - Qp2 * (y1 / Vc - y3 / Vp2)
+dot(y2) = Qp1 * (y1 / Vc - y2 / Vp1)
+dot(y3) = Qp2 * (y1 / Vc - y3 / Vp2)
+
+[param]
+CL = 0.2 [mL/h]
+Qp1 = 2 [mL/h]
+Qp2 = 10 [mL/h]
+Vc = 10 [mL]
+Vp1 = 5 [mL]
+Vp2 = 1 [mL]
+ka = 0.3 [1/h]
+
+[[protocol]]
+## Perdiodic dosing
+# Level  Start    Length   Period   Multiplier
+20.0      10.0       0.1      8         3

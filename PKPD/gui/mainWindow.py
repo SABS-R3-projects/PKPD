@@ -139,12 +139,15 @@ class MainWindow(abstractGui.AbstractMainWindow):
             # plot data in simulation tab
             self.simulation.add_data_to_data_model_plot()
             # instantiate model and inverse problem
-            self.model = m.SingleOutputModel(self.model_file)
-            self.problem = inf.SingleOutputInverseProblem(model=self.model,
-                                                          times=self.simulation.time_data,
-                                                          values=self.simulation.state_data)
-            self.simulation.create_parameter_sliders()
-            self.simulation.create_parameter_table()
+            # TODO: uncomment below
+
+            # self.model = m.SingleOutputModel(self.model_file)
+            # self.problem = inf.SingleOutputInverseProblem(model=self.model,
+            #                                               times=self.simulation.time_data,
+            #                                               values=self.simulation.state_data)
+            # self.simulation.create_parameter_sliders()
+            # self.simulation.create_parameter_table()
+
             # switch to simulation tab
             self.tabs.setCurrentIndex(self.sim_tab_index)
         else:
@@ -203,11 +206,9 @@ class SimulationTab(QtWidgets.QDialog):
         self.parameter_values = None
 
         # a figure instance to plot on
-        data_model_figure = Figure()
-        self.data_model_ax = data_model_figure.add_subplot(111)
-        # this is the Canvas Widget that displays the `figure`
-        # it takes the `figure` instance as a parameter to __init__
-        self.canvas = FigureCanvas(data_model_figure)
+        self.data_model_figure = Figure()
+        # this is the Canvas Widget that displays the figure
+        self.canvas = FigureCanvas(self.data_model_figure)
 
         # set the layout
         layout = QtWidgets.QHBoxLayout()
@@ -216,24 +217,45 @@ class SimulationTab(QtWidgets.QDialog):
         self.setLayout(layout)
 
     def add_data_to_data_model_plot(self):
-        # TODO: so far only 1d models can be handeled.
         # load data
         data = pd.read_csv(self.main_window.data_file)
-        # sort into time and state data
-        time_label, state_label = data.keys()[0], data.keys()[1]
-        self.time_data = data[time_label].to_numpy()
-        self.state_data = data[state_label].to_numpy()
-        # plot data
-        # TODO: add separate different compartments into different subplots
-        self.data_model_ax.clear()
-        self.data_model_ax.scatter(x=self.time_data, y=self.state_data, label='data', marker='o', color='darkgreen', edgecolor='black',
-                   alpha=0.5)
-        self.data_model_ax.set_xlabel(time_label)
-        self.data_model_ax.set_ylabel(state_label)
-        self.data_model_ax.legend()
+        time_label, state_labels = data.keys()[0], data.keys()[1:]
+        self.state_dimension = len(state_labels)
+        print(time_label)
+        print(state_labels)
+        print(self.state_dimension)
 
-        # refresh canvas
-        self.canvas.draw()
+        # sort into time and state data
+        self.time_data = data[time_label].to_numpy()
+        if self.state_dimension == 1:
+            state_label = state_labels[0]
+            self.state_data = data[state_label].to_numpy()
+        else:
+            self.state_data = data[state_labels].to_numpy()
+
+        # plot data
+        if self.state_dimension == 1:
+            self.data_model_ax = self.data_model_figure.subplots()
+            self.data_model_ax.clear()
+            self.data_model_ax.scatter(x=self.time_data, y=self.state_data, label='data', marker='o', color='darkgreen', edgecolor='black',
+                                       alpha=0.5)
+            self.data_model_ax.set_xlabel(time_label)
+            self.data_model_ax.set_ylabel(state_label)
+            self.data_model_ax.legend()
+
+            # refresh canvas
+            self.canvas.draw()
+        else:
+            self.data_model_ax = self.data_model_figure.subplots(nrows=self.state_dimension, sharex=True)
+            for dim in range(self.state_dimension):
+                self.data_model_ax[dim].scatter(x=self.time_data, y=self.state_data[:, dim], label='data', marker='o', color='darkgreen', edgecolor='black',
+                                                alpha=0.5)
+                self.data_model_ax[dim].set_ylabel(state_labels[dim])
+                self.data_model_ax[dim].legend()
+            self.data_model_ax[-1].set_xlabel(time_label)
+
+            # refresh canvas
+            self.canvas.draw()
 
 
     def infer_plot_model(self):
@@ -265,6 +287,7 @@ class SimulationTab(QtWidgets.QDialog):
 
         # fill up grid with slider objects
         self.slider_container = [] # store in to list to be able to update later individually
+        self.slider_min_max_label_container = []
         self.parameter_text_field_container = []
         for param_id, param_name in enumerate(parameter_names):
             self.parameter_sliders.addWidget(self._create_slider(param_name), param_id, 0)
@@ -278,8 +301,8 @@ class SimulationTab(QtWidgets.QDialog):
         # make horizontal slider
         slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         slider.setTickPosition(QtWidgets.QSlider.TicksBothSides)
-        slider.setTickInterval(10)
-        slider.setSingleStep(1)
+        # slider.setTickInterval(1)
+        # slider.setSingleStep(1)
         # keep track of slider by adding it to container
         self.slider_container.append(slider)
         # create labels
@@ -299,9 +322,10 @@ class SimulationTab(QtWidgets.QDialog):
         slider = self.slider_container[-1]
         min_value = QtWidgets.QLabel('0')
         text_field = QtWidgets.QLineEdit(str(slider.value()))
-        max_value = QtWidgets.QLabel('10')
-        # keep track of parameter values
+        max_value = QtWidgets.QLabel('99')
+        # keep track of parameter values and min max labels
         self.parameter_text_field_container.append(text_field)
+        self.slider_min_max_label_container.append([min_value, max_value])
 
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(min_value)
@@ -314,7 +338,6 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _update_parameter_values(self):
-        # for lack of creativity just update all parameters
         for slider_id, slider in enumerate(self.slider_container):
             self.parameter_values[slider_id] = slider.value()
             self.parameter_text_field_container[slider_id].setText(str(self.parameter_values[slider_id]))
@@ -382,9 +405,6 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     # TODO:
-    # - make infered parameters visible somewhere
-    # - display correct min and max value
-    # - let inference start from chosen parameter values
     # - create double click option to adjust range of slider
     #   and tick option whether range is supposed to constrain inference
     # - create warning when infer parameters is clicked multiple times
@@ -402,7 +422,11 @@ class SimulationTab(QtWidgets.QDialog):
         self.enable_live_plotting = False
 
         # TODO: make this compatible with multi-output models
-        initial_parameters = np.array([25, 3, 5])
+        # get initial parameters from slider text fields
+        initial_parameters = []
+        for parameter_text_field in self.parameter_text_field_container:
+            value = float(parameter_text_field.text())
+            initial_parameters.append(value) # Note: order of text fields matches order of params in inverse problem
 
         # find parameters
         self.main_window.problem.find_optimal_parameter(initial_parameter=initial_parameters)
