@@ -144,6 +144,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                                                           times=self.simulation.time_data,
                                                           values=self.simulation.state_data)
             self.simulation.create_parameter_sliders()
+            self.simulation.create_parameter_table()
             # switch to simulation tab
             self.tabs.setCurrentIndex(self.sim_tab_index)
         else:
@@ -237,25 +238,30 @@ class SimulationTab(QtWidgets.QDialog):
 
     def infer_plot_model(self):
         #TODO: make sliders and plot button
-        # initialise sliders, 'plot model' and 'infer model' button
+        # initialise sliders, 'plot model' button,'infer model' button and
+        # infered parameters table
         self.parameter_sliders = QtWidgets.QGridLayout()
         plot_button = QtWidgets.QPushButton('plot model')
         plot_button.clicked.connect(self.on_plot_model_click)
         infer_button = QtWidgets.QPushButton('infer model')
         infer_button.clicked.connect(self.on_infer_model_click)
+        self.infered_parameter_table = QtWidgets.QTableWidget()
 
         # arange plot and widgets vertically
         vertical_layout = QtWidgets.QVBoxLayout()
         vertical_layout.addLayout(self.parameter_sliders)
         vertical_layout.addWidget(plot_button)
         vertical_layout.addWidget(infer_button)
+        vertical_layout.addWidget(self.infered_parameter_table)
 
         return vertical_layout
 
 
     def create_parameter_sliders(self):
         # TODO: replace internal parameter names by description.
-        parameter_names = self.main_window.model.parameter_names
+        state_name = self.main_window.model.state_name
+        model_param_names = self.main_window.model.parameter_names
+        parameter_names = [state_name] + model_param_names
 
         # fill up grid with slider objects
         self.slider_container = [] # store in to list to be able to update later individually
@@ -317,6 +323,29 @@ class SimulationTab(QtWidgets.QDialog):
             self._plot_model()
 
 
+    def create_parameter_table(self):
+        # get fit parameter names
+        state_name = self.main_window.model.state_name
+        model_param_names = self.main_window.model.parameter_names
+        parameter_names = [state_name] + model_param_names
+        number_parameters = len(parameter_names)
+
+        # fill up table with parameter columns (name and empty cell)
+        self.infered_parameter_table.setRowCount(1)
+        self.infered_parameter_table.setColumnCount(number_parameters)
+        for param_id, param_name in enumerate(parameter_names):
+            self.infered_parameter_table.setHorizontalHeaderItem(param_id, QtWidgets.QTableWidgetItem(param_name))
+            self.infered_parameter_table.setItem(0, param_id, QtWidgets.QTableWidgetItem(''))
+
+        # set height and width of table to fit the content
+        header_height = self.infered_parameter_table.horizontalHeader().height()
+        cell_height = self.infered_parameter_table.rowHeight(0)
+        self.infered_parameter_table.setMaximumHeight(header_height + cell_height)
+        header_width = self.infered_parameter_table.verticalHeader().width()
+        cell_width = self.infered_parameter_table.columnWidth(0)
+        self.infered_parameter_table.setMaximumWidth(header_width + number_parameters * cell_width)
+
+
     def _plot_model(self):
         self.state_values = self.main_window.model.simulate(parameters=self.parameter_values,
                                                             times=self.times
@@ -358,6 +387,10 @@ class SimulationTab(QtWidgets.QDialog):
     # - let inference start from chosen parameter values
     # - create double click option to adjust range of slider
     #   and tick option whether range is supposed to constrain inference
+    # - create warning when infer parameters is clicked multiple times
+    # - if yes delete infered model and do inference again
+    # - create warning when plot model is clicked without having
+    #   adjusted the model parameters.
     # - fix the window size, such that slider doesnt affect window
 
 
@@ -378,6 +411,9 @@ class SimulationTab(QtWidgets.QDialog):
         # plot infered model
         self._plot_infered_model()
 
+        # update parameter table
+        self._update_parameter_table()
+
 
 
     def _plot_infered_model(self):
@@ -393,6 +429,11 @@ class SimulationTab(QtWidgets.QDialog):
 
         # refresh canvas
         self.canvas.draw()
+
+
+    def _update_parameter_table(self):
+        for param_id, param_value in enumerate(self.estimated_parameters):
+            self.infered_parameter_table.item(0, param_id).setText('%.3f' % param_value)
 
 
 ###################################################################################
