@@ -138,15 +138,23 @@ class MainWindow(abstractGui.AbstractMainWindow):
         if correct_model and correct_data:
             # plot data in simulation tab
             self.simulation.add_data_to_data_model_plot()
-            # instantiate model and inverse problem
-            # TODO: uncomment below
+            # disable live plotting and line removal for the simulation
+            self.simulation.enable_live_plotting = False
+            self.simulation.enable_line_removal = False
 
-            # self.model = m.SingleOutputModel(self.model_file)
-            # self.problem = inf.SingleOutputInverseProblem(model=self.model,
-            #                                               times=self.simulation.time_data,
-            #                                               values=self.simulation.state_data)
-            # self.simulation.create_parameter_sliders()
-            # self.simulation.create_parameter_table()
+            # instantiate model and inverse problem
+            if self.simulation.is_single_output_model:
+                self.model = m.SingleOutputModel(self.model_file)
+                self.problem = inf.SingleOutputInverseProblem(model=self.model,
+                                                              times=self.simulation.time_data,
+                                                              values=self.simulation.state_data)
+            else:
+                self.model = m.MultiOutputModel(self.model_file)
+                self.problem = inf.MultiOutputInverseProblem(model=self.model,
+                                                             times=self.simulation.time_data,
+                                                             values=self.simulation.state_data)
+            self.simulation.fill_parameter_slider_group()
+            self.simulation.create_parameter_table()
 
             # switch to simulation tab
             self.tabs.setCurrentIndex(self.sim_tab_index)
@@ -203,107 +211,137 @@ class SimulationTab(QtWidgets.QDialog):
         self.name = 'Simulation'
         self.main_window = main_window
         self.enable_live_plotting = False
+        self.enable_line_removal = False
+        self.is_single_output_model = True
         self.parameter_values = None
 
         # a figure instance to plot on
         self.data_model_figure = Figure()
-        # this is the Canvas Widget that displays the figure
+        # this is the canvas widget that displays the figure
         self.canvas = FigureCanvas(self.data_model_figure)
 
         # set the layout
         layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.canvas)
-        layout.addLayout(self.infer_plot_model())
+        layout.addLayout(self._init_plot_infer_model_group())
         self.setLayout(layout)
+
 
     def add_data_to_data_model_plot(self):
         # load data
         data = pd.read_csv(self.main_window.data_file)
         time_label, state_labels = data.keys()[0], data.keys()[1:]
+        # check dimensionality of problem for plotting and inference
         self.state_dimension = len(state_labels)
-        print(time_label)
-        print(state_labels)
-        print(self.state_dimension)
-
+        self.is_single_output_model = self.state_dimension == 1
         # sort into time and state data
         self.time_data = data[time_label].to_numpy()
-        if self.state_dimension == 1:
+        if self.is_single_output_model:
             state_label = state_labels[0]
             self.state_data = data[state_label].to_numpy()
         else:
             self.state_data = data[state_labels].to_numpy()
-
         # plot data
-        if self.state_dimension == 1:
+        if self.is_single_output_model: # single output
+            # clear figure
+            self.data_model_figure.clf()
+            # create plot
             self.data_model_ax = self.data_model_figure.subplots()
-            self.data_model_ax.clear()
-            self.data_model_ax.scatter(x=self.time_data, y=self.state_data, label='data', marker='o', color='darkgreen', edgecolor='black',
-                                       alpha=0.5)
+            self.data_model_ax.scatter(x=self.time_data, y=self.state_data, label='data', marker='o', color='darkgreen',
+                                       edgecolor='black', alpha=0.5)
             self.data_model_ax.set_xlabel(time_label)
             self.data_model_ax.set_ylabel(state_label)
             self.data_model_ax.legend()
-
             # refresh canvas
             self.canvas.draw()
-        else:
+        else: # multi output
+            # clear figure
+            self.data_model_figure.clf()
+            # create subplots for each compartment
             self.data_model_ax = self.data_model_figure.subplots(nrows=self.state_dimension, sharex=True)
             for dim in range(self.state_dimension):
-                self.data_model_ax[dim].scatter(x=self.time_data, y=self.state_data[:, dim], label='data', marker='o', color='darkgreen', edgecolor='black',
-                                                alpha=0.5)
+                self.data_model_ax[dim].scatter(x=self.time_data, y=self.state_data[:, dim], label='data', marker='o',
+                                                color='darkgreen', edgecolor='black', alpha=0.5)
                 self.data_model_ax[dim].set_ylabel(state_labels[dim])
                 self.data_model_ax[dim].legend()
             self.data_model_ax[-1].set_xlabel(time_label)
-
             # refresh canvas
             self.canvas.draw()
 
 
-    def infer_plot_model(self):
-        #TODO: make sliders and plot button
-        # initialise sliders, 'plot model' button,'infer model' button and
-        # infered parameters table
-        self.parameter_sliders = QtWidgets.QGridLayout()
+    def _init_plot_infer_model_group(self):
+        # initialise sliders, 'plot model' button,'infer model' button and inferred parameters table
+        slider_group = self._initialise_slider_group()
         plot_button = QtWidgets.QPushButton('plot model')
         plot_button.clicked.connect(self.on_plot_model_click)
         infer_button = QtWidgets.QPushButton('infer model')
         infer_button.clicked.connect(self.on_infer_model_click)
-        self.infered_parameter_table = QtWidgets.QTableWidget()
+        self.inferred_parameter_table = QtWidgets.QTableWidget()
 
-        # arange plot and widgets vertically
-        vertical_layout = QtWidgets.QVBoxLayout()
-        vertical_layout.addLayout(self.parameter_sliders)
-        vertical_layout.addWidget(plot_button)
-        vertical_layout.addWidget(infer_button)
-        vertical_layout.addWidget(self.infered_parameter_table)
+        # arrange widgets vertically
+        vbox = QtWidgets.QVBoxLayout()
+        vbox.addWidget(slider_group)
+        vbox.addWidget(plot_button)
+        vbox.addWidget(infer_button)
+        vbox.addWidget(self.inferred_parameter_table)
 
-        return vertical_layout
+        return vbox
 
 
-    def create_parameter_sliders(self):
+    def _initialise_slider_group(self):
+        # initialise slider group widget that is scrollable
+        slider_group = QtWidgets.QGroupBox()
+        # initialise grid to arrange sliders vertically
+        self.parameter_sliders = QtWidgets.QGridLayout()
+        # add grid layout to slider group
+        slider_group.setLayout(self.parameter_sliders)
+        # make slider group scrollable, such that window is never exceeded
+        scroll = QtWidgets.QScrollArea()
+        scroll.setWidget(slider_group)
+        scroll.setWidgetResizable(True)
+        # fix vertical space that sliders can take up
+        height = 0.7 * self.main_window.height
+        scroll.setFixedHeight(height)
+
+        return scroll
+
+
+    def fill_parameter_slider_group(self):
+        self._clear_slider_group()
         # TODO: replace internal parameter names by description.
-        state_name = self.main_window.model.state_name
+        # get parameter names
+        if self.is_single_output_model:
+            state_names = [self.main_window.model.state_name]
+        else:
+            state_names = self.main_window.model.state_names
         model_param_names = self.main_window.model.parameter_names
-        parameter_names = [state_name] + model_param_names
-
+        parameter_names = state_names + model_param_names
         # fill up grid with slider objects
-        self.slider_container = [] # store in to list to be able to update later individually
+        self.slider_container = [] # store in list to be able to update later
         self.slider_min_max_label_container = []
         self.parameter_text_field_container = []
         for param_id, param_name in enumerate(parameter_names):
             self.parameter_sliders.addWidget(self._create_slider(param_name), param_id, 0)
-
-        # container to store parameter values
+        # init container to store parameter values
         self.parameter_values = np.empty(len(self.parameter_text_field_container))
+
+
+    def _clear_slider_group(self):
+        number_items_in_group = self.parameter_sliders.count()
+        for item_id in range(number_items_in_group):
+            # setting an items parent to None deletes it, according to stackoverflow
+            self.parameter_sliders.itemAtPosition(item_id, 0).widget().setParent(None)
 
 
     def _create_slider(self, parameter_name):
         slider_box = QtWidgets.QGroupBox(parameter_name)
         # make horizontal slider
         slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        slider.setMinimum(0.1) # arbitrary choice
+        slider.setValue(1) # default arbitrary, but it seems reasonable to avoid zero
+        slider.setMaximum(30) # arbitrary choice
         slider.setTickPosition(QtWidgets.QSlider.TicksBothSides)
-        # slider.setTickInterval(1)
-        # slider.setSingleStep(1)
-        # keep track of slider by adding it to container
+        # keep track of sliders
         self.slider_container.append(slider)
         # create labels
         min_current_max_value = self._display_min_current_max_value()
@@ -319,14 +357,16 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _display_min_current_max_value(self):
+        # get slider object
         slider = self.slider_container[-1]
-        min_value = QtWidgets.QLabel('0')
+        # create min/max labels and text field for current value
+        min_value = QtWidgets.QLabel(str(slider.minimum())) # default value arbitrary
         text_field = QtWidgets.QLineEdit(str(slider.value()))
-        max_value = QtWidgets.QLabel('99')
+        max_value = QtWidgets.QLabel(str(slider.maximum())) # default value arbitrary
         # keep track of parameter values and min max labels
         self.parameter_text_field_container.append(text_field)
         self.slider_min_max_label_container.append([min_value, max_value])
-
+        # arrange widgets horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(min_value)
         hbox.addStretch(1)
@@ -338,109 +378,145 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _update_parameter_values(self):
+        # let slider text fields display current values
         for slider_id, slider in enumerate(self.slider_container):
             self.parameter_values[slider_id] = slider.value()
-            self.parameter_text_field_container[slider_id].setText(str(self.parameter_values[slider_id]))
-
-        if self.enable_live_plotting:
-            self._plot_model()
-
-
-    def create_parameter_table(self):
-        # get fit parameter names
-        state_name = self.main_window.model.state_name
-        model_param_names = self.main_window.model.parameter_names
-        parameter_names = [state_name] + model_param_names
-        number_parameters = len(parameter_names)
-
-        # fill up table with parameter columns (name and empty cell)
-        self.infered_parameter_table.setRowCount(1)
-        self.infered_parameter_table.setColumnCount(number_parameters)
-        for param_id, param_name in enumerate(parameter_names):
-            self.infered_parameter_table.setHorizontalHeaderItem(param_id, QtWidgets.QTableWidgetItem(param_name))
-            self.infered_parameter_table.setItem(0, param_id, QtWidgets.QTableWidgetItem(''))
-
-        # set height and width of table to fit the content
-        header_height = self.infered_parameter_table.horizontalHeader().height()
-        cell_height = self.infered_parameter_table.rowHeight(0)
-        self.infered_parameter_table.setMaximumHeight(header_height + cell_height)
-        header_width = self.infered_parameter_table.verticalHeader().width()
-        cell_width = self.infered_parameter_table.columnWidth(0)
-        self.infered_parameter_table.setMaximumWidth(header_width + number_parameters * cell_width)
+            self.parameter_text_field_container[slider_id].setText('%d' % self.parameter_values[slider_id])
+        # plot model if live plotting is enabled
+        if self.enable_live_plotting and self.is_single_output_model:
+            self._plot_single_output_model()
+        elif self.enable_live_plotting and not self.is_single_output_model:
+            self._plot_multi_output_model()
 
 
-    def _plot_model(self):
+    @QtCore.pyqtSlot()
+    def on_plot_model_click(self):
+        # enable live plotting with sliders
+        self.enable_live_plotting = True
+        # define time points for evaluation
+        self.times = np.linspace(start=self.time_data[0],
+                                 stop=self.time_data[-1],
+                                 num=100
+                                 )
+        # get current parameters from sliders
+        for param_id, param_text_field in enumerate(self.parameter_text_field_container):
+            self.parameter_values[param_id] = float(param_text_field.text())
+        # plot model
+        if self.is_single_output_model:
+            self._plot_single_output_model()
+        else:
+            self._plot_multi_output_model()
+        # enable removal of plots to prevent fludding of figure
+        self.enable_line_removal = True
+
+
+    def _plot_single_output_model(self):
+        # solve forward problem for current parameter set
         self.state_values = self.main_window.model.simulate(parameters=self.parameter_values,
                                                             times=self.times
                                                             )
+        # remove previous graph to avoid fludding the figure
         if self.enable_line_removal:
             self.data_model_ax.lines.pop()
-        # plot current values
+        # plot model
         self.data_model_ax.plot(self.times, self.state_values, linestyle='dashed', color='grey')
         # refresh canvas
         self.canvas.draw()
 
 
-    @QtCore.pyqtSlot()
-    def on_plot_model_click(self):
-        # define time points for evaluation and container for simulation
-        self.times = np.linspace(start=self.time_data[0],
-                            stop=self.time_data[-1],
-                            num=100
-                            )
-        for param_id, param_text_field in enumerate(self.parameter_text_field_container):
-            self.parameter_values[param_id] = float(param_text_field.text())
-        self.state_values = np.empty(len(self.times))
-
-        # enable live plotting with sliders
-        self.enable_live_plotting = True
-        # disable removal of previous line (either there is none or its the infered model)
-        self.enable_line_removal = False
-
+    def _plot_multi_output_model(self):
+        # solve forward problem for current parameter set
+        self.state_values = self.main_window.model.simulate(parameters=self.parameter_values,
+                                                            times=self.times
+                                                            )
+        # remove previous graphs from subplots to avoid fludding the figure
+        if self.enable_line_removal:
+            for dim in range(self.state_dimension):
+                self.data_model_ax[dim].lines.pop()
         # plot model
-        self._plot_model()
-
-        # enable removal of plots again to prevent fludding of figure
-        self.enable_line_removal = True
-
-
-    # TODO:
-    # - create double click option to adjust range of slider
-    #   and tick option whether range is supposed to constrain inference
-    # - create warning when infer parameters is clicked multiple times
-    # - if yes delete infered model and do inference again
-    # - create warning when plot model is clicked without having
-    #   adjusted the model parameters.
-    # - fix the window size, such that slider doesnt affect window
+        for dim in range(self.state_dimension):
+            self.data_model_ax[dim].plot(self.times, self.state_values[:, dim], linestyle='dashed', color='grey')
+        # refresh canvas
+        self.canvas.draw()
 
 
+    def create_parameter_table(self):
+        # get fit parameter names
+        if self.is_single_output_model:
+            state_names = [self.main_window.model.state_name]
+        else:
+            state_names = self.main_window.model.state_names
+        model_param_names = self.main_window.model.parameter_names
+        parameter_names = state_names + model_param_names
+        number_parameters = len(parameter_names)
+        # fill up table with parameter columns (name and empty cell)
+        self.inferred_parameter_table.setRowCount(1)
+        self.inferred_parameter_table.setColumnCount(number_parameters)
+        for param_id, param_name in enumerate(parameter_names):
+            self.inferred_parameter_table.setHorizontalHeaderItem(param_id, QtWidgets.QTableWidgetItem(param_name))
+            self.inferred_parameter_table.setItem(0, param_id, QtWidgets.QTableWidgetItem(''))
+
+        # set height and width of table to fit the content
+        header_height = self.inferred_parameter_table.horizontalHeader().height()
+        cell_height = self.inferred_parameter_table.rowHeight(0)
+        self.inferred_parameter_table.setMaximumHeight(header_height + cell_height)
+        header_width = self.inferred_parameter_table.verticalHeader().width()
+        cell_width = self.inferred_parameter_table.columnWidth(0)
+        self.inferred_parameter_table.setMaximumWidth(header_width + number_parameters * cell_width)
 
 
     @QtCore.pyqtSlot()
     def on_infer_model_click(self):
-        # disable live model plotting
+        # disable live plotting
         self.enable_live_plotting = False
-
-        # TODO: make this compatible with multi-output models
         # get initial parameters from slider text fields
         initial_parameters = []
         for parameter_text_field in self.parameter_text_field_container:
             value = float(parameter_text_field.text())
             initial_parameters.append(value) # Note: order of text fields matches order of params in inverse problem
+        # set parameter boundaries
+        self._set_parameter_boundaries(initial_parameters)
+        if self.correct_initial_values:
+            # find parameters
+            self.main_window.problem.find_optimal_parameter(initial_parameter=initial_parameters)
+            self.estimated_parameters = self.main_window.problem.estimated_parameters
+            # plot infered model
+            self._plot_infered_model()
+            # update slider position to infered parameters
+            self._set_sliders_to_inferred_params()
+            # update parameter table
+            self._update_parameter_table()
 
-        # find parameters
-        self.main_window.problem.find_optimal_parameter(initial_parameter=initial_parameters)
-        self.estimated_parameters = self.main_window.problem.estimated_parameters
 
-        # plot infered model
-        self._plot_infered_model()
+    def _set_parameter_boundaries(self, initial_parameters):
+        min_values = []
+        max_values = []
+        # get boundaries from sliders
+        for param_id, slider in enumerate(self.slider_container):
+            minimum = slider.minimum()
+            maximum = slider.maximum()
+            initial_value = initial_parameters[param_id]
+            if (initial_value < minimum) or (initial_value > maximum):
+                # flag that there is problem with initial values
+                self.correct_initial_values = False
+                # generate error message
+                error_message = 'Initial parameters do not lie within boundaries. Please check again!'
+                QtWidgets.QMessageBox.question(self, 'Parameters outside boundaries!', error_message, QtWidgets.QMessageBox.Yes)
+                break
+            else:
+                # flag that initial values are correct
+                self.correct_initial_values = True
+                # collect boundaries
+                min_values.append(slider.minimum())
+                max_values.append(slider.maximum())
 
-        # update parameter table
-        self._update_parameter_table()
-
+        # set boundaries for inference
+        if self.correct_initial_values:
+            self.main_window.problem.set_parameter_boundaries([min_values, max_values])
 
 
     def _plot_infered_model(self):
+        # define time points for model evaluation
         times = np.linspace(start=self.time_data[0],
                             stop=self.time_data[-1],
                             num=100
@@ -448,16 +524,47 @@ class SimulationTab(QtWidgets.QDialog):
         state_values = self.main_window.model.simulate(parameters=self.main_window.problem.estimated_parameters,
                                                        times=times
                                                        )
-        self.data_model_ax.plot(times, state_values, color='black', label='model')
-        self.data_model_ax.legend()
+        if self.is_single_output_model:
+            # remove previously fitted lines
+            lines = self.data_model_ax.lines
+            if len(lines) > 0:
+                lines.pop(0)
+            # plot model
+            self.data_model_ax.plot(times, state_values, color='black', label='model')
+            self.data_model_ax.legend()
+        else:
+            # remove previously fitted lines
+            lines = self.data_model_ax[0].lines # sufficient to check one subplot for existence of lines
+            if len(lines) > 0:
+                for dim in range(self.state_dimension):
+                    self.data_model_ax[dim].lines.pop(0)
+            # plot model
+            for dim in range(self.state_dimension):
+                self.data_model_ax[dim].plot(times, state_values[:, dim], color='black', label='model')
+                self.data_model_ax[dim].legend()
 
         # refresh canvas
         self.canvas.draw()
 
 
+    def _set_sliders_to_inferred_params(self):
+        for param_id, param_value in enumerate(self.estimated_parameters):
+            slider = self.slider_container[param_id]
+            slider.setValue(param_value)
+            text_field = self.parameter_text_field_container[param_id]
+            text_field.setText('%d' % int(param_value))
+
+
     def _update_parameter_table(self):
         for param_id, param_value in enumerate(self.estimated_parameters):
-            self.infered_parameter_table.item(0, param_id).setText('%.3f' % param_value)
+            self.inferred_parameter_table.item(0, param_id).setText('%.3f' % param_value)
+
+
+
+
+
+
+
 
 
 ###################################################################################

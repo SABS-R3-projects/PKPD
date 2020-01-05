@@ -82,6 +82,16 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         self.optimiser = optimiser
 
 
+    def set_parameter_boundaries(self, boundaries:List):
+        """Sets the parameter boundaries for inference.
+
+        Arguments:
+            boundaries {List} -- List of two lists. [min values, max values]
+        """
+        min_values, max_values = boundaries[0], boundaries[1]
+        self.parameter_boundaries = pints.RectangularBoundaries(min_values, max_values)
+
+
     def get_estimate(self) -> List:
         """Returns the estimated parameters that minimise the objective function in a dictionary and the corresponding
         score of the objective function.
@@ -194,6 +204,16 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
             raise ValueError('Method is not supported.')
 
         self.optimiser = optimiser
+
+
+    def set_parameter_boundaries(self, boundaries:List):
+        """Sets the parameter boundaries for inference.
+
+        Arguments:
+            boundaries {List} -- List of two lists. [min values, max values]
+        """
+        min_values, max_values = boundaries[0], boundaries[1]
+        self.parameter_boundaries = pints.RectangularBoundaries(min_values, max_values)
 
 
     def get_estimate(self) -> List:

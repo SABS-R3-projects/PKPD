@@ -4,16 +4,16 @@
 name: Test PKPD three-compartment model.
 
 # Initial values
-SubcutaneousDosing.y0 = 10
-SubcutaneousDosing.y1 = 0
-SubcutaneousDosing.y2 = 0
-SubcutaneousDosing.y3 = 0
+Subcutaneous.y0 = 10
+Subcutaneous.y1 = 0
+Subcutaneous.y2 = 0
+Subcutaneous.y3 = 0
 
 [engine]
 repeat_dose_rate = 0 bind pace
 time = 0 bind time
 
-[SubcutaneousDosing]
+[Subcutaneous]
 use param.ka as ka
 use param.CL as CL
 use param.Vc as Vc
