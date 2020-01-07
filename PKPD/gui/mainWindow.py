@@ -206,6 +206,9 @@ from PKPD.model import model as m
 from PKPD.inference import inference as inf
 
 class SimulationTab(QtWidgets.QDialog):
+    """Simulation tab class that is responsible for plotting the data and the model, as well as providing
+    the ability to infer an optimal set model parameters for the data set.
+    """
     def __init__(self, main_window):
         super().__init__()
         self.name = 'Simulation'
@@ -215,9 +218,8 @@ class SimulationTab(QtWidgets.QDialog):
         self.is_single_output_model = True
         self.parameter_values = None
 
-        # a figure instance to plot on
+        # initialising the figure
         self.data_model_figure = Figure()
-        # this is the canvas widget that displays the figure
         self.canvas = FigureCanvas(self.data_model_figure)
 
         # set the layout
@@ -228,12 +230,17 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def add_data_to_data_model_plot(self):
+        """Adds the data from the in the home tab chosen data file to the previously initialised figure. For multi-
+        dimensional data, the figure is split into subplots.
+        """
         # load data
         data = pd.read_csv(self.main_window.data_file)
         time_label, state_labels = data.keys()[0], data.keys()[1:]
+
         # check dimensionality of problem for plotting and inference
         self.state_dimension = len(state_labels)
         self.is_single_output_model = self.state_dimension == 1
+
         # sort into time and state data
         self.time_data = data[time_label].to_numpy()
         if self.is_single_output_model:
@@ -241,10 +248,12 @@ class SimulationTab(QtWidgets.QDialog):
             self.state_data = data[state_label].to_numpy()
         else:
             self.state_data = data[state_labels].to_numpy()
+
         # plot data
         if self.is_single_output_model: # single output
             # clear figure
             self.data_model_figure.clf()
+
             # create plot
             self.data_model_ax = self.data_model_figure.subplots()
             self.data_model_ax.scatter(x=self.time_data, y=self.state_data, label='data', marker='o', color='darkgreen',
@@ -252,11 +261,13 @@ class SimulationTab(QtWidgets.QDialog):
             self.data_model_ax.set_xlabel(time_label)
             self.data_model_ax.set_ylabel(state_label)
             self.data_model_ax.legend()
+
             # refresh canvas
             self.canvas.draw()
         else: # multi output
             # clear figure
             self.data_model_figure.clf()
+
             # create subplots for each compartment
             self.data_model_ax = self.data_model_figure.subplots(nrows=self.state_dimension, sharex=True)
             for dim in range(self.state_dimension):
@@ -265,11 +276,17 @@ class SimulationTab(QtWidgets.QDialog):
                 self.data_model_ax[dim].set_ylabel(state_labels[dim])
                 self.data_model_ax[dim].legend()
             self.data_model_ax[-1].set_xlabel(time_label)
+
             # refresh canvas
             self.canvas.draw()
 
 
     def _init_plot_infer_model_group(self):
+        """Initialises the functional sliders and buttons of the simulation tab.
+
+        Returns:
+            vbox {QVBoxLayout} -- Returns the layout arranging the sliders, buttons and the inferred parameter table.
+        """
         # initialise sliders, 'plot model' button,'infer model' button and inferred parameters table
         slider_group = self._initialise_slider_group()
         plot_button = QtWidgets.QPushButton('plot model')
@@ -289,16 +306,26 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _initialise_slider_group(self):
-        # initialise slider group widget that is scrollable
+        """Initialises the value sliders for the model parameters.
+
+        Returns:
+            scroll {QScrollArea} -- Returns an area of fixed, relative size to the app screen that is scrollable
+                                    should the slider group exceed the assigned space.
+        """
+        # initialise slider group widget
         slider_group = QtWidgets.QGroupBox()
+
         # initialise grid to arrange sliders vertically
         self.parameter_sliders = QtWidgets.QGridLayout()
+
         # add grid layout to slider group
         slider_group.setLayout(self.parameter_sliders)
+
         # make slider group scrollable, such that window is never exceeded
         scroll = QtWidgets.QScrollArea()
         scroll.setWidget(slider_group)
         scroll.setWidgetResizable(True)
+
         # fix vertical space that sliders can take up
         height = 0.7 * self.main_window.height
         scroll.setFixedHeight(height)
@@ -307,46 +334,67 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def fill_parameter_slider_group(self):
+        """Fills the initialised slider group with parameter sliders (the number of sliders is determined by the
+        number of parameters in the model).
+        """
         self._clear_slider_group()
-        # TODO: replace internal parameter names by description.
+
         # get parameter names
         if self.is_single_output_model:
             state_names = [self.main_window.model.state_name]
         else:
             state_names = self.main_window.model.state_names
-        model_param_names = self.main_window.model.parameter_names
-        parameter_names = state_names + model_param_names
+        model_param_names = self.main_window.model.parameter_names # parameters except initial conditions
+        parameter_names = state_names + model_param_names # parameters including initial conditions
+
         # fill up grid with slider objects
         self.slider_container = [] # store in list to be able to update later
-        self.slider_min_max_label_container = []
-        self.parameter_text_field_container = []
+        self.slider_min_max_label_container = [] # store in list to be able to update later
+        self.parameter_text_field_container = [] # store in list to be able to update later
         for param_id, param_name in enumerate(parameter_names):
             self.parameter_sliders.addWidget(self._create_slider(param_name), param_id, 0)
-        # init container to store parameter values
-        self.parameter_values = np.empty(len(self.parameter_text_field_container))
+
+        # initialise container to store parameter values (for efficiency)
+        number_parameters = len(self.parameter_text_field_container)
+        self.parameter_values = np.empty(number_parameters)
 
 
     def _clear_slider_group(self):
+        """Clears the slider group from pre-existing sliders.
+        """
         number_items_in_group = self.parameter_sliders.count()
         for item_id in range(number_items_in_group):
             # setting an items parent to None deletes it, according to stackoverflow
             self.parameter_sliders.itemAtPosition(item_id, 0).widget().setParent(None)
 
 
-    def _create_slider(self, parameter_name):
+    def _create_slider(self, parameter_name: str):
+        """Creates slider group. Includes parameter label, value slider, value text field and labels for slider boundaries.
+
+        Arguments:
+            parameter_name {str} -- Parameter name for which the slider is created.
+        
+        Returns:
+            slider_box {QGroupBox} -- Returns a widget containing labels, a value slider and a value text field for the parameter.
+        """
+        # initialise widget
         slider_box = QtWidgets.QGroupBox(parameter_name)
-        # make horizontal slider
+
+        # create horizontal slider
         slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         slider.setMinimum(0.1) # arbitrary choice
         slider.setValue(1) # default arbitrary, but it seems reasonable to avoid zero
         slider.setMaximum(30) # arbitrary choice
         slider.setTickPosition(QtWidgets.QSlider.TicksBothSides)
+
         # keep track of sliders
         self.slider_container.append(slider)
+
         # create labels
-        min_current_max_value = self._display_min_current_max_value()
+        min_current_max_value = self._create_min_current_max_value_label(slider)
         slider.valueChanged[int].connect(self._update_parameter_values)
 
+        # arrange slider and labels
         vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(slider)
         vbox.addLayout(min_current_max_value)
@@ -356,16 +404,25 @@ class SimulationTab(QtWidgets.QDialog):
         return slider_box
 
 
-    def _display_min_current_max_value(self):
-        # get slider object
-        slider = self.slider_container[-1]
+    def _create_min_current_max_value_label(self, slider:QtWidgets.QSlider):
+        """Creates labels for a slider displaying the current position of the slider and the minimum and
+        maximum value of the slider.
+
+        Arguments:
+            slider {QtWidgets.QSlider} -- Parameter slider.
+        
+        Returns:
+            hbox {QHBoxLayout} -- Returns a layout arranging the slider labels.
+        """
         # create min/max labels and text field for current value
-        min_value = QtWidgets.QLabel(str(slider.minimum())) # default value arbitrary
+        min_value = QtWidgets.QLabel(str(slider.minimum()))
         text_field = QtWidgets.QLineEdit(str(slider.value()))
-        max_value = QtWidgets.QLabel(str(slider.maximum())) # default value arbitrary
-        # keep track of parameter values and min max labels
+        max_value = QtWidgets.QLabel(str(slider.maximum()))
+
+        # keep track of parameter values and min/max labels
         self.parameter_text_field_container.append(text_field)
         self.slider_min_max_label_container.append([min_value, max_value])
+
         # arrange widgets horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(min_value)
@@ -378,10 +435,14 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _update_parameter_values(self):
-        # let slider text fields display current values
+        """Updates parameter text fields when slider position is moved and updates the model plot in the
+        figure, should life plotting be enabled.
+        """
+        # update slider text fields
         for slider_id, slider in enumerate(self.slider_container):
             self.parameter_values[slider_id] = slider.value()
             self.parameter_text_field_container[slider_id].setText('%d' % self.parameter_values[slider_id])
+
         # plot model if live plotting is enabled
         if self.enable_live_plotting and self.is_single_output_model:
             self._plot_single_output_model()
@@ -391,51 +452,68 @@ class SimulationTab(QtWidgets.QDialog):
 
     @QtCore.pyqtSlot()
     def on_plot_model_click(self):
+        """Reaction to left-clicking the 'plot model' button. Enables the 'life plotting feature' and plots the
+        model with parameters from the current slider positions.
+        """
         # enable live plotting with sliders
         self.enable_live_plotting = True
+
         # define time points for evaluation
         self.times = np.linspace(start=self.time_data[0],
                                  stop=self.time_data[-1],
                                  num=100
                                  )
+
         # get current parameters from sliders
         for param_id, param_text_field in enumerate(self.parameter_text_field_container):
             self.parameter_values[param_id] = float(param_text_field.text())
+
         # plot model
         if self.is_single_output_model:
             self._plot_single_output_model()
         else:
             self._plot_multi_output_model()
+
         # enable removal of plots to prevent fludding of figure
         self.enable_line_removal = True
 
 
     def _plot_single_output_model(self):
+        """Plots the model in dashed, grey lines.
+        """
         # solve forward problem for current parameter set
         self.state_values = self.main_window.model.simulate(parameters=self.parameter_values,
                                                             times=self.times
                                                             )
+
         # remove previous graph to avoid fludding the figure
         if self.enable_line_removal:
             self.data_model_ax.lines.pop()
+
         # plot model
         self.data_model_ax.plot(self.times, self.state_values, linestyle='dashed', color='grey')
+
         # refresh canvas
         self.canvas.draw()
 
 
     def _plot_multi_output_model(self):
+        """Plots the model in dashed, grey lines. Each state dimension is plotted to a separate subplot.
+        """
         # solve forward problem for current parameter set
         self.state_values = self.main_window.model.simulate(parameters=self.parameter_values,
                                                             times=self.times
                                                             )
+
         # remove previous graphs from subplots to avoid fludding the figure
         if self.enable_line_removal:
             for dim in range(self.state_dimension):
                 self.data_model_ax[dim].lines.pop()
+
         # plot model
         for dim in range(self.state_dimension):
             self.data_model_ax[dim].plot(self.times, self.state_values[:, dim], linestyle='dashed', color='grey')
+
         # refresh canvas
         self.canvas.draw()
 
@@ -561,7 +639,15 @@ class SimulationTab(QtWidgets.QDialog):
 
 
 
-
+# TODO:
+# - documentation
+# - make option button for plotting
+#   - choose range of sliders and resolution
+# - make option button for inference
+#   - choice of objective fuction
+#   - choice of optimiser
+#   - choice whether parameters should be constrained by boundaries
+# - show units of parameters in slider, table, plots
 
 
 
