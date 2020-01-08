@@ -154,7 +154,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                                                              times=self.simulation.time_data,
                                                              values=self.simulation.state_data)
             self.simulation.fill_parameter_slider_group()
-            self.simulation.create_parameter_table()
+            self.simulation.fill_parameter_table()
 
             # switch to simulation tab
             self.tabs.setCurrentIndex(self.sim_tab_index)
@@ -436,7 +436,7 @@ class SimulationTab(QtWidgets.QDialog):
 
     def _update_parameter_values(self):
         """Updates parameter text fields when slider position is moved and updates the model plot in the
-        figure, should life plotting be enabled.
+        figure, should live plotting be enabled.
         """
         # update slider text fields
         for slider_id, slider in enumerate(self.slider_container):
@@ -452,7 +452,7 @@ class SimulationTab(QtWidgets.QDialog):
 
     @QtCore.pyqtSlot()
     def on_plot_model_click(self):
-        """Reaction to left-clicking the 'plot model' button. Enables the 'life plotting feature' and plots the
+        """Reaction to left-clicking the 'plot model' button. Enables the 'live plotting feature' and plots the
         model with parameters from the current slider positions.
         """
         # enable live plotting with sliders
@@ -518,7 +518,10 @@ class SimulationTab(QtWidgets.QDialog):
         self.canvas.draw()
 
 
-    def create_parameter_table(self):
+    def fill_parameter_table(self):
+        """Fills the parameter table with # parameters columns. Each column carries the name of the respective parameter and an
+        empty cell for the inferred value.
+        """
         # get fit parameter names
         if self.is_single_output_model:
             state_names = [self.main_window.model.state_name]
@@ -527,6 +530,7 @@ class SimulationTab(QtWidgets.QDialog):
         model_param_names = self.main_window.model.parameter_names
         parameter_names = state_names + model_param_names
         number_parameters = len(parameter_names)
+
         # fill up table with parameter columns (name and empty cell)
         self.inferred_parameter_table.setRowCount(1)
         self.inferred_parameter_table.setColumnCount(number_parameters)
@@ -545,38 +549,61 @@ class SimulationTab(QtWidgets.QDialog):
 
     @QtCore.pyqtSlot()
     def on_infer_model_click(self):
+        """Reaction to left-clicking the 'infer model' button. A parameter set for the model is estimated that minimises an objective function
+        with respect to the data. The initial point for the inference is taken from the slider position, and the inferred parameter set updates
+        the sliders and the inferred parameter table.
+        """
         # disable live plotting
         self.enable_live_plotting = False
+
+        # disable line removal
+        self.enable_line_removal = False
+
         # get initial parameters from slider text fields
         initial_parameters = []
         for parameter_text_field in self.parameter_text_field_container:
             value = float(parameter_text_field.text())
-            initial_parameters.append(value) # Note: order of text fields matches order of params in inverse problem
+            initial_parameters.append(value) # Note: order of text fields matches order of params in inverse problem class
+
         # set parameter boundaries
         self._set_parameter_boundaries(initial_parameters)
+
+        # if initial parameters lie within provided boundaries, start inference
         if self.correct_initial_values:
             # find parameters
             self.main_window.problem.find_optimal_parameter(initial_parameter=initial_parameters)
             self.estimated_parameters = self.main_window.problem.estimated_parameters
+
             # plot infered model
             self._plot_infered_model()
+
             # update slider position to infered parameters
-            self._set_sliders_to_inferred_params()
+            self._update_sliders_to_inferred_params()
+
             # update parameter table
             self._update_parameter_table()
 
 
-    def _set_parameter_boundaries(self, initial_parameters):
+    def _set_parameter_boundaries(self, initial_parameters:np.ndarray):
+        """Gets slider boundaries and restricts the parameter search to those intervals. If initial parameters lie outside the domain of
+        support, an error message is returned.
+
+        Arguments:
+            initial_parameters {np.ndarray} -- Initial point in parameter space for the inference.
+        """
+        # get boundaries from sliders
         min_values = []
         max_values = []
-        # get boundaries from sliders
         for param_id, slider in enumerate(self.slider_container):
             minimum = slider.minimum()
             maximum = slider.maximum()
             initial_value = initial_parameters[param_id]
+
+            # check whether initial value lies within boundaries
             if (initial_value < minimum) or (initial_value > maximum):
-                # flag that there is problem with initial values
+                # flag that there is problem with the initial values
                 self.correct_initial_values = False
+
                 # generate error message
                 error_message = 'Initial parameters do not lie within boundaries. Please check again!'
                 QtWidgets.QMessageBox.question(self, 'Parameters outside boundaries!', error_message, QtWidgets.QMessageBox.Yes)
@@ -584,6 +611,7 @@ class SimulationTab(QtWidgets.QDialog):
             else:
                 # flag that initial values are correct
                 self.correct_initial_values = True
+
                 # collect boundaries
                 min_values.append(slider.minimum())
                 max_values.append(slider.maximum())
@@ -594,28 +622,33 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _plot_infered_model(self):
+        """Plots inferred model in a solid, black line and removes all other lines from figure.
+        """
         # define time points for model evaluation
         times = np.linspace(start=self.time_data[0],
                             stop=self.time_data[-1],
                             num=100
                             )
+
+        # solve forward problem
         state_values = self.main_window.model.simulate(parameters=self.main_window.problem.estimated_parameters,
                                                        times=times
                                                        )
-        if self.is_single_output_model:
-            # remove previously fitted lines
+        if self.is_single_output_model: # single-output problem
+            # remove all lines from figure
             lines = self.data_model_ax.lines
-            if len(lines) > 0:
-                lines.pop(0)
+            while lines:
+                lines.pop()
+
             # plot model
             self.data_model_ax.plot(times, state_values, color='black', label='model')
             self.data_model_ax.legend()
-        else:
-            # remove previously fitted lines
-            lines = self.data_model_ax[0].lines # sufficient to check one subplot for existence of lines
-            if len(lines) > 0:
-                for dim in range(self.state_dimension):
-                    self.data_model_ax[dim].lines.pop(0)
+        else: # multi-output problem
+            # remove all lines from figure
+            lines = self.data_model_ax.lines
+            while lines:
+                lines.pop()
+
             # plot model
             for dim in range(self.state_dimension):
                 self.data_model_ax[dim].plot(times, state_values[:, dim], color='black', label='model')
@@ -625,7 +658,9 @@ class SimulationTab(QtWidgets.QDialog):
         self.canvas.draw()
 
 
-    def _set_sliders_to_inferred_params(self):
+    def _update_sliders_to_inferred_params(self):
+        """Set slider positions and text fields to inferred parameters.
+        """
         for param_id, param_value in enumerate(self.estimated_parameters):
             slider = self.slider_container[param_id]
             slider.setValue(param_value)
@@ -634,6 +669,8 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _update_parameter_table(self):
+        """Fills parameter table cells with inferred parameter values.
+        """
         for param_id, param_value in enumerate(self.estimated_parameters):
             self.inferred_parameter_table.item(0, param_id).setText('%.3f' % param_value)
 
