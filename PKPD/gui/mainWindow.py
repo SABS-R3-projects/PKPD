@@ -18,8 +18,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
         self.version_number = QtWidgets.QLabel('Version: 0.0.0')
         self.producers = QtWidgets.QLabel('SABS R3')
         # variables needed across tabs
-        # self.model_file = None
-        # self.data_file = None
         self.available_geometry = self.app.desktop().availableGeometry()
         _, _, self.desktop_width, self.desktop_height = self.available_geometry.getRect()
         # set window size.
@@ -154,6 +152,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                                                              times=self.simulation.time_data,
                                                              values=self.simulation.state_data)
             self.simulation.fill_parameter_slider_group()
+            self.simulation.fill_plot_option_window()
             self.simulation.fill_parameter_table()
 
             # switch to simulation tab
@@ -289,17 +288,15 @@ class SimulationTab(QtWidgets.QDialog):
         """
         # initialise sliders, 'plot model' button,'infer model' button and inferred parameters table
         slider_group = self._initialise_slider_group()
-        plot_button = QtWidgets.QPushButton('plot model')
-        plot_button.clicked.connect(self.on_plot_model_click)
-        infer_button = QtWidgets.QPushButton('infer model')
-        infer_button.clicked.connect(self.on_infer_model_click)
+        plot_buttons = self._initialise_plot_buttons()
+        infer_buttons = self._initialise_infer_buttons()
         self.inferred_parameter_table = QtWidgets.QTableWidget()
 
         # arrange widgets vertically
         vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(slider_group)
-        vbox.addWidget(plot_button)
-        vbox.addWidget(infer_button)
+        vbox.addLayout(plot_buttons)
+        vbox.addLayout(infer_buttons)
         vbox.addWidget(self.inferred_parameter_table)
 
         return vbox
@@ -331,6 +328,116 @@ class SimulationTab(QtWidgets.QDialog):
         scroll.setFixedHeight(height)
 
         return scroll
+
+
+    def _initialise_plot_buttons(self):
+        # create plot model button
+        plot_button = QtWidgets.QPushButton('plot model')
+        plot_button.clicked.connect(self.on_plot_model_click)
+
+        # create option button
+        option_button = QtWidgets.QPushButton('option')
+        option_button.clicked.connect(self.on_plot_option_click)
+
+        # initialise option window
+        self.plot_option_window = QtWidgets.QDialog()
+
+        # arange button horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(plot_button)
+        hbox.addWidget(option_button)
+
+        return hbox
+
+
+    def _initialise_infer_buttons(self):
+        # create plot model button
+        infer_button = QtWidgets.QPushButton('infer model')
+        infer_button.clicked.connect(self.on_infer_model_click)
+
+        # create option button
+        option_button = QtWidgets.QPushButton('option')
+        option_button.clicked.connect(self.on_infer_option_click)
+
+        # create option window
+        self._create_infer_option_window()
+
+        # arange button horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(infer_button)
+        hbox.addWidget(option_button)
+
+        return hbox
+
+
+    def _create_infer_option_window(self):
+        # TODO:
+        # - add option for boundaries on/off
+        # - add option for finding optimal parameters multiple times
+        #   - if boundaries activated, random sample within supported domain
+        #   - if boundaries deactivated, use sigma0 option
+        
+        # create option window
+        self.infer_option_window = QtWidgets.QDialog()
+        self.infer_option_window.setWindowTitle('Inference options')
+
+        # define dropdown dimension
+        self.dropdown_menu_width = 190 # value arbitrary
+
+        # create inference options
+        optimiser_options = self._create_optimiser_options()
+        objective_function_options = self._create_objective_function_options()
+
+        # arange options vertically
+        vbox = QtWidgets.QVBoxLayout()
+        vbox.addLayout(optimiser_options)
+        vbox.addLayout(objective_function_options)
+
+        # add options to window
+        self.infer_option_window.setLayout(vbox)
+
+
+    def _create_optimiser_options(self):
+        # create label
+        label = QtWidgets.QLabel('selected optimiser:')
+
+        # define options
+        valid_optimisers = ['CMA-ES', 'Nelder-Mead', 'SNES', 'xNES']
+
+        # create dropdown menu for options
+        combo_box = QtWidgets.QComboBox()
+        combo_box.setMinimumWidth(self.dropdown_menu_width)
+        for optimiser in valid_optimisers:
+            combo_box.addItem(optimiser)
+
+        # arange label and dropdown menu horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(label)
+        hbox.addWidget(combo_box)
+
+        return hbox
+
+
+    def _create_objective_function_options(self):
+        # create label
+        label = QtWidgets.QLabel('selected error measure:')
+
+        # define options
+        valid_error_measures = ['Mean Squared Error', 'Sum of Squares Error']
+
+        # create dropdown menu for options
+        combo_box = QtWidgets.QComboBox()
+        combo_box.setMinimumWidth(self.dropdown_menu_width)
+        for error_measure in valid_error_measures:
+            combo_box.addItem(error_measure)
+
+        # arange label and dropdown menu horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(label)
+        hbox.addWidget(combo_box)
+
+        return hbox
+
 
 
     def fill_parameter_slider_group(self):
@@ -450,6 +557,20 @@ class SimulationTab(QtWidgets.QDialog):
             self._plot_multi_output_model()
 
 
+    def fill_plot_option_window(self):
+        # TODO: finish this!
+        # create text fields
+        for slider in self.slider_container:
+            pass
+
+
+    def fill_infer_option_window(self):
+        # TODO: finish this!
+        # create text fields
+        for slider in self.slider_container:
+            pass
+
+
     @QtCore.pyqtSlot()
     def on_plot_model_click(self):
         """Reaction to left-clicking the 'plot model' button. Enables the 'live plotting feature' and plots the
@@ -516,6 +637,18 @@ class SimulationTab(QtWidgets.QDialog):
 
         # refresh canvas
         self.canvas.draw()
+
+
+    @QtCore.pyqtSlot()
+    def on_plot_option_click(self):
+        # open option window
+        self.plot_option_window.open()
+
+
+    @QtCore.pyqtSlot()
+    def on_infer_option_click(self):
+        # open option window
+        self.infer_option_window.open()
 
 
     def fill_parameter_table(self):
@@ -645,9 +778,10 @@ class SimulationTab(QtWidgets.QDialog):
             self.data_model_ax.legend()
         else: # multi-output problem
             # remove all lines from figure
-            lines = self.data_model_ax.lines
-            while lines:
-                lines.pop()
+            for dim in range(self.state_dimension):
+                lines = self.data_model_ax[dim].lines
+                while lines:
+                    lines.pop()
 
             # plot model
             for dim in range(self.state_dimension):
