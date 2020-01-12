@@ -196,6 +196,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
 # to be moved to simulation.py
 import numpy as np
 import pandas as pd
+import pints
 from PyQt5 import QtWidgets
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
@@ -371,12 +372,8 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _create_infer_option_window(self):
-        # TODO:
-        # - add option for boundaries on/off
-        # - add option for finding optimal parameters multiple times
-        #   - if boundaries activated, random sample within supported domain
-        #   - if boundaries deactivated, use sigma0 option
-        
+        """Creates an option window to set the inference settings.
+        """
         # create option window
         self.infer_option_window = QtWidgets.QDialog()
         self.infer_option_window.setWindowTitle('Inference options')
@@ -388,16 +385,25 @@ class SimulationTab(QtWidgets.QDialog):
         optimiser_options = self._create_optimiser_options()
         objective_function_options = self._create_objective_function_options()
 
+        # create apply / cancel buttons
+        apply_cancel_buttons = self._create_apply_cancel_buttons()
+
         # arange options vertically
         vbox = QtWidgets.QVBoxLayout()
         vbox.addLayout(optimiser_options)
         vbox.addLayout(objective_function_options)
+        vbox.addLayout(apply_cancel_buttons)
 
         # add options to window
         self.infer_option_window.setLayout(vbox)
 
 
     def _create_optimiser_options(self):
+        """Creates a dropdown menu to select an optimiser method for the inference.
+
+        Returns:
+            hbox {QHBoxLayout} -- Returns label and dropdown menu.
+        """
         # create label
         label = QtWidgets.QLabel('selected optimiser:')
 
@@ -405,20 +411,25 @@ class SimulationTab(QtWidgets.QDialog):
         valid_optimisers = ['CMA-ES', 'Nelder-Mead', 'SNES', 'xNES']
 
         # create dropdown menu for options
-        combo_box = QtWidgets.QComboBox()
-        combo_box.setMinimumWidth(self.dropdown_menu_width)
+        self.optimiser_dropdown_menu = QtWidgets.QComboBox()
+        self.optimiser_dropdown_menu.setMinimumWidth(self.dropdown_menu_width)
         for optimiser in valid_optimisers:
-            combo_box.addItem(optimiser)
+            self.optimiser_dropdown_menu.addItem(optimiser)
 
         # arange label and dropdown menu horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(label)
-        hbox.addWidget(combo_box)
+        hbox.addWidget(self.optimiser_dropdown_menu)
 
         return hbox
 
 
     def _create_objective_function_options(self):
+        """Creates a dropdown menu to select an error measure for the inference.
+
+        Returns:
+            hbox {QHBoxLayout} -- Returns label and dropdown menu.
+        """
         # create label
         label = QtWidgets.QLabel('selected error measure:')
 
@@ -426,18 +437,98 @@ class SimulationTab(QtWidgets.QDialog):
         valid_error_measures = ['Mean Squared Error', 'Sum of Squares Error']
 
         # create dropdown menu for options
-        combo_box = QtWidgets.QComboBox()
-        combo_box.setMinimumWidth(self.dropdown_menu_width)
+        self.error_measure_dropdown_menu = QtWidgets.QComboBox()
+        self.error_measure_dropdown_menu.setMinimumWidth(self.dropdown_menu_width)
         for error_measure in valid_error_measures:
-            combo_box.addItem(error_measure)
+            self.error_measure_dropdown_menu.addItem(error_measure)
 
         # arange label and dropdown menu horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(label)
-        hbox.addWidget(combo_box)
+        hbox.addWidget(self.error_measure_dropdown_menu)
 
         return hbox
 
+
+    def _create_apply_cancel_buttons(self):
+        """Creates an apply and cancel button to either update the inference settings or
+        closing the option window without updating.
+
+        Returns:
+            hbox {QHBoxLayout} -- Returns layout aranging the apply and cancel button.
+        """
+        # create apply and cancel button
+        apply_button = QtWidgets.QPushButton('apply')
+        apply_button.clicked.connect(self.on_infer_option_apply_click)
+        cancel_button = QtWidgets.QPushButton('cancel')
+        cancel_button.clicked.connect(self.on_infer_option_cancel_button_click)
+
+        # arange buttons horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addStretch(1)
+        hbox.addWidget(apply_button)
+        hbox.addWidget(cancel_button)
+
+        return hbox
+
+
+    @QtCore.pyqtSlot()
+    def on_infer_option_apply_click(self):
+        """Reaction to left-clicking the infer option 'apply' button. Updates the inference settings
+        and closes the option window.
+        """
+        # update infer options
+        self._set_optimiser()
+        self._set_error_measure()
+
+        # close option window
+        self.infer_option_window.close()
+
+
+    def _set_optimiser(self):
+        """Sets the optimiser method for inference to the in the dropdown menu selected method.
+        """
+        # get selected optimiser
+        optimiser = self.optimiser_dropdown_menu.currentText()
+
+        # define dictionary between optimiser names and pints methods
+        optimiser_dict = {'CMA-ES': pints.CMAES,
+                          'Nelder-Mead': pints.NelderMead,
+                          'SNES': pints.SNES,
+                          'xNES': pints.XNES
+                          }
+
+        # get corresponding pints method
+        method = optimiser_dict[optimiser]
+
+        # update optimiser
+        self.main_window.problem.set_optimiser(method)
+
+
+    def _set_error_measure(self):
+        """Sets the error measure for inference to the in the dropdown menu selected measure.
+        """
+        # get selected optimiser
+        error_measure = self.error_measure_dropdown_menu.currentText()
+
+        # define dictionary between error measure names and pints methods
+        error_measure_dict = {'Mean Squared Error': pints.MeanSquaredError,
+                              'Sum of Squares Error': pints.SumOfSquaresError,
+                              }
+
+        # get corresponding pints measure
+        measure = error_measure_dict[error_measure]
+
+        # update error measure
+        self.main_window.problem.set_objective_function(measure)
+
+
+    @QtCore.pyqtSlot()
+    def on_infer_option_cancel_button_click(self):
+        """Reaction to left-clicking the infer option 'cancel' button. Closes the window.
+        """
+        # close option window
+        self.infer_option_window.close()
 
 
     def fill_parameter_slider_group(self):
@@ -641,12 +732,16 @@ class SimulationTab(QtWidgets.QDialog):
 
     @QtCore.pyqtSlot()
     def on_plot_option_click(self):
+        """Reaction to left-clicking the plot 'option' button. Opens the plot option window.
+        """
         # open option window
         self.plot_option_window.open()
 
 
     @QtCore.pyqtSlot()
     def on_infer_option_click(self):
+        """Reaction to left-clicking the inference 'option' button. Opens the plot option window.
+        """
         # open option window
         self.infer_option_window.open()
 
