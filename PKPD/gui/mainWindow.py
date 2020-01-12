@@ -204,6 +204,7 @@ from matplotlib.figure import Figure
 
 from PKPD.model import model as m
 from PKPD.inference import inference as inf
+from PKPD.gui.utils import slider as sl
 
 class SimulationTab(QtWidgets.QDialog):
     """Simulation tab class that is responsible for plotting the data and the model, as well as providing
@@ -579,11 +580,11 @@ class SimulationTab(QtWidgets.QDialog):
         slider_box = QtWidgets.QGroupBox(parameter_name)
 
         # create horizontal slider
-        slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        slider = sl.DoubleSlider()
         slider.setMinimum(0.1) # arbitrary choice
         slider.setValue(1) # default arbitrary, but it seems reasonable to avoid zero
         slider.setMaximum(30) # arbitrary choice
-        slider.setTickPosition(QtWidgets.QSlider.TicksBothSides)
+        slider.setTickPosition(sl.DoubleSlider.TicksBothSides)
 
         # keep track of sliders
         self.slider_container.append(slider)
@@ -613,9 +614,9 @@ class SimulationTab(QtWidgets.QDialog):
             hbox {QHBoxLayout} -- Returns a layout arranging the slider labels.
         """
         # create min/max labels and text field for current value
-        min_value = QtWidgets.QLabel(str(slider.minimum()))
-        text_field = QtWidgets.QLineEdit(str(slider.value()))
-        max_value = QtWidgets.QLabel(str(slider.maximum()))
+        min_value = QtWidgets.QLabel('%.1f' % slider.minimum())
+        text_field = QtWidgets.QLineEdit('%.1f' % slider.value())
+        max_value = QtWidgets.QLabel('%.1f' % slider.maximum())
 
         # keep track of parameter values and min/max labels
         self.parameter_text_field_container.append(text_field)
@@ -638,8 +639,8 @@ class SimulationTab(QtWidgets.QDialog):
         """
         # update slider text fields
         for slider_id, slider in enumerate(self.slider_container):
-            self.parameter_values[slider_id] = slider.value()
-            self.parameter_text_field_container[slider_id].setText('%d' % self.parameter_values[slider_id])
+            self.parameter_values[slider_id] = round(number=slider.value(), ndigits=1)
+            self.parameter_text_field_container[slider_id].setText('%.1f' % self.parameter_values[slider_id])
 
         # plot model if live plotting is enabled
         if self.enable_live_plotting and self.is_single_output_model:
@@ -819,13 +820,18 @@ class SimulationTab(QtWidgets.QDialog):
         Arguments:
             initial_parameters {np.ndarray} -- Initial point in parameter space for the inference.
         """
+        # tolerance extenstion of boundaries (as values can be set to slider boundaries)
+        increment = 1.0E-7
+
+
         # get boundaries from sliders
         min_values = []
         max_values = []
         for param_id, slider in enumerate(self.slider_container):
-            minimum = slider.minimum()
-            maximum = slider.maximum()
+            minimum = slider.minimum() - increment # extend boundaries for stability
+            maximum = slider.maximum() + increment
             initial_value = initial_parameters[param_id]
+            print(minimum, initial_value, maximum)
 
             # check whether initial value lies within boundaries
             if (initial_value < minimum) or (initial_value > maximum):
@@ -841,8 +847,8 @@ class SimulationTab(QtWidgets.QDialog):
                 self.correct_initial_values = True
 
                 # collect boundaries
-                min_values.append(slider.minimum())
-                max_values.append(slider.maximum())
+                min_values.append(minimum)
+                max_values.append(maximum)
 
         # set boundaries for inference
         if self.correct_initial_values:
@@ -891,29 +897,34 @@ class SimulationTab(QtWidgets.QDialog):
         """Set slider positions and text fields to inferred parameters.
         """
         for param_id, param_value in enumerate(self.estimated_parameters):
+            # get slider
             slider = self.slider_container[param_id]
-            slider.setValue(param_value)
+
+            # round parameter value to appropriate precision
+            rounded_value = round(number=param_value, ndigits=1)
+
+            # set slider value
+            slider.setValue(rounded_value)
+
+            # get text field
             text_field = self.parameter_text_field_container[param_id]
-            text_field.setText('%d' % int(param_value))
+
+            # set text field value
+            text_field.setText('%.1f' % rounded_value)
 
 
     def _update_parameter_table(self):
         """Fills parameter table cells with inferred parameter values.
         """
         for param_id, param_value in enumerate(self.estimated_parameters):
-            self.inferred_parameter_table.item(0, param_id).setText('%.3f' % param_value)
+            # round value to 3 digits (arbitrary)
+            rounded_value = round(number=param_value, ndigits=3)
+
+            # update cell in table
+            self.inferred_parameter_table.item(0, param_id).setText('%.3f' % rounded_value)
 
 
 
-# TODO:
-# - documentation
-# - make option button for plotting
-#   - choose range of sliders and resolution
-# - make option button for inference
-#   - choice of objective fuction
-#   - choice of optimiser
-#   - choice whether parameters should be constrained by boundaries
-# - show units of parameters in slider, table, plots
 
 
 
