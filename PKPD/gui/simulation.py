@@ -1,4 +1,5 @@
 import numpy as np
+import myokit
 import pandas as pd
 import pints
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -292,6 +293,7 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _set_optimiser(self):
+        #TODO: Nelder-Mead does not support boundaries. So should be cross-linked with tunring boundaries off.
         """Sets the optimiser method for inference to the in the dropdown menu selected method.
         """
         # get selected optimiser
@@ -604,18 +606,29 @@ class SimulationTab(QtWidgets.QDialog):
 
         # if initial parameters lie within provided boundaries, start inference
         if self.correct_initial_values:
-            # find parameters
-            self.main_window.problem.find_optimal_parameter(initial_parameter=initial_parameters)
-            self.estimated_parameters = self.main_window.problem.estimated_parameters
+            try:
+                # find parameters
+                self.main_window.problem.find_optimal_parameter(initial_parameter=initial_parameters)
+                self.estimated_parameters = self.main_window.problem.estimated_parameters
 
-            # plot infered model
-            self._plot_infered_model()
+                # plot infered model
+                self._plot_infered_model()
 
-            # update slider position to infered parameters
-            self._update_sliders_to_inferred_params()
+                # update slider position to infered parameters
+                self._update_sliders_to_inferred_params()
 
-            # update parameter table
-            self._update_parameter_table()
+                # update parameter table
+                self._update_parameter_table()
+            except ArithmeticError:
+                # generate error message
+                error_message = str('Convergence test failures occurred too many times during one internal time step or minimum' +
+                                ' step size was reached. Please try different inference settings!')
+                QtWidgets.QMessageBox.question(self, 'Convergence error!', error_message, QtWidgets.QMessageBox.Yes)
+            except myokit.SimulationError:
+                # generate error message
+                error_message = str('A numerical error occurred during the simulation likely due to unsuitable inference settings.' +
+                                ' Please try different inference settings!')
+                QtWidgets.QMessageBox.question(self, 'Numerical error!', error_message, QtWidgets.QMessageBox.Yes)
 
 
     def _set_parameter_boundaries(self, initial_parameters:np.ndarray):
@@ -627,7 +640,6 @@ class SimulationTab(QtWidgets.QDialog):
         """
         # tolerance extenstion of boundaries (as values can be set to slider boundaries)
         increment = 1.0E-7
-
 
         # get boundaries from sliders
         min_values = []

@@ -20,13 +20,17 @@ class MainWindow(abstractGui.AbstractMainWindow):
         self.window_title = 'Pharmacokinetics/Pharmacodynamics'
         self.version_number = QtWidgets.QLabel('Version: 0.0.0')
         self.producers = QtWidgets.QLabel('SABS R3')
+
         # variables needed across tabs
         self.available_geometry = self.app.desktop().availableGeometry()
         _, _, self.desktop_width, self.desktop_height = self.available_geometry.getRect()
+
         # set window size.
         self._set_window_size()
+
         # format icons/images
         self._format_images()
+
         # fill the empty window with content
         self._arrange_window_content()
 
@@ -71,6 +75,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
         # SABS R3 logo in status bar
         sabs_logo = QtGui.QPixmap('images/SABSR3.png')
         self.rescaled_sabs = sabs_logo.scaledToHeight(self.desktop_height * 0.02)
+
         # symbols for success/failure of file selection
         question_mark = QtGui.QPixmap('images/QUESTION.png')
         self.rescaled_qm = question_mark.scaledToHeight(self.desktop_height * 0.025)
@@ -98,6 +103,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
         # generate tabs.
         self.home = home.HomeTab(self)
         self.simulation = simulation.SimulationTab(self)
+
         # add tabs to tab widget.
         tabs = QtWidgets.QTabWidget()
         self.home_tab_index = tabs.addTab(self.home, self.home.name)
@@ -135,31 +141,39 @@ class MainWindow(abstractGui.AbstractMainWindow):
     def next_tab(self):
         """Switches to the simulation tab, when triggered by clicking the 'next' QPushButton on the home tab.
         """
-        correct_model, correct_data = self._file_sanity_check()
+        #TODO: refactor this construction when structure of webApp is clear.
+        correct_model, correct_data = self._are_files_correct()
         if correct_model and correct_data:
-            # plot data in simulation tab
-            self.simulation.add_data_to_data_model_plot()
-            # disable live plotting and line removal for the simulation
-            self.simulation.enable_live_plotting = False
-            self.simulation.enable_line_removal = False
+            #TODO: check that .csv has correct arrangement to be read or come up with dynamic solution.
+            try:
+                # plot data in simulation tab
+                self.simulation.add_data_to_data_model_plot()
 
-            # instantiate model and inverse problem
-            if self.simulation.is_single_output_model:
-                self.model = m.SingleOutputModel(self.model_file)
-                self.problem = inf.SingleOutputInverseProblem(model=self.model,
-                                                              times=self.simulation.time_data,
-                                                              values=self.simulation.state_data)
-            else:
-                self.model = m.MultiOutputModel(self.model_file)
-                self.problem = inf.MultiOutputInverseProblem(model=self.model,
-                                                             times=self.simulation.time_data,
-                                                             values=self.simulation.state_data)
-            self.simulation.fill_parameter_slider_group()
-            self.simulation.fill_plot_option_window()
-            self.simulation.fill_parameter_table()
+                # disable live plotting and line removal for the simulation
+                self.simulation.enable_live_plotting = False
+                self.simulation.enable_line_removal = False
 
-            # switch to simulation tab
-            self.tabs.setCurrentIndex(self.sim_tab_index)
+                # instantiate model and inverse problem
+                if self.simulation.is_single_output_model:
+                    self.model = m.SingleOutputModel(self.model_file)
+                    self.problem = inf.SingleOutputInverseProblem(model=self.model,
+                                                                times=self.simulation.time_data,
+                                                                values=self.simulation.state_data)
+                else:
+                    self.model = m.MultiOutputModel(self.model_file)
+                    self.problem = inf.MultiOutputInverseProblem(model=self.model,
+                                                                times=self.simulation.time_data,
+                                                                values=self.simulation.state_data)
+                self.simulation.fill_parameter_slider_group()
+                self.simulation.fill_plot_option_window()
+                self.simulation.fill_parameter_table()
+
+                # switch to simulation tab
+                self.tabs.setCurrentIndex(self.sim_tab_index)
+            except ValueError:
+                # generate error message
+                error_message = 'The .csv file does not seem to be properly formatted. Please check again!'
+                QtWidgets.QMessageBox.question(self, 'Data structure not compatible!', error_message, QtWidgets.QMessageBox.Yes)
         else:
             # update file dialog icons
             if not correct_model:
@@ -170,12 +184,13 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 self.home.data_check_mark.setPixmap(self.rescaled_rc)
             else:
                 self.home.data_check_mark.setPixmap(self.rescaled_cm)
+
             # generate error message
             error_message = 'At least one of the files does not seem to exist or does not have the correct file format. Please check again!'
             QtWidgets.QMessageBox.question(self, 'Files not found!', error_message, QtWidgets.QMessageBox.Yes)
 
 
-    def _file_sanity_check(self) -> List[bool]:
+    def _are_files_correct(self) -> List[bool]:
         """Checks whether model and data exist and have the correct format (.mmt and .csv, respectively).
 
         Returns:
@@ -186,6 +201,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
         model_is_file = os.path.isfile(self.model_file)
         model_correct_format = self.model_file.split('.')[-1] == 'mmt'
         correct_model = model_is_file and model_correct_format
+
         # data sanity check
         self.data_file = self.home.data_text.text()
         data_is_file = os.path.isfile(self.data_file)
@@ -197,7 +213,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
 
 if __name__ == '__main__':
-
     # Create window instance
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow(app)
