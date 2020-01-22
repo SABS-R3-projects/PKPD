@@ -24,11 +24,25 @@ class SingleOutputModel(AbstractModel):
                 'The output seems to be multi-dimensional. You might want to try a MultiOutputProblem instead.'
                 )
         self.state_name = next(model.states()).qname()
+        print(self.state_name)
+        print(list(model.components()))
+        for component in model.components():
+            print(sorted([var.qname() for var in model.get(component).variables()]))
+        # TODO:
+        # - define _get_parameter_names
+        # - make sure the pipeline works, where the parameters are called.
         # TODO: automate name 'param'
-        self.parameter_names = sorted([var.qname() for var in model.get('param').variables()])
-        self.number_model_parameters = len(self.parameter_names)
-        self.number_parameters_to_fit = 1 + self.number_model_parameters
+        # self.parameter_names = sorted([var.qname() for var in model.get('param').variables()])
+        # self.number_model_parameters = len(self.parameter_names)
+        self.parameter_names = self._get_parameter_names(model)
+        self.number_parameters_to_fit = model.count_variables(bound=False)
         self.simulation = myokit.Simulation(model, protocol)
+
+
+    def _get_parameter_names(self, model):
+        parameter_names = []
+        for component in model.components():
+            parameter_names += sorted([var.qname() for var in model.get(component).variables()]))
 
 
     def n_parameters(self) -> int:

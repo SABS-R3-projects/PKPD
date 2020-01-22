@@ -1,0 +1,20 @@
+# Linear, single-compartment model of drug concentration with bolus injection. The default protocol is a single injection, but can be adjusted in the GUI.
+
+[[model]]
+name: PKPD One Compartment Model
+# Initial values
+centralCompartment.y = 0 [mg/mL]
+
+[centralCompartment]
+CL = 2 [mL/s (2.777777777777775e-10)] : Clearance rate
+V = 4 [mL] : Volume of central compartment
+
+dot(y) = dosing.dose_rate - y * CL / V
+
+[dosing]
+time = 0 bind time
+dose_rate = 0 bind pace
+
+[[protocol]]
+# Level  Start    Length   Period   Multiplier
+1.0      8.0      1.0      0        0
