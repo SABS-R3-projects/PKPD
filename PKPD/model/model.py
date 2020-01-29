@@ -21,7 +21,8 @@ class SingleOutputModel(AbstractModel):
         model, protocol, _ = myokit.load(mmtfile)
 
         # get state, parameter and output names
-        self.state_name = next(model.states()).qname()
+        self.state_names = [state.qname() for state in model.states()]
+        self.state_dimension = len(self.state_names)
         self.output_name = next(model.variables(inter=True)).qname() # by default drug concentration (only intermediate variable in any compartment)
         self.parameter_names = self._get_parameter_names(model)
         self.number_parameters_to_fit = model.count_variables(inter=False, bound=False)
@@ -99,8 +100,8 @@ class SingleOutputModel(AbstractModel):
         Arguments:
             parameters {np.ndarray} -- Parameters of the model. By convention [initial condition, model parameters].
         """
-        self.simulation.set_state(parameters[:1])
-        for param_id, value in enumerate(parameters[1:]):
+        self.simulation.set_state(parameters[:self.state_dimension])
+        for param_id, value in enumerate(parameters[self.state_dimension:]):
             self.simulation.set_constant(self.parameter_names[param_id], value)
 
 

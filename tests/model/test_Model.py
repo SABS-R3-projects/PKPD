@@ -19,13 +19,13 @@ class TestSingleOutputModel(unittest.TestCase):
         """
         # Test case I: 1-compartment model
         ## expected:
-        state_name = 'centralCompartment.drug'
+        state_names = ['centralCompartment.drug']
         output_name = 'centralCompartment.drugConcentration'
         parameter_names = ['centralCompartment.CL', 'centralCompartment.V']
         number_parameters_to_fit = 3
 
         ## assert initilised values coincide
-        assert state_name == self.one_comp_model.state_name
+        assert state_names == self.one_comp_model.state_names
         assert output_name == self.one_comp_model.output_name
         for parameter_id, parameter in enumerate(self.one_comp_model.parameter_names):
             assert parameter_names[parameter_id] == parameter
@@ -86,13 +86,13 @@ class TestMultiOutputModel(unittest.TestCase):
         """
         # Test case I: 1-compartment model
         ## expected:
-        state_name = ['bolus.y_c']
+        state_names = ['bolus.y_c']
         parameter_names = ['param.CL', 'param.V_c']
         number_model_parameters = 2
         number_parameters_to_fit = 3
 
         ## assert initilised values coincide
-        assert state_name == self.one_comp_model.state_names
+        assert state_names == self.one_comp_model.state_names
         for parameter_id, parameter in enumerate(self.one_comp_model.parameter_names):
             assert parameter_names[parameter_id] == parameter
         assert number_model_parameters == self.one_comp_model.number_model_parameters

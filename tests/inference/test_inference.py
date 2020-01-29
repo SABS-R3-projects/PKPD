@@ -41,6 +41,7 @@ class TestSingleOutputProblem(unittest.TestCase):
 
         # solve inverse problem
         problem.find_optimal_parameter(initial_parameter=initial_parameters)
+        #TODO: remove get estimate. unnecessary and except for testing never used!
         parameter_dict, _ = problem.get_estimate()
 
         for parameter_id, parameter_name in enumerate(parameter_dict):

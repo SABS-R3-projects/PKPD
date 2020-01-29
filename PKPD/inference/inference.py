@@ -92,45 +92,6 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         self.parameter_boundaries = pints.RectangularBoundaries(min_values, max_values)
 
 
-    def get_estimate(self) -> List:
-        """Returns the estimated parameters that minimise the objective function in a dictionary and the corresponding
-        score of the objective function.
-
-        Returns:
-            List -- [parameter dictionary, corresponding score of the objective function]
-        """
-        if self.estimated_parameters is None:
-            raise ValueError('The estimated parameter is None. Try to run the `find_optimal_parameter` routine again?')
-        parameter_dict = self._create_parameter_dict(self.estimated_parameters)
-
-        return [parameter_dict, self.objective_score]
-
-
-    def _create_parameter_dict(self, estimated_parameter:np.ndarray) -> Dict:
-        """Creates a dictionary of the optimal parameters by assigning the corresponding names to them.
-
-        Arguments:
-            estimated_parameter {np.ndarray} -- Parameter values resulting from the optimisation.
-
-        Return:
-            {Dict} -- Estimated parameter values with their name as key.
-        """
-        state_dimension = 1
-        state_name = self.problem._model.state_name
-        parameter_names = self.problem._model.parameter_names
-
-        parameter_dict = {}
-        # Note that the estimated parameters are [inital values, model parameter].
-        for parameter_id, value in enumerate(estimated_parameter):
-            if parameter_id < state_dimension:
-                parameter_dict[state_name] = value
-            else:
-                reset_id = parameter_id-state_dimension
-                parameter_dict[parameter_names[reset_id]] = value
-
-        return parameter_dict
-
-
 class MultiOutputInverseProblem(AbstractInverseProblem):
     """Multi-output inverse problem based on pints.MultiOutputProblem https://pints.readthedocs.io/. Default objective function
     is pints.SumOfSquaresError and default optimiser is pints.CMAES.
@@ -214,43 +175,3 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         """
         min_values, max_values = boundaries[0], boundaries[1]
         self.parameter_boundaries = pints.RectangularBoundaries(min_values, max_values)
-
-
-    def get_estimate(self) -> List:
-        """Returns the estimated parameters that minimise the objective function in a dictionary and the corresponding
-        score of the objective function.
-
-        Returns:
-            List -- [parameter dictionary, corresponding score of the objective function]
-        """
-        if self.estimated_parameters is None:
-            raise ValueError('The estimated parameter is None. Try to run the `find_optimal_parameter` routine again?')
-        parameter_dict = self._create_parameter_dict(self.estimated_parameters)
-
-        return [parameter_dict, self.objective_score]
-
-
-    def _create_parameter_dict(self, estimated_parameter:np.ndarray) -> Dict:
-        """Creates a dictionary of the optimal parameters by assigning the corresponding names to them.
-
-        Arguments:
-            estimated_parameter {np.ndarray} -- Parameter values resulting from the optimisation.
-
-        Return:
-            {Dict} -- Estimated parameter values with their name as key.
-        """
-        state_dimension = self.problem._model.n_outputs()
-        state_names = self.problem._model.state_names
-        parameter_names = self.problem._model.parameter_names
-
-        parameter_dict = {}
-        # Note that the estimated parameters are [inital values, model parameter].
-        for parameter_id, value in enumerate(estimated_parameter):
-            if parameter_id < state_dimension:
-                parameter_dict[state_names[parameter_id]] = value
-            else:
-                reset_id = parameter_id-state_dimension
-                parameter_dict[parameter_names[reset_id]] = value
-
-        return parameter_dict
-
