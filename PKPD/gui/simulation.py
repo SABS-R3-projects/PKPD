@@ -24,6 +24,8 @@ class SimulationTab(QtWidgets.QDialog):
         self.enable_line_removal = False
         self.is_single_output_model = True
         self.parameter_values = None
+        # self.time_data = None
+        self.state_data = None
 
         # initialising the figure
         self.data_model_figure = Figure()
@@ -35,50 +37,57 @@ class SimulationTab(QtWidgets.QDialog):
         layout.addLayout(self._init_plot_infer_model_group())
         self.setLayout(layout)
 
-
     def add_data_to_data_model_plot(self):
         """Adds the data from the in the home tab chosen data file to the previously initialised figure. For multi-
         dimensional data, the figure is split into subplots.
         """
         # load data
         data = pd.read_csv(self.main_window.data_file)
-        time_label, state_labels = data.keys()[0], data.keys()[1:]
+        if data.keys()[0] != 'ID':
+            data.insert(0, 'ID', 1)
+            print('added ID')
+
+        id_label, time_label, state_labels, dose_label = data.keys()[0], data.keys()[1], data.keys()[2:-1], data.keys()[-1]
+
+        # identify the patients
+        grouped_data = data.groupby(id_label)
+        num_patients = len(grouped_data)
 
         # check dimensionality of problem for plotting and inference
         self.state_dimension = len(state_labels)
         self.is_single_output_model = self.state_dimension == 1
 
-        # sort into time and state data
-        self.time_data = data[time_label].to_numpy()
-        if self.is_single_output_model:
-            state_label = state_labels[0]
-            self.state_data = data[state_label].to_numpy()
-        else:
-            self.state_data = data[state_labels].to_numpy()
+        self.patients_data = []
+        # sort into [dosing, time, state data] for each individual patient and append to patients_data
+        for name, group in grouped_data:
+            time_data = grouped_data.get_group(name)[time_label].to_numpy()
+            dosing_data = grouped_data.get_group(name)[dose_label].to_numpy()
+            state_data = grouped_data.get_group(name)[state_labels].to_numpy()
+            self.patients_data.append([dosing_data, time_data, state_data])
 
         # plot data
-        if self.is_single_output_model: # single output
+        if self.is_single_output_model:  # single output
             # clear figure
             self.data_model_figure.clf()
 
             # create plot
             self.data_model_ax = self.data_model_figure.subplots()
-            self.data_model_ax.scatter(x=self.time_data, y=self.state_data, label='data', marker='o', color='darkgreen',
+            self.data_model_ax.scatter(x=self.patients_data[0][1], y=self.patients_data[0][2], label='data', marker='o', color='darkgreen',
                                        edgecolor='black', alpha=0.5)
             self.data_model_ax.set_xlabel(time_label)
-            self.data_model_ax.set_ylabel(state_label)
+            self.data_model_ax.set_ylabel(state_labels[0])
             self.data_model_ax.legend()
 
             # refresh canvas
             self.canvas.draw()
-        else: # multi output
+        else:  # multi output
             # clear figure
             self.data_model_figure.clf()
 
             # create subplots for each compartment
             self.data_model_ax = self.data_model_figure.subplots(nrows=self.state_dimension, sharex=True)
             for dim in range(self.state_dimension):
-                self.data_model_ax[dim].scatter(x=self.time_data, y=self.state_data[:, dim], label='data', marker='o',
+                self.data_model_ax[dim].scatter(x=self.patients_data[0][1], y=self.patients_data[0][2][:, dim], label='data', marker='o',
                                                 color='darkgreen', edgecolor='black', alpha=0.5)
                 self.data_model_ax[dim].set_ylabel(state_labels[dim])
                 self.data_model_ax[dim].legend()
@@ -479,8 +488,8 @@ class SimulationTab(QtWidgets.QDialog):
         self.enable_live_plotting = True
 
         # define time points for evaluation
-        self.times = np.linspace(start=self.time_data[0],
-                                 stop=self.time_data[-1],
+        self.times = np.linspace(start=self.patients_data[0][1][0],
+                                 stop=self.patients_data[0][1][-1],
                                  num=100
                                  )
 
@@ -676,8 +685,8 @@ class SimulationTab(QtWidgets.QDialog):
         """Plots inferred model in a solid, black line and removes all other lines from figure.
         """
         # define time points for model evaluation
-        times = np.linspace(start=self.time_data[0],
-                            stop=self.time_data[-1],
+        times = np.linspace(start=self.patients_data[0][1][0],
+                            stop=self.patients_data[0][1][-1],
                             num=100
                             )
 
