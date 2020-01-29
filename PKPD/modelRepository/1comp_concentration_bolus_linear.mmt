@@ -1,19 +1,32 @@
-# Linear, single-compartment model of drug concentration with bolus injection. The default protocol is a single injection, but can be adjusted in the GUI.
-
 [[model]]
-name: PKPD One Compartment Model
+name: Linear, single-compartment PK model of drug concentration with bolus injection. The default protocol is a single injection, but can be adjusted in the GUI.
+author: SABS:R3
+
 # Initial values
-centralCompartment.y = 0 [mg/mL]
+centralCompartment.drug = 0 [ng]
 
 [centralCompartment]
-CL = 2 [mL/s (2.777777777777775e-10)] : Clearance rate
-V = 4 [mL] : Volume of central compartment
+CL = 2 [mL/h]
+    desc: Clearance/elimination rate from central compartment.
+V = 4 [mL]
+    desc: Volume of central compartment.
 
-dot(y) = dosing.dose_rate - y * CL / V
+dot(drug) = dose.doseApplication - drug * CL / V
+    desc: Drug in central compartment in ng.
 
-[dosing]
+drugConcentration = drug / V
+    desc: Dreug concentration in central compartment in ng/mL.
+
+[time]
 time = 0 bind time
-dose_rate = 0 bind pace
+
+[dose]
+doseAmount = 1
+    desc: Amount of drug. Can be set in the GUI.
+doseBinary = 0 bind pace
+    desc: Boolean - determines when dose is applied and is controlled by the protocol.
+doseApplication = doseBinary * doseAmount
+    desc: dose that is being applied.
 
 [[protocol]]
 # Level  Start    Length   Period   Multiplier

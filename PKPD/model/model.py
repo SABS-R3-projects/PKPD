@@ -24,6 +24,9 @@ class SingleOutputModel(AbstractModel):
                 'The output seems to be multi-dimensional. You might want to try a MultiOutputProblem instead.'
                 )
         self.state_name = next(model.states()).qname()
+        print(model.code(line_numbers=True))
+
+
         print(self.state_name)
         print(list(model.components()))
         for component in model.components():
@@ -42,7 +45,7 @@ class SingleOutputModel(AbstractModel):
     def _get_parameter_names(self, model):
         parameter_names = []
         for component in model.components():
-            parameter_names += sorted([var.qname() for var in model.get(component).variables()]))
+            parameter_names += sorted([var.qname() for var in model.get(component).variables()])
 
 
     def n_parameters(self) -> int:
