@@ -1,0 +1,27 @@
+[[model]]
+name: Linear, single-compartment PK model of drug concentration with bolus injection. The default protocol is a single injection, but can be adjusted in the GUI.
+author: SABS:R3
+
+# Initial values
+centralCompartment.drug = 0 [ng]
+
+[centralCompartment]
+doseRate = 0 bind pace
+    desc: Dose rate in ng/h. Controlled by protocol.
+time = 0 bind time
+    desc: independent time variable in h.
+
+CL = 2 [mL/h]
+    desc: Clearance/elimination rate from central compartment.
+V = 4 [mL]
+    desc: Volume of central compartment.
+
+dot(drug) = doseRate - drug * CL / V
+    desc: Drug in central compartment in ng.
+
+drugConcentration = drug / V
+    desc: Drug concentration in central compartment in ng/mL.
+
+[[protocol]]
+# Level  Start    Length   Period   Multiplier
+2.0      2.0      0.5      6        0
