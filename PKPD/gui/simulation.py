@@ -409,10 +409,18 @@ class SimulationTab(QtWidgets.QDialog):
         return slider_box
 
     def _give_param_label(self, parameter_name):
+        """Takes a parameter name and returns a string with the parameter label (if exists), name (if no label),
+        and units.
+
+        Arguments: parameter_name -- name of myokit parameter (string)
+
+        Returns: slider_label -- appropriate parameter name (string)
+        """
         var = self.main_window.model.model.get(parameter_name)
         unit = var.unit()
         parameter_label = var.label()
 
+        # If there's a label or units, add them to the naming string.
         if parameter_label is not None:
             if unit is not None:
                 slider_label = str(parameter_label + ' ' + str(unit))
@@ -423,6 +431,7 @@ class SimulationTab(QtWidgets.QDialog):
                 slider_label = str(parameter_name + ' ' + str(unit))
             else:
                 slider_label = str(parameter_name)
+
         return slider_label
 
     def _create_min_current_max_value_label(self, slider:QtWidgets.QSlider):
