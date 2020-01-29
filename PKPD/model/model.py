@@ -17,35 +17,33 @@ class SingleOutputModel(AbstractModel):
         Arguments:
             mmtfile {str} -- Path to the mmtfile defining the model and the protocol.
         """
+        # load model and protocol
         model, protocol, _ = myokit.load(mmtfile)
-        state_dimension = model.count_states()
-        if state_dimension > 1:
-            raise NotImplementedError(
-                'The output seems to be multi-dimensional. You might want to try a MultiOutputProblem instead.'
-                )
+
+        # get state, parameter and output names
         self.state_name = next(model.states()).qname()
-        print(model.code(line_numbers=True))
-
-
-        print(self.state_name)
-        print(list(model.components()))
-        for component in model.components():
-            print(sorted([var.qname() for var in model.get(component).variables()]))
-        # TODO:
-        # - define _get_parameter_names
-        # - make sure the pipeline works, where the parameters are called.
-        # TODO: automate name 'param'
-        # self.parameter_names = sorted([var.qname() for var in model.get('param').variables()])
-        # self.number_model_parameters = len(self.parameter_names)
+        self.output_name = next(model.variables(inter=True)) # by default drug concentration (only intermediate variable in any compartment)
         self.parameter_names = self._get_parameter_names(model)
-        self.number_parameters_to_fit = model.count_variables(bound=False)
+        self.number_parameters_to_fit = model.count_variables(inter=False, bound=False)
+
+        # instantiate the simulation
         self.simulation = myokit.Simulation(model, protocol)
 
 
-    def _get_parameter_names(self, model):
+    def _get_parameter_names(self, model:myokit.Model):
+        """Gets parameter names of the ODE model, i.e. initial conditions are excluded.
+
+        Arguments:
+            model {myokit.Model} -- A myokit model.
+
+        Returns:
+            List -- List of parameter names.
+        """
         parameter_names = []
-        for component in model.components():
-            parameter_names += sorted([var.qname() for var in model.get(component).variables()])
+        for component in model.components(sort=True):
+            parameter_names += [var.qname() for var in component.variables(state=False, inter=False, bound=False, sort=True)]
+
+        return parameter_names
 
 
     def n_parameters(self) -> int:
@@ -67,6 +65,15 @@ class SingleOutputModel(AbstractModel):
         return 1
 
 
+    def set_output(self, output_name):
+        """Sets the output of the model.
+
+        Arguments:
+            output_name {[type]} -- [description]
+        """
+        self.output_name = output_name
+
+
     def simulate(self, parameters:np.ndarray, times:np.ndarray) -> array:
         """Solves the forward problem and returns the state values evaluated at the times provided.
 
@@ -81,9 +88,9 @@ class SingleOutputModel(AbstractModel):
         self._set_parameters(parameters)
 
         # duration is the last time point plus an increment to iclude the last time step.
-        result = self.simulation.run(duration=times[-1]+1, log=[self.state_name], log_times = times)
+        result = self.simulation.run(duration=times[-1]+1, log=[self.output_name], log_times = times)
 
-        return result[self.state_name]
+        return result[self.output_name]
 
 
     def _set_parameters(self, parameters:np.ndarray) -> None:
@@ -98,6 +105,7 @@ class SingleOutputModel(AbstractModel):
 
 
 class MultiOutputModel(AbstractModel):
+    #TODO: refactor similar to SIngleOutput model!
     """Model class inheriting from pints.ForwardModel. To solve the forward problem methods from the
     myokit package are employed. The sole difference to the SingleOutputProblem is that the simulate method
     returns a 2d array instead of a 1d array.
