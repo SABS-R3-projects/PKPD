@@ -31,12 +31,6 @@ class SingleOutputModel(AbstractModel):
         self.simulation = myokit.Simulation(model, protocol)
         self.model = model
 
-        try:
-            model.check_units(mode=my.UNIT_STRICT)
-        except:
-            print("Some Units are wrong!")
-            #Warning("Some Units may be wrong!")
-
 
     def _get_parameter_names(self, model:myokit.Model):
         """Gets parameter names of the ODE model, i.e. initial conditions are excluded.
