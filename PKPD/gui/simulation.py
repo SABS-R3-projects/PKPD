@@ -351,6 +351,8 @@ class SimulationTab(QtWidgets.QDialog):
         else:
             state_names = self.main_window.model.state_names
         model_param_names = self.main_window.model.parameter_names # parameters except initial conditions
+        print(model_param_names)
+        print(state_names)
         parameter_names = state_names + model_param_names # parameters including initial conditions
 
         # fill up grid with slider objects
@@ -384,7 +386,7 @@ class SimulationTab(QtWidgets.QDialog):
             slider_box {QGroupBox} -- Returns a widget containing labels, a value slider and a value text field for the parameter.
         """
         # initialise widget
-        slider_box = QtWidgets.QGroupBox(parameter_name)
+        slider_box = QtWidgets.QGroupBox(self._give_param_label(parameter_name))
 
         # create horizontal slider
         slider = sl.DoubleSlider()
@@ -409,6 +411,22 @@ class SimulationTab(QtWidgets.QDialog):
 
         return slider_box
 
+    def _give_param_label(self, parameter_name):
+        var = self.main_window.model.model.get(parameter_name)
+        unit = var.unit()
+        parameter_label = var.label()
+
+        if parameter_label is not None:
+            if unit is not None:
+                slider_label = str(parameter_label + ' ' + str(unit))
+            else:
+                slider_label = str(parameter_label)
+        else:
+            if unit is not None:
+                slider_label = str(parameter_name + ' ' + str(unit))
+            else:
+                slider_label = str(parameter_name)
+        return slider_label
 
     def _create_min_current_max_value_label(self, slider:QtWidgets.QSlider):
         """Creates labels for a slider displaying the current position of the slider and the minimum and

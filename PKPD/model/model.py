@@ -29,6 +29,7 @@ class SingleOutputModel(AbstractModel):
         self.number_model_parameters = len(self.parameter_names)
         self.number_parameters_to_fit = 1 + self.number_model_parameters
         self.simulation = myokit.Simulation(model, protocol)
+        self.model = model
 
 
     def n_parameters(self) -> int:
@@ -104,7 +105,7 @@ class MultiOutputModel(AbstractModel):
         self.number_model_parameters = len(self.parameter_names)
         self.number_parameters_to_fit = self.state_dimension + self.number_model_parameters
         self.simulation = myokit.Simulation(model, protocol)
-
+        self.model = model
 
     def n_parameters(self) -> int:
         """Returns the number of parameters of the model, i.e. initial conditions and model
