@@ -11,7 +11,7 @@ class TestSingleOutputModel(unittest.TestCase):
     """Tests the functionality of all methods of the SingleOutputModel class.
     """
     # Test case I: 1-compartment model
-    file_name = 'PKPD/mmt/one_compartment.mmt'
+    file_name = 'PKPD/modelRepository/1comp_concentration_bolus_linear.mmt'
     one_comp_model = m.SingleOutputModel(file_name)
 
     def test_init(self):
@@ -19,16 +19,16 @@ class TestSingleOutputModel(unittest.TestCase):
         """
         # Test case I: 1-compartment model
         ## expected:
-        state_name = 'bolus.y_c'
-        parameter_names = ['param.CL', 'param.V_c']
-        number_model_parameters = 2
+        state_name = 'centralCompartment.drug'
+        output_name = 'centralCompartment.drugConcentration'
+        parameter_names = ['centralCompartment.CL', 'centralCompartment.V']
         number_parameters_to_fit = 3
 
         ## assert initilised values coincide
         assert state_name == self.one_comp_model.state_name
+        assert output_name == self.one_comp_model.output_name
         for parameter_id, parameter in enumerate(self.one_comp_model.parameter_names):
             assert parameter_names[parameter_id] == parameter
-        assert number_model_parameters == self.one_comp_model.number_model_parameters
         assert number_parameters_to_fit == self.one_comp_model.number_parameters_to_fit
 
     def test_n_parameters(self):
@@ -56,17 +56,17 @@ class TestSingleOutputModel(unittest.TestCase):
         the _set_parameters method works properly.
         """
         # Test case I: 1-compartment model
-        parameters = [20, 2, 4] # different from initialsed parameters
+        parameters = [0, 2, 4] # different from initialsed parameters
         times = np.arange(25)
 
         ## expected
         model, protocol, _ = myokit.load(self.file_name)
         model.set_state([parameters[0]])
-        model.set_value('param.CL', parameters[1])
-        model.set_value('param.V_c', parameters[2])
+        model.set_value('centralCompartment.CL', parameters[1])
+        model.set_value('centralCompartment.V', parameters[2])
         simulation = myokit.Simulation(model, protocol)
-        myokit_result = simulation.run(duration=times[-1]+1, log=['bolus.y_c'], log_times = times)
-        expected_result = myokit_result.get('bolus.y_c')
+        myokit_result = simulation.run(duration=times[-1]+1, log=['centralCompartment.drugConcentration'], log_times = times)
+        expected_result = myokit_result.get('centralCompartment.drugConcentration')
 
         ## assert that Model.simulate returns the same result.
         model_result = self.one_comp_model.simulate(parameters, times)

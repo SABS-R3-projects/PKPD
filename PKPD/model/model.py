@@ -22,7 +22,7 @@ class SingleOutputModel(AbstractModel):
 
         # get state, parameter and output names
         self.state_name = next(model.states()).qname()
-        self.output_name = next(model.variables(inter=True)) # by default drug concentration (only intermediate variable in any compartment)
+        self.output_name = next(model.variables(inter=True)).qname() # by default drug concentration (only intermediate variable in any compartment)
         self.parameter_names = self._get_parameter_names(model)
         self.number_parameters_to_fit = model.count_variables(inter=False, bound=False)
 
