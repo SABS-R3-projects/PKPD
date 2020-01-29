@@ -17,17 +17,17 @@ class SingleOutputModel(AbstractModel):
         Arguments:
             mmtfile {str} -- Path to the mmtfile defining the model and the protocol.
         """
+        # load model and protocol
         model, protocol, _ = myokit.load(mmtfile)
-        state_dimension = model.count_states()
-        if state_dimension > 1:
-            raise NotImplementedError(
-                'The output seems to be multi-dimensional. You might want to try a MultiOutputProblem instead.'
-                )
-        self.state_name = next(model.states()).qname()
-        # TODO: automate name 'param'
-        self.parameter_names = sorted([var.qname() for var in model.get('param').variables()])
-        self.number_model_parameters = len(self.parameter_names)
-        self.number_parameters_to_fit = 1 + self.number_model_parameters
+
+        # get state, parameter and output names
+        self.state_names = [state.qname() for state in model.states()]
+        self.state_dimension = len(self.state_names)
+        self.output_name = next(model.variables(inter=True)).qname() # by default drug concentration (only intermediate variable in any compartment)
+        self.parameter_names = self._get_parameter_names(model)
+        self.number_parameters_to_fit = model.count_variables(inter=False, bound=False)
+
+        # instantiate the simulation
         self.simulation = myokit.Simulation(model, protocol)
         self.model = model
 
@@ -36,6 +36,22 @@ class SingleOutputModel(AbstractModel):
         except:
             print("Some Units are wrong!")
             #Warning("Some Units may be wrong!")
+
+
+    def _get_parameter_names(self, model:myokit.Model):
+        """Gets parameter names of the ODE model, i.e. initial conditions are excluded.
+
+        Arguments:
+            model {myokit.Model} -- A myokit model.
+
+        Returns:
+            List -- List of parameter names.
+        """
+        parameter_names = []
+        for component in model.components(sort=True):
+            parameter_names += [var.qname() for var in component.variables(state=False, inter=False, bound=False, sort=True)]
+
+        return parameter_names
 
 
     def n_parameters(self) -> int:
@@ -57,6 +73,15 @@ class SingleOutputModel(AbstractModel):
         return 1
 
 
+    def set_output(self, output_name):
+        """Sets the output of the model.
+
+        Arguments:
+            output_name {[type]} -- [description]
+        """
+        self.output_name = output_name
+
+
     def simulate(self, parameters:np.ndarray, times:np.ndarray) -> array:
         """Solves the forward problem and returns the state values evaluated at the times provided.
 
@@ -71,9 +96,9 @@ class SingleOutputModel(AbstractModel):
         self._set_parameters(parameters)
 
         # duration is the last time point plus an increment to iclude the last time step.
-        result = self.simulation.run(duration=times[-1]+1, log=[self.state_name], log_times = times)
+        result = self.simulation.run(duration=times[-1]+1, log=[self.output_name], log_times = times)
 
-        return result[self.state_name]
+        return result[self.output_name]
 
 
     def _set_parameters(self, parameters:np.ndarray) -> None:
@@ -82,12 +107,13 @@ class SingleOutputModel(AbstractModel):
         Arguments:
             parameters {np.ndarray} -- Parameters of the model. By convention [initial condition, model parameters].
         """
-        self.simulation.set_state(parameters[:1])
-        for param_id, value in enumerate(parameters[1:]):
+        self.simulation.set_state(parameters[:self.state_dimension])
+        for param_id, value in enumerate(parameters[self.state_dimension:]):
             self.simulation.set_constant(self.parameter_names[param_id], value)
 
 
 class MultiOutputModel(AbstractModel):
+    #TODO: refactor similar to SIngleOutput model!
     """Model class inheriting from pints.ForwardModel. To solve the forward problem methods from the
     myokit package are employed. The sole difference to the SingleOutputProblem is that the simulate method
     returns a 2d array instead of a 1d array.

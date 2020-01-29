@@ -346,10 +346,7 @@ class SimulationTab(QtWidgets.QDialog):
         self._clear_slider_group()
 
         # get parameter names
-        if self.is_single_output_model:
-            state_names = [self.main_window.model.state_name]
-        else:
-            state_names = self.main_window.model.state_names
+        state_names = self.main_window.model.state_names
         model_param_names = self.main_window.model.parameter_names # parameters except initial conditions
         print(model_param_names)
         print(state_names)
@@ -577,10 +574,7 @@ class SimulationTab(QtWidgets.QDialog):
         empty cell for the inferred value.
         """
         # get fit parameter names
-        if self.is_single_output_model:
-            state_names = [self.main_window.model.state_name]
-        else:
-            state_names = self.main_window.model.state_names
+        state_names = self.main_window.model.state_names
         model_param_names = self.main_window.model.parameter_names
         parameter_names = state_names + model_param_names
         number_parameters = len(parameter_names)
