@@ -13,11 +13,11 @@ class TestSingleOutputProblem(unittest.TestCase):
     """
     ## Test case I: One Compartment Model
     # generating data
-    file_name = 'PKPD/mmt/one_compartment.mmt'
+    file_name = 'PKPD/modelRepository/1comp_concentration_bolus_linear.mmt'
     one_comp_model = m.SingleOutputModel(file_name)
-    true_parameters_one_comp_model = [20, 2, 4] # [bolus.y_c, param.CL, param.V_c]
+    true_parameters_one_comp_model = [0, 2, 4] # # [initial drug, CL, V]
 
-    times = np.linspace(0.0, 24.0, 10000)
+    times = np.linspace(0.0, 24.0, 1000)
     model_result = one_comp_model.simulate(true_parameters_one_comp_model, times)
 
     # add white noise to generate data
@@ -37,7 +37,7 @@ class TestSingleOutputProblem(unittest.TestCase):
                                                        )
 
         # start somewhere in parameter space (close to the solution for ease)
-        initial_parameters = np.array([25, 3, 5])
+        initial_parameters = np.array([1, 3, 5])
 
         # solve inverse problem
         problem.find_optimal_parameter(initial_parameter=initial_parameters)
@@ -46,7 +46,7 @@ class TestSingleOutputProblem(unittest.TestCase):
         for parameter_id, parameter_name in enumerate(parameter_dict):
             true_value = self.true_parameters_one_comp_model[parameter_id]
             estimated_value = parameter_dict[parameter_name]
-            assert true_value == pytest.approx(estimated_value, rel=0.05)
+            assert true_value == pytest.approx(estimated_value, abs=0.05)
 
 
     def test_set_objective_function(self):
@@ -58,7 +58,7 @@ class TestSingleOutputProblem(unittest.TestCase):
                                                        )
 
         # start somewhere in parameter space (close to the solution for ease)
-        initial_parameters = np.array([20.1, 2.1, 4.1])
+        initial_parameters = np.array([1, 2.1, 4.1])
 
         # solve inverse problem
         valid_obj_func = [pints.MeanSquaredError, pints.RootMeanSquaredError, pints.SumOfSquaresError]
@@ -70,7 +70,7 @@ class TestSingleOutputProblem(unittest.TestCase):
             for parameter_id, parameter_name in enumerate(parameter_dict):
                 true_value = self.true_parameters_one_comp_model[parameter_id]
                 estimated_value = parameter_dict[parameter_name]
-                assert true_value == pytest.approx(estimated_value, rel=0.05)
+                assert true_value == pytest.approx(estimated_value, abs=0.05)
 
 
     def test_set_optimiser(self):
@@ -83,7 +83,7 @@ class TestSingleOutputProblem(unittest.TestCase):
                                                        )
 
         # start somewhere in parameter space (close to the solution for ease)
-        initial_parameters = np.array([20.1, 2.1, 4.1])
+        initial_parameters = np.array([1, 2.1, 4.1])
 
         # solve inverse problem
         valid_optimisers = [pints.CMAES, pints.NelderMead, pints.SNES, pints.XNES]
@@ -95,7 +95,7 @@ class TestSingleOutputProblem(unittest.TestCase):
             for parameter_id, parameter_name in enumerate(parameter_dict):
                 true_value = self.true_parameters_one_comp_model[parameter_id]
                 estimated_value = parameter_dict[parameter_name]
-                assert true_value == pytest.approx(estimated_value, rel=0.05)
+                assert true_value == pytest.approx(estimated_value, abs=0.05)
 
 
     def test_optimiser(self):
@@ -108,7 +108,7 @@ class TestSingleOutputProblem(unittest.TestCase):
                                                        )
 
         # start somewhere in parameter space (close to the solution for ease)
-        initial_parameters = np.array([20.1, 2.1, 4.1])
+        initial_parameters = np.array([1, 2.1, 4.1])
 
         # solve inverse problem
         valid_optimisers = [pints.CMAES, pints.NelderMead, pints.SNES, pints.XNES]
@@ -120,7 +120,7 @@ class TestSingleOutputProblem(unittest.TestCase):
             for parameter_id, parameter_name in enumerate(parameter_dict):
                 true_value = self.true_parameters_one_comp_model[parameter_id]
                 estimated_value = parameter_dict[parameter_name]
-                assert true_value == pytest.approx(estimated_value, rel=0.05)
+                assert true_value == pytest.approx(estimated_value, abs=0.05)
 
 
 class TestMultiOutputProblem(unittest.TestCase):
