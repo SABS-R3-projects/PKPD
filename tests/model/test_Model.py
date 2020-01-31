@@ -11,7 +11,7 @@ class TestSingleOutputModel(unittest.TestCase):
     """Tests the functionality of all methods of the SingleOutputModel class.
     """
     # Test case I: 1-compartment model
-    file_name = 'PKPD/modelRepository/1comp_concentration_bolus_linear.mmt'
+    file_name = 'PKPD/modelRepository/1comp_bolus_linear.mmt'
     one_comp_model = m.SingleOutputModel(file_name)
 
     def test_init(self):

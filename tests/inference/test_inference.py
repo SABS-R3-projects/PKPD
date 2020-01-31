@@ -13,7 +13,7 @@ class TestSingleOutputProblem(unittest.TestCase):
     """
     ## Test case I: One Compartment Model
     # generating data
-    file_name = 'PKPD/modelRepository/1comp_concentration_bolus_linear.mmt'
+    file_name = 'PKPD/modelRepository/1comp_bolus_linear.mmt'
     one_comp_model = m.SingleOutputModel(file_name)
     true_parameters_one_comp_model = [0, 2, 4] # # [initial drug, CL, V]
 
