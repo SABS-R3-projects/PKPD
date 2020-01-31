@@ -7,6 +7,7 @@ centralCompartment.drug = 0 [ng]
 doseCompartment.drug = 0 [ng]
 
 [doseCompartment]
+# bound variables (dosing controlled by the protocol, and time)
 doseRate = 0 [ng/h]
     in [ng/h]
     bind pace
@@ -16,17 +17,18 @@ time = 0 [h]
     bind time
     desc: independent time variable in h.
 
+# compartment internal parameters
 Ka = 0 [1/h]
     in [1/h]
     desc: Absorption rate (transition rate between dose and cetral compartment).
 
-dot(drug) = doseRate - Ka * drug 
+# state variable
+dot(drug) = doseRate - Ka * drug
     in [ng]
     desc: Drug in dose compartment in ng.
 
 [centralCompartment]
-use doseCompartment.Ka as Ka
-
+# compartment internal parameters
 CL = 2 [mL/h]
     in [mL/h]
     desc: Clearance/elimination rate from central compartment.
@@ -34,10 +36,15 @@ V = 4 [mL]
     in [mL]
     desc: Volume of central compartment.
 
+# compartment external parameters
+use doseCompartment.Ka as Ka
+
+# state variable
 dot(drug) = Ka * doseCompartment.drug - drug * CL / V
     in [ng]
     desc: Drug in central compartment in ng.
 
+# convert to concentration
 drugConcentration = drug / V
     in [ng/mL]
     desc: Drug concentration in central compartment in ng/mL.

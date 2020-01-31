@@ -6,6 +6,7 @@ author: SABS:R3
 centralCompartment.drug = 0 [ng]
 
 [centralCompartment]
+# bound variables (dosing controlled by the protocol, and time)
 doseRate = 0 [ng/h]
     in [ng/h]
     bind pace
@@ -15,6 +16,7 @@ time = 0 [h]
     bind time
     desc: independent time variable in h.
 
+# compartment internal parameters
 CL = 2 [mL/h]
     in [mL/h]
     desc: Clearance/elimination rate from central compartment.
@@ -22,10 +24,12 @@ V = 4 [mL]
     in [mL]
     desc: Volume of central compartment.
 
+# state variable
 dot(drug) = doseRate - drug * CL / V
     in [ng]
     desc: Drug in central compartment in ng.
 
+# convert to concentration
 drugConcentration = drug / V
     in [ng/mL]
     desc: Drug concentration in central compartment in ng/mL.
