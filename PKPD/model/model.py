@@ -20,9 +20,9 @@ class SingleOutputModel(AbstractModel):
         # load model and protocol
         model, protocol, _ = myokit.load(mmtfile)
 
-        # get state, parameter and output name
+        # get state, parameter and output names
         self.state_names = [state.qname() for state in model.states()]
-        self.state_dimension = len(self.state_names)
+        self.state_dimension = model.count_states()
         self.output_name = self._get_default_output_name(model)
         self.parameter_names = self._get_parameter_names(model)
         self.number_parameters_to_fit = model.count_variables(inter=False, bound=False)
@@ -37,7 +37,7 @@ class SingleOutputModel(AbstractModel):
 
         Arguments:
             model {myokit.Model} -- A myokit model.
-        
+
         Returns:
             str -- Output name of model.
         """
@@ -125,7 +125,6 @@ class SingleOutputModel(AbstractModel):
 
 
 class MultiOutputModel(AbstractModel):
-    #TODO: refactor similar to SIngleOutput model!
     """Model class inheriting from pints.ForwardModel. To solve the forward problem methods from the
     myokit package are employed. The sole difference to the SingleOutputProblem is that the simulate method
     returns a 2d array instead of a 1d array.
@@ -136,19 +135,39 @@ class MultiOutputModel(AbstractModel):
         Arguments:
             mmtfile {str} -- Path to the mmtfile defining the model and the protocol.
         """
+        # load model and protocol
         model, protocol, _ = myokit.load(mmtfile)
+
+        # get state, parameter and output names
+        self.state_names = [state.qname() for state in model.states()]
         self.state_dimension = model.count_states()
-        if self.state_dimension == 1:
-            Warning(
-                'The output seems to be one-dimensional. For efficiency you might want to try a SingleOutputProblem instead.'
-                )
-        model_states = model.states()
-        self.state_names = [next(model_states).qname() for _ in range(self.state_dimension)]
-        # TODO: automate name 'param'
-        self.parameter_names = sorted([var.qname() for var in model.get('param').variables()])
-        self.number_model_parameters = len(self.parameter_names)
-        self.number_parameters_to_fit = self.state_dimension + self.number_model_parameters
+        self.output_names = self._get_default_output_names(model)
+        self.parameter_names = self._get_parameter_names(model)
+        self.number_parameters_to_fit = model.count_variables(inter=False, bound=False)
+
+        # instantiate the simulation
         self.simulation = myokit.Simulation(model, protocol)
+
+
+    ### TODO: adapt function and continue fixing changes.
+    ### Oriantate on init and singleoutput problme.
+    def _get_default_output_names(self, model:myokit.Model):
+        """Returns 'centralCompartment.drugConcentration' as output_name by default. If variable does not exist in model, first state
+        variable name is returned.
+
+        Arguments:
+            model {myokit.Model} -- A myokit model.
+
+        Returns:
+            str -- Output name of model.
+        """
+        default_output_name = 'centralCompartment.drugConcentration'
+        if model.has_variable(default_output_name):
+            return default_output_name
+        else:
+            # if default output name does not exist, output first state variable
+            first_state_name = self.state_names[0]
+            return first_state_name
 
 
     def n_parameters(self) -> int:
