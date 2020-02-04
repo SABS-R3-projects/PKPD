@@ -20,15 +20,34 @@ class SingleOutputModel(AbstractModel):
         # load model and protocol
         model, protocol, _ = myokit.load(mmtfile)
 
-        # get state, parameter and output names
+        # get state, parameter and output name
         self.state_names = [state.qname() for state in model.states()]
         self.state_dimension = len(self.state_names)
-        self.output_name = next(model.variables(inter=True)).qname() # by default drug concentration (only intermediate variable in any compartment)
+        self.output_name = self._get_default_output_name(model)
         self.parameter_names = self._get_parameter_names(model)
         self.number_parameters_to_fit = model.count_variables(inter=False, bound=False)
 
         # instantiate the simulation
         self.simulation = myokit.Simulation(model, protocol)
+
+
+    def _get_default_output_name(self, model:myokit.Model):
+        """Returns 'centralCompartment.drugConcentration' as output_name by default. If variable does not exist in model, first state
+        variable name is returned.
+
+        Arguments:
+            model {myokit.Model} -- A myokit model.
+        
+        Returns:
+            str -- Output name of model.
+        """
+        default_output_name = 'centralCompartment.drugConcentration'
+        if model.has_variable(default_output_name):
+            return default_output_name
+        else:
+            # if default output name does not exist, output first state variable
+            first_state_name = self.state_names[0]
+            return first_state_name
 
 
     def _get_parameter_names(self, model:myokit.Model):
