@@ -140,9 +140,9 @@ class TestMultiOutputProblem(unittest.TestCase):
     scale = np.mean(model_result) * 0.05 # arbitrary choice of noise (not too much, not too little)
     noise =  np.random.normal(loc=0.0,
                               scale=scale,
-                              size=len(model_result)
+                              size=model_result.shape
                               )
-    data_one_comp_model = model_result + noise[:, np.newaxis]
+    data_one_comp_model = model_result + noise
 
 
     def test_find_optimal_parameter(self):
