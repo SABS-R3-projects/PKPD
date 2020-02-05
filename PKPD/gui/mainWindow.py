@@ -1,5 +1,6 @@
 import os
 import sys
+import myokit
 from typing import List
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -7,7 +8,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PKPD.inference import inference as inf
 from PKPD.gui import abstractGui, home, simulation
 from PKPD.model import model as m
-import myokit
 
 
 class MainWindow(abstractGui.AbstractMainWindow):
@@ -176,15 +176,13 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 error_message = 'The .csv file does not seem to be properly formatted. Please check again!'
                 QtWidgets.QMessageBox.question(self, 'Data structure not compatible!', error_message, QtWidgets.QMessageBox.Yes)
 
-            #Check Units in MMT file
+            # Check Units in MMT file
             try:
                 self.model.model.check_units(mode=myokit.UNIT_STRICT)
-            except Exception as e: #Display Warning if Inconsistent
+            except Exception as e: # Display Warning if Inconsistent
                 warning_message = 'Warning: Units may be inconsistent'
                 QtWidgets.QMessageBox.question(self, warning_message, str(e),
                                                QtWidgets.QMessageBox.Yes)
-
-
         else:
             # update file dialog icons
             if not correct_model:
@@ -199,7 +197,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
             # generate error message
             error_message = 'At least one of the files does not seem to exist or does not have the correct file format. Please check again!'
             QtWidgets.QMessageBox.question(self, 'Files not found!', error_message, QtWidgets.QMessageBox.Yes)
-
 
 
     def _are_files_correct(self) -> List[bool]:
