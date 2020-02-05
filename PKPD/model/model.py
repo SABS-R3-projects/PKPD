@@ -150,8 +150,21 @@ class MultiOutputModel(AbstractModel):
         self.simulation = myokit.Simulation(model, protocol)
 
 
-    ### TODO: adapt function and continue fixing changes.
-    ### Oriantate on init and singleoutput problme.
+    def _get_parameter_names(self, model:myokit.Model):
+        """Gets parameter names of the ODE model, i.e. initial conditions are excluded.
+
+        Arguments:
+            model {myokit.Model} -- A myokit model.
+
+        Returns:
+            List -- List of parameter names.
+        """
+        parameter_names = []
+        for component in model.components(sort=True):
+            parameter_names += [var.qname() for var in component.variables(state=False, inter=False, bound=False, sort=True)]
+
+        return parameter_names
+
 
     def n_parameters(self) -> int:
         """Returns the number of parameters of the model, i.e. initial conditions and model
@@ -186,11 +199,11 @@ class MultiOutputModel(AbstractModel):
         self._set_parameters(parameters)
 
         # duration is the last time point plus an increment to iclude the last time step.
-        output = self.simulation.run(duration=times[-1]+1, log=self.state_names, log_times = times)
+        output = self.simulation.run(duration=times[-1]+1, log=self.output_names, log_times = times)
 
         result = []
-        for state in self.state_names:
-            result.append(output[state])
+        for name in self.output_names:
+            result.append(output[name])
 
         return np.array(result).transpose()
 
@@ -215,7 +228,7 @@ class MultiOutputModel(AbstractModel):
         self.output_dimension = data_dimension
 
 
-    def get_default_output_names(self, model:myokit.Model):
+    def set_default_output_names(self):
         """Returns 'centralCompartment.drugConcentration' as output_name by default. If variable does not exist in model, first state
         variable name is returned.
 
@@ -227,6 +240,7 @@ class MultiOutputModel(AbstractModel):
         """
         default_output_names = []
         default_output_variable = 'drugConcentration'
+        model = self.simulation._model
 
         # iterate through components and fill with default variables
         model_components = model.components(sort=True)
@@ -237,8 +251,8 @@ class MultiOutputModel(AbstractModel):
 
         # check dimensional compatibility
         if len(default_output_names) >= self.output_dimension:
-            return default_output_names[:self.output_dimension]
+            self.output_names = default_output_names[:self.output_dimension]
         elif self.state_dimension >= self.output_dimension:
-            return self.state_names[:self.output_dimension]
+            self.output_names = self.state_names[:self.output_dimension]
         else:
-            return None
+            self.output_names = None
