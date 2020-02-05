@@ -147,8 +147,7 @@ class SimulationTab(QtWidgets.QDialog):
         option_button = QtWidgets.QPushButton('option')
         option_button.clicked.connect(self.on_plot_option_click)
 
-        # initialise option window
-        self._create_plot_option_window()
+        # initialise option window (moved to main window)
 
         # arange button horizontally
         hbox = QtWidgets.QHBoxLayout()

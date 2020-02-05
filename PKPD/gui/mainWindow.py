@@ -169,6 +169,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 self.simulation.fill_parameter_slider_group()
                 self.simulation.fill_plot_option_window()
                 self.simulation.fill_parameter_table()
+                self.simulation_create_plot_option_window()
 
                 # switch to simulation tab
                 self.tabs.setCurrentIndex(self.sim_tab_index)
