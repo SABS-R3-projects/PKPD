@@ -25,7 +25,6 @@ class SimulationTab(QtWidgets.QDialog):
         self.enable_line_removal = False
         self.is_single_output_model = True
         self.parameter_values = None
-        # self.time_data = None
         self.patients_data = None
         self.patients_dose = None
         self.state_dimension = 0
@@ -70,7 +69,7 @@ class SimulationTab(QtWidgets.QDialog):
         for name, group in states:
             time_data = states.get_group(name)[time_label].to_numpy()
             state_data = states.get_group(name)[state_labels].to_numpy()
-            self.patients_data[name] = (time_data, state_data.astype(np.float))
+            self.patients_data[int(name)] = (time_data.astype(np.float), state_data.astype(np.float))
 
         dose = data
         dose.drop(dose.loc[dose[dose_label] == '.'].index, inplace=True)
@@ -79,7 +78,7 @@ class SimulationTab(QtWidgets.QDialog):
         for name, group in dose:
             time_data = dose.get_group(name)[time_label].to_numpy()
             dosing_data = dose.get_group(name)[dose_label].to_numpy()
-            self.patients_dose[name] = (time_data, dosing_data)
+            self.patients_dose[int(name)] = (time_data.astype(np.float), dosing_data.astype(np.float))
 
         # plot data
         if self.is_single_output_model:  # single output
@@ -88,10 +87,18 @@ class SimulationTab(QtWidgets.QDialog):
 
             # create plot
             self.data_model_ax = self.data_model_figure.subplots()
-            print(self.patients_data)
-            self.data_model_ax.scatter(x=self.patients_data[3][0], y=self.patients_data[3][1][:, 0], label='data', marker='o',
-                                       color='darkgreen',
-                                       edgecolor='black', alpha=0.5)
+            colours = ["#68af53", "#9a89f0", "#d188ed", "#3a91fb", "#c59927", "#e7893e", "#658bfb", "#f5665e",
+                       "#ed7446", "#f65c98", "#9ea51e", "#ba79e8", "#7bac31", "#e670d2", "#baa923", "#42b656",
+                       "#8184fb", "#db9123", "#e47825", "#997cfb"]
+            # 20 colours from https://medialab.github.io/iwanthue/
+
+            for patient_id in self.patients_data:
+                label = 'patient ' + str(patient_id)
+                print(patient_id)
+                self.data_model_ax.scatter(x=self.patients_data[patient_id][0],
+                                           y=self.patients_data[patient_id][1][:, 0], label=label, marker='o',
+                                           color=colours[patient_id-1],
+                                           edgecolor='black', alpha=0.5)
             self.data_model_ax.set_xlabel(time_label)
             self.data_model_ax.set_ylabel(state_labels[0])
             self.data_model_ax.legend()
@@ -528,8 +535,8 @@ class SimulationTab(QtWidgets.QDialog):
         """
         # solve forward problem for current parameter set
         self.state_values = self.main_window.model[4].simulate(parameters=self.parameter_values,
-                                                            times=self.times
-                                                            )
+                                                               times=self.times
+                                                               )
 
         # remove previous graphs from subplots to avoid flooding the figure
         if self.enable_line_removal:
@@ -685,8 +692,8 @@ class SimulationTab(QtWidgets.QDialog):
 
         # solve forward problem
         state_values = self.main_window.model[4].simulate(parameters=self.main_window.problem.estimated_parameters,
-                                                       times=times
-                                                       )
+                                                          times=times
+                                                          )
         if self.is_single_output_model:  # single-output problem
             # remove all lines from figure
             lines = self.data_model_ax.lines
