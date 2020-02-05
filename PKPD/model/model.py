@@ -22,6 +22,7 @@ class SingleOutputModel(AbstractModel):
 
         # get state, parameter and output names
         self.state_names = [state.qname() for state in model.states()]
+        self.create_state_dictionary(model)
         self.state_dimension = model.count_states()
         self.output_name = self._get_default_output_name(model)
         self.parameter_names = self._get_parameter_names(model)
@@ -85,7 +86,6 @@ class SingleOutputModel(AbstractModel):
         """
         return 1
 
-
     def set_output(self, output_name):
         """Sets the output of the model.
 
@@ -123,6 +123,19 @@ class SingleOutputModel(AbstractModel):
         self.simulation.set_state(parameters[:self.state_dimension])
         for param_id, value in enumerate(parameters[self.state_dimension:]):
             self.simulation.set_constant(self.parameter_names[param_id], value)
+
+
+    def create_state_dictionary(self, myokit_model):
+        """
+        Temporary Function to create dictionary for state labels
+        """
+        code = {'p' : 'Peripheral', 'c' : 'Central', 'd' : 'Dosing'}
+        self.state_dictionary = {}
+        for name in self.state_names:
+            label = code[name[0]]
+            if myokit_model.has_variable(name+'Concentration'): # ensure conc variable in myokit
+                self.state_dictionary[label + ' (conc)'] = name + 'Concentration'
+            self.state_dictionary[label + ' (mass)'] = name #add mass
 
 
 class MultiOutputModel(AbstractModel):
@@ -223,6 +236,18 @@ class MultiOutputModel(AbstractModel):
         for param_id, value in enumerate(parameters[self.state_dimension:]):
             self.simulation.set_constant(self.parameter_names[param_id], value)
 
+    def create_state_dictionary(self):
+        """
+        Tempoary Function to create dictionary for state labels
+
+        """
+        code = {'p' : 'Peripheral', 'c' : 'Central', 'd' : 'Dosing'}
+        self.state_dictionary = {}
+        for name in self.state_names:
+            label = code[name[0]]
+            self.state_dictionary[label + ' (mass)'] = name
+            self.state_dictionary[label + ' (conc)'] = name + 'Concentration'
+
 def set_unit_format():
     """
     Set nicer display format for some commonly used units
@@ -243,4 +268,5 @@ def set_unit_format():
         myokit.Unit.register_preferred_representation(name, unit)
 
 set_unit_format()
+
 

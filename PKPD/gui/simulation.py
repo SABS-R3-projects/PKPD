@@ -320,6 +320,7 @@ class SimulationTab(QtWidgets.QDialog):
         """
         # update plot options
         self._change_yaxis_scaling()
+        self._change_state_to_plot()
 
         # close option window
         self.plot_option_window.close()
@@ -330,6 +331,11 @@ class SimulationTab(QtWidgets.QDialog):
         scale = self.yaxis_dropdown_menu.currentText()
         self.data_model_ax.set_yscale(scale)
         self.canvas.draw() #refresh canvas
+
+    def _change_state_to_plot(self):
+        state_to_plot = self.main_window.model.state_dictionary.get(self.state_dropdown_menu.currentText())
+        if self.main_window.model.model.has_variable(state_to_plot):
+            self.main_window.model.set_output(state_to_plot)
 
 
     def on_plot_option_cancel_click(self):
@@ -398,6 +404,7 @@ class SimulationTab(QtWidgets.QDialog):
 
         # create plotting options
         yaxis_options = self._create_yaxis_options()
+        state_options = self._create_state_options() # to select which state to plot
 
         # create apply / cancel buttons
         apply_cancel_buttons = self._plot_options_apply_cancel_buttons()
@@ -405,6 +412,7 @@ class SimulationTab(QtWidgets.QDialog):
         # vertical layout
         vbox = QtWidgets.QVBoxLayout()
         vbox.addLayout(yaxis_options)
+        vbox.addLayout(state_options)
         vbox.addLayout(apply_cancel_buttons)
 
         # add options to window
@@ -428,6 +436,31 @@ class SimulationTab(QtWidgets.QDialog):
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(label)
         hbox.addWidget(self.yaxis_dropdown_menu)
+
+        return hbox
+
+    def _create_state_options(self):
+        """
+        Create dropdown meu for selecting which state variable to plot, to be displayed in plot options menu
+        Returns: dropdown menu
+        """
+        # create label
+        label = QtWidgets.QLabel('Compartment to Plot')
+
+        # define options
+
+        state_variables = self.main_window.model.state_dictionary.keys()
+
+        # create dropdown menu for options
+        self.state_dropdown_menu = QtWidgets.QComboBox()
+        self.state_dropdown_menu.setMinimumWidth(self.dropdown_menu_width)
+        for state in state_variables:
+            self.state_dropdown_menu.addItem(state)
+
+        # arange label and dropdown menu horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(label)
+        hbox.addWidget(self.state_dropdown_menu)
 
         return hbox
 
@@ -629,9 +662,22 @@ class SimulationTab(QtWidgets.QDialog):
 
         # plot model
         self.data_model_ax.plot(self.times, self.state_values, linestyle='dashed', color='grey')
+        self.update_plot_labels()
+
 
         # refresh canvas
         self.canvas.draw()
+
+    def update_plot_labels(self):
+        self.data_model_ax.set_title(self.state_dropdown_menu.currentText()) # add title
+
+        state_to_plot = self.main_window.model.state_dictionary[self.state_dropdown_menu.currentText()]
+        ylabel = self.state_dropdown_menu.currentText()[-5:-1] #conc or mass
+        unit = self.main_window.model.model.get(state_to_plot).unit()
+        if unit is not None:
+            ylabel += ' ' + str(unit)
+
+        self.data_model_ax.set_ylabel(ylabel)
 
 
     def _plot_multi_output_model(self):
