@@ -27,6 +27,7 @@ class SimulationTab(QtWidgets.QDialog):
         self.parameter_values = None
         # self.time_data = None
         self.patients_data = None
+        self.patients_dose = None
         self.state_dimension = 0
 
         # initialising the figure
@@ -52,21 +53,33 @@ class SimulationTab(QtWidgets.QDialog):
         id_label, time_label, state_labels, dose_label = data.keys()[0], data.keys()[1], data.keys()[2:-1], data.keys()[
             -1]
 
-        # identify the patients
-        grouped_data = data.groupby(id_label)
-        num_patients = len(grouped_data)
+        num_patients = data[id_label].nunique()
 
         # check dimensionality of problem for plotting and inference
         self.state_dimension = len(state_labels)
         self.is_single_output_model = self.state_dimension == 1
 
-        self.patients_data = []
-        # sort into [dosing, time, state data] for each individual patient and append to patients_data
-        for name, group in grouped_data:
-            time_data = grouped_data.get_group(name)[time_label].to_numpy()
-            dosing_data = grouped_data.get_group(name)[dose_label].to_numpy()
-            state_data = grouped_data.get_group(name)[state_labels].to_numpy()
-            self.patients_data.append([dosing_data, time_data, state_data])
+        self.patients_data = {}
+        self.patients_dose = {}
+
+        # sort and clean data into {id: (time, state data)} and {id:(time, dosing)} for each individual patient and append to patients_data
+        states = data
+        states.drop(states.loc[states[state_labels[0]] == '.'].index, inplace=True)
+        states = states.groupby(id_label)
+
+        for name, group in states:
+            time_data = states.get_group(name)[time_label].to_numpy()
+            state_data = states.get_group(name)[state_labels].to_numpy()
+            self.patients_data[name] = (time_data, state_data.astype(np.float))
+
+        dose = data
+        dose.drop(dose.loc[dose[dose_label] == '.'].index, inplace=True)
+        dose = dose.groupby(id_label)
+
+        for name, group in dose:
+            time_data = dose.get_group(name)[time_label].to_numpy()
+            dosing_data = dose.get_group(name)[dose_label].to_numpy()
+            self.patients_dose[name] = (time_data, dosing_data)
 
         # plot data
         if self.is_single_output_model:  # single output
@@ -75,7 +88,8 @@ class SimulationTab(QtWidgets.QDialog):
 
             # create plot
             self.data_model_ax = self.data_model_figure.subplots()
-            self.data_model_ax.scatter(x=self.patients_data[0][1], y=self.patients_data[0][2], label='data', marker='o',
+            print(self.patients_data)
+            self.data_model_ax.scatter(x=self.patients_data[3][0], y=self.patients_data[3][1][:, 0], label='data', marker='o',
                                        color='darkgreen',
                                        edgecolor='black', alpha=0.5)
             self.data_model_ax.set_xlabel(time_label)
@@ -91,7 +105,7 @@ class SimulationTab(QtWidgets.QDialog):
             # create subplots for each compartment
             self.data_model_ax = self.data_model_figure.subplots(nrows=self.state_dimension, sharex=True)
             for dim in range(self.state_dimension):
-                self.data_model_ax[dim].scatter(x=self.patients_data[0][1], y=self.patients_data[0][2][:, dim],
+                self.data_model_ax[dim].scatter(x=self.patients_data[4][0], y=self.patients_data[4][1][:, dim],
                                                 label='data', marker='o',
                                                 color='darkgreen', edgecolor='black', alpha=0.5)
                 self.data_model_ax[dim].set_ylabel(state_labels[dim])
@@ -348,10 +362,10 @@ class SimulationTab(QtWidgets.QDialog):
 
         # get parameter names
         if self.is_single_output_model:
-            state_names = [self.main_window.model[0].state_name]
+            state_names = [self.main_window.model[4].state_name]
         else:
-            state_names = self.main_window.model.state_names
-        model_param_names = self.main_window.model[0].parameter_names  # parameters except initial conditions
+            state_names = self.main_window.model[4].state_names
+        model_param_names = self.main_window.model[4].parameter_names  # parameters except initial conditions
         parameter_names = state_names + model_param_names  # parameters including initial conditions
 
         # fill up grid with slider objects
@@ -473,8 +487,8 @@ class SimulationTab(QtWidgets.QDialog):
         self.enable_live_plotting = True
 
         # define time points for evaluation
-        self.times = np.linspace(start=self.patients_data[0][1][0],
-                                 stop=self.patients_data[0][1][-1],
+        self.times = np.linspace(start=0.0,
+                                 stop=self.patients_data[4][0][-1],
                                  num=100
                                  )
 
@@ -495,7 +509,7 @@ class SimulationTab(QtWidgets.QDialog):
         """Plots the model in dashed, grey lines.
         """
         # solve forward problem for current parameter set
-        self.state_values = self.main_window.model[0].simulate(parameters=self.parameter_values,
+        self.state_values = self.main_window.model[4].simulate(parameters=self.parameter_values,
                                                                times=self.times
                                                                )
 
@@ -513,7 +527,7 @@ class SimulationTab(QtWidgets.QDialog):
         """Plots the model in dashed, grey lines. Each state dimension is plotted to a separate subplot.
         """
         # solve forward problem for current parameter set
-        self.state_values = self.main_window.model.simulate(parameters=self.parameter_values,
+        self.state_values = self.main_window.model[4].simulate(parameters=self.parameter_values,
                                                             times=self.times
                                                             )
 
@@ -549,10 +563,10 @@ class SimulationTab(QtWidgets.QDialog):
         """
         # get fit parameter names
         if self.is_single_output_model:
-            state_names = [self.main_window.model[0].state_name]
+            state_names = [self.main_window.model[4].state_name]
         else:
-            state_names = self.main_window.model.state_names
-        model_param_names = self.main_window.model[0].parameter_names
+            state_names = self.main_window.model[4].state_names
+        model_param_names = self.main_window.model[4].parameter_names
         parameter_names = state_names + model_param_names
         number_parameters = len(parameter_names)
 
@@ -664,13 +678,13 @@ class SimulationTab(QtWidgets.QDialog):
         """Plots inferred model in a solid, black line and removes all other lines from figure.
         """
         # define time points for model evaluation
-        times = np.linspace(start=self.patients_data[0][1][0],
-                            stop=self.patients_data[0][1][-1],
+        times = np.linspace(start=0.0,
+                            stop=self.patients_data[4][0][-1],
                             num=100
                             )
 
         # solve forward problem
-        state_values = self.main_window.model[0].simulate(parameters=self.main_window.problem.estimated_parameters,
+        state_values = self.main_window.model[4].simulate(parameters=self.main_window.problem.estimated_parameters,
                                                        times=times
                                                        )
         if self.is_single_output_model:  # single-output problem

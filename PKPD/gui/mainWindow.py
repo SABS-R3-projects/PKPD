@@ -150,16 +150,17 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
                 # instantiate model and inverse problem
                 if self.simulation.is_single_output_model:
-                    self.model = []
-                    for array in self.simulation.patients_data:
-                        self.model.append(m.SingleOutputModel(self.model_file))
+                    self.model = {}
+                    for patient_id in self.simulation.patients_data:
+                        self.model[patient_id] = m.SingleOutputModel(self.model_file)
                     self.problem = inf.SingleOutputInverseProblem(self.model,
                                                                   self.simulation.patients_data)
                 else:
-                    self.model = m.MultiOutputModel(self.model_file)
-                    self.problem = inf.MultiOutputInverseProblem(model=self.model,
-                                                                 times=self.simulation.patients_data[0][1],
-                                                                 values=self.simulation.patients_data[0][2])
+                    self.model = {}
+                    self.model[4] = m.MultiOutputModel(self.model_file)
+                    self.problem = inf.MultiOutputInverseProblem(model=self.model[4],
+                                                                 times=self.simulation.patients_data[4][0],
+                                                                 values=self.simulation.patients_data[4][1])
                 self.simulation.fill_parameter_slider_group()
                 self.simulation.fill_plot_option_window()
                 self.simulation.fill_parameter_table()

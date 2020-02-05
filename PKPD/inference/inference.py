@@ -12,16 +12,16 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
     is pints.SumOfSquaresError and default optimiser is pints.CMAES.
     """
 
-    def __init__(self, models: list, data: np.ndarray):
+    def __init__(self, models: dict, data: dict):
         """Initialises a single output inference problem with default objective function pints.SumOfSquaresError
         and default optimiser pints.CMAES. Standard deviation in initial starting point of optimisation as well as
         restricted domain of support for inferred parameters is disabled by default.
 
         Arguments:
-            models {list} -- list of Models (m.SingleOutputModel) for each patient on which parameters are to be inferred.
-            patients_data {np.ndarray} -- 3d array where the first index refers to a particular patient; the second
-                index refers to dosing, time and state data; and the third index selects data for a particular time
-                point.
+            models {dict} -- A dictionary of Models (m.SingleOutputModel) for each patient ID on which parameters are to
+                be inferred.
+            data {dict} -- A dictionary of tuples for each patient ID, where the the tuple contains an np.ndarray of
+                times and an np.ndarray of state values.
 
         Return:
             None
@@ -30,9 +30,9 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         self.error_measure = None
         self.patients_data = data
 
-        for i in range(len(self.patients_data)):
+        for i in models:
             self.problems.append(
-                pints.SingleOutputProblem(models[i], self.patients_data[i][1], self.patients_data[i][2]))
+                pints.SingleOutputProblem(models[i], self.patients_data[i][0], self.patients_data[i][1]))
 
         print(self.problems[0])
         self.objective_function = None
