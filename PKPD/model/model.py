@@ -29,6 +29,7 @@ class SingleOutputModel(AbstractModel):
 
         # instantiate the simulation
         self.simulation = myokit.Simulation(model, protocol)
+        self.model = model
 
 
     def _get_default_output_name(self, model:myokit.Model):
@@ -147,7 +148,7 @@ class MultiOutputModel(AbstractModel):
 
         # instantiate the simulation
         self.simulation = myokit.Simulation(model, protocol)
-
+        self.model = model
 
     ### TODO: adapt function and continue fixing changes.
     ### Oriantate on init and singleoutput problme.
@@ -221,4 +222,25 @@ class MultiOutputModel(AbstractModel):
         self.simulation.set_state(parameters[:self.state_dimension])
         for param_id, value in enumerate(parameters[self.state_dimension:]):
             self.simulation.set_constant(self.parameter_names[param_id], value)
+
+def set_unit_format():
+    """
+    Set nicer display format for some commonly used units
+    """
+
+    # Common Unit Dictionary
+    common_units = {
+        'mL/h': myokit.units.L * 1e-3 / myokit.units.h,
+        'mL': myokit.units.L * 1e-3,
+        'ng': myokit.units.g * 1e-9,
+        'ng/mL': myokit.units.g * 1e-9 / (myokit.units.L * 1e-3),
+        'h': myokit.units.h,
+        'ng/h': myokit.units.g * 1e-9 / myokit.units.h
+    }
+
+    # Set Preferred Representation in Myokit
+    for name, unit in common_units.items():
+        myokit.Unit.register_preferred_representation(name, unit)
+
+set_unit_format()
 
