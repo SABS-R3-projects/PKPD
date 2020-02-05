@@ -3,12 +3,12 @@ name: Linear, two-compartment PK model of drug concentration with bolus injectio
 author: SABS:R3
 
 # Initial values
-centralCompartment.drug = 0 [ng]
-peripheralCompartment.drug = 0 [ng]
+central_compartment.drug = 0 [ng]
+peripheral_compartment.drug = 0 [ng]
 
-[centralCompartment]
+[central_compartment]
 # bound variables (dosing controlled by the protocol, and time)
-doseRate = 0 [ng/h]
+dose_rate = 0 [ng/h]
     in [ng/h]
     bind pace
     desc: Dose rate in ng/h. Controlled by protocol.
@@ -29,19 +29,19 @@ Kcp = 0 [1/h]
     desc: Transition rate from the central compartment to the peripheral compartment.
 
 # compartment external parameters
-use peripheralCompartment.Kpc as Kpc
+use peripheral_compartment.Kpc as Kpc
 
 # state variable
-dot(drug) = doseRate - drug * CL / V - drug * Kcp + peripheralCompartment.drug * Kpc
+dot(drug) = dose_rate - drug * CL / V - drug * Kcp + peripheral_compartment.drug * Kpc
     in [ng]
     desc: Drug in central compartment in ng.
 
 # convert to concentration
-drugConcentration = drug / V
+drug_concentration = drug / V
     in [ng/mL]
     desc: Drug concentration in central compartment in ng/mL.
 
-[peripheralCompartment]
+[peripheral_compartment]
 # compartment interal parameters
 V = 2 [mL]
     in [mL]
@@ -51,13 +51,13 @@ Kpc = 0 [1/h]
     desc: Transition rate from the peripheral compartment to the central compartment.
 
 # compartment external parameters
-use centralCompartment.Kcp as Kcp
+use central_compartment.Kcp as Kcp
 
 # state variable
-dot(drug) = centralCompartment.drug * Kcp - drug * Kpc
+dot(drug) = central_compartment.drug * Kcp - drug * Kpc
 
 # convert to concentration
-drugConcentration = drug / V
+drug_concentration = drug / V
     in [ng/mL]
     desc: Drug concentration in peripheral compartment in ng/mL.
 

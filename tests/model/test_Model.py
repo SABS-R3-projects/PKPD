@@ -19,9 +19,9 @@ class TestSingleOutputModel(unittest.TestCase):
         """
         # Test case I: 1-compartment model
         ## expected:
-        state_names = ['centralCompartment.drug']
-        output_name = 'centralCompartment.drugConcentration'
-        parameter_names = ['centralCompartment.CL', 'centralCompartment.V']
+        state_names = ['central_compartment.drug']
+        output_name = 'central_compartment.drug_concentration'
+        parameter_names = ['central_compartment.CL', 'central_compartment.V']
         number_parameters_to_fit = 3
 
         ## assert initilised values coincide
@@ -62,11 +62,11 @@ class TestSingleOutputModel(unittest.TestCase):
         ## expected
         model, protocol, _ = myokit.load(self.file_name)
         model.set_state([parameters[0]])
-        model.set_value('centralCompartment.CL', parameters[1])
-        model.set_value('centralCompartment.V', parameters[2])
+        model.set_value('central_compartment.CL', parameters[1])
+        model.set_value('central_compartment.V', parameters[2])
         simulation = myokit.Simulation(model, protocol)
-        myokit_result = simulation.run(duration=times[-1]+1, log=['centralCompartment.drugConcentration'], log_times = times)
-        expected_result = myokit_result.get('centralCompartment.drugConcentration')
+        myokit_result = simulation.run(duration=times[-1]+1, log=['central_compartment.drug_concentration'], log_times = times)
+        expected_result = myokit_result.get('central_compartment.drug_concentration')
 
         ## assert that Model.simulate returns the same result.
         model_result = self.one_comp_model.simulate(parameters, times)

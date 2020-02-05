@@ -32,7 +32,7 @@ class SingleOutputModel(AbstractModel):
 
 
     def _get_default_output_name(self, model:myokit.Model):
-        """Returns 'centralCompartment.drugConcentration' as output_name by default. If variable does not exist in model, first state
+        """Returns 'central_compartment.drug_concentration' as output_name by default. If variable does not exist in model, first state
         variable name is returned.
 
         Arguments:
@@ -41,7 +41,7 @@ class SingleOutputModel(AbstractModel):
         Returns:
             str -- Output name of model.
         """
-        default_output_name = 'centralCompartment.drugConcentration'
+        default_output_name = 'central_compartment.drug_concentration'
         if model.has_variable(default_output_name):
             return default_output_name
         else:
@@ -229,7 +229,7 @@ class MultiOutputModel(AbstractModel):
 
 
     def set_default_output_names(self):
-        """Returns 'centralCompartment.drugConcentration' as output_name by default. If variable does not exist in model, first state
+        """Returns 'central_compartment.drug_concentration' as output_name by default. If variable does not exist in model, first state
         variable name is returned.
 
         Arguments:
@@ -239,7 +239,7 @@ class MultiOutputModel(AbstractModel):
             str -- Output names of model.
         """
         default_output_names = []
-        default_output_variable = 'drugConcentration'
+        default_output_variable = 'drug_concentration'
         model = self.simulation._model
 
         # iterate through components and fill with default variables

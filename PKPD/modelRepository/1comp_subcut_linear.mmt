@@ -3,12 +3,12 @@ name: Linear, single-compartment PK model of drug concentration with subcutaneou
 author: SABS:R3
 
 # Initial values
-centralCompartment.drug = 0 [ng]
-doseCompartment.drug = 0 [ng]
+central_compartment.drug = 0 [ng]
+dose_compartment.drug = 0 [ng]
 
-[doseCompartment]
+[dose_compartment]
 # bound variables (dosing controlled by the protocol, and time)
-doseRate = 0 [ng/h]
+dose_rate = 0 [ng/h]
     in [ng/h]
     bind pace
     desc: Dose rate in ng/h. Controlled by protocol.
@@ -23,11 +23,11 @@ Ka = 0 [1/h]
     desc: Absorption rate (transition rate between dose and cetral compartment).
 
 # state variable
-dot(drug) = doseRate - Ka * drug
+dot(drug) = dose_rate - Ka * drug
     in [ng]
     desc: Drug in dose compartment in ng.
 
-[centralCompartment]
+[central_compartment]
 # compartment internal parameters
 CL = 2 [mL/h]
     in [mL/h]
@@ -37,15 +37,15 @@ V = 4 [mL]
     desc: Volume of central compartment.
 
 # compartment external parameters
-use doseCompartment.Ka as Ka
+use dose_compartment.Ka as Ka
 
 # state variable
-dot(drug) = Ka * doseCompartment.drug - drug * CL / V
+dot(drug) = Ka * dose_compartment.drug - drug * CL / V
     in [ng]
     desc: Drug in central compartment in ng.
 
 # convert to concentration
-drugConcentration = drug / V
+drug_concentration = drug / V
     in [ng/mL]
     desc: Drug concentration in central compartment in ng/mL.
 

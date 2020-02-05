@@ -14,8 +14,8 @@ model = m.MultiOutputModel(file_name)
 model.set_output_dimension(2)
 model.set_default_output_names()
 
-# List of parameters: ['centralCompartment.drug', 'doseCompartment.drug', 'peripheralCompartment.drug', 'centralCompartment.CL',
-# 'centralCompartment.Kcp', 'centralCompartment.V', 'doseCompartment.Ka', 'peripheralCompartment.Kpc', 'peripheralCompartment.V']
+# List of parameters: ['central_compartment.drug', 'dose_compartment.drug', 'peripheral_compartment.drug', 'central_compartment.CL',
+# 'central_compartment.Kcp', 'central_compartment.V', 'dose_compartment.Ka', 'peripheral_compartment.Kpc', 'peripheral_compartment.V']
 true_parameters = [0, 0, 0, 1, 3, 5, 2, 2, 2]
 
 times = np.linspace(0.0, 24.0, 100)
