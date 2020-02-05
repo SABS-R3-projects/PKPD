@@ -132,6 +132,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
         Returns:
             {QLabel} -- Returns SABS R3 logo.
+            {QLabel} -- Returns SABS R3 logo.
         """
         label = QtWidgets.QLabel(self)
         label.setPixmap(self.rescaled_sabs)

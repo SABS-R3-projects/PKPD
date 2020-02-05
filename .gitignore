@@ -29,3 +29,5 @@ pints
 # compiled Cython code
 *.pyc
 
+# pycharm
+.idea
