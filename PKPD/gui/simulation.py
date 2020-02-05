@@ -48,7 +48,6 @@ class SimulationTab(QtWidgets.QDialog):
         data = pd.read_csv(self.main_window.data_file)
         if data.keys()[0] != 'ID':
             data.insert(0, 'ID', 1)
-            print('added ID')
 
         id_label, time_label, state_labels, dose_label = data.keys()[0], data.keys()[1], data.keys()[2:-1], data.keys()[
             -1]
@@ -349,10 +348,10 @@ class SimulationTab(QtWidgets.QDialog):
 
         # get parameter names
         if self.is_single_output_model:
-            state_names = [self.main_window.model.state_name]
+            state_names = [self.main_window.model[0].state_name]
         else:
             state_names = self.main_window.model.state_names
-        model_param_names = self.main_window.model.parameter_names  # parameters except initial conditions
+        model_param_names = self.main_window.model[0].parameter_names  # parameters except initial conditions
         parameter_names = state_names + model_param_names  # parameters including initial conditions
 
         # fill up grid with slider objects
@@ -496,9 +495,9 @@ class SimulationTab(QtWidgets.QDialog):
         """Plots the model in dashed, grey lines.
         """
         # solve forward problem for current parameter set
-        self.state_values = self.main_window.model.simulate(parameters=self.parameter_values,
-                                                            times=self.times
-                                                            )
+        self.state_values = self.main_window.model[0].simulate(parameters=self.parameter_values,
+                                                               times=self.times
+                                                               )
 
         # remove previous graph to avoid fludding the figure
         if self.enable_line_removal:
@@ -550,10 +549,10 @@ class SimulationTab(QtWidgets.QDialog):
         """
         # get fit parameter names
         if self.is_single_output_model:
-            state_names = [self.main_window.model.state_name]
+            state_names = [self.main_window.model[0].state_name]
         else:
             state_names = self.main_window.model.state_names
-        model_param_names = self.main_window.model.parameter_names
+        model_param_names = self.main_window.model[0].parameter_names
         parameter_names = state_names + model_param_names
         number_parameters = len(parameter_names)
 
@@ -671,7 +670,7 @@ class SimulationTab(QtWidgets.QDialog):
                             )
 
         # solve forward problem
-        state_values = self.main_window.model.simulate(parameters=self.main_window.problem.estimated_parameters,
+        state_values = self.main_window.model[0].simulate(parameters=self.main_window.problem.estimated_parameters,
                                                        times=times
                                                        )
         if self.is_single_output_model:  # single-output problem

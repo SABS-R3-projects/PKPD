@@ -11,21 +11,33 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
     """Single-output inverse problem based on pints.SingleOutputProblem https://pints.readthedocs.io/. Default objective function
     is pints.SumOfSquaresError and default optimiser is pints.CMAES.
     """
-    def __init__(self, model: m.SingleOutputModel, times: np.ndarray, values: np.ndarray):
+
+    def __init__(self, models: list, data: np.ndarray):
         """Initialises a single output inference problem with default objective function pints.SumOfSquaresError
         and default optimiser pints.CMAES. Standard deviation in initial starting point of optimisation as well as
         restricted domain of support for inferred parameters is disabled by default.
 
         Arguments:
-            model {m.SingleOutputModel} -- Model which parameters are to be inferred.
-            times {np.ndarray} -- Times of data points.
-            values {np.ndarray} -- State values of data points.
+            models {list} -- list of Models (m.SingleOutputModel) for each patient on which parameters are to be inferred.
+            patients_data {np.ndarray} -- 3d array where the first index refers to a particular patient; the second
+                index refers to dosing, time and state data; and the third index selects data for a particular time
+                point.
 
         Return:
             None
         """
-        self.problem = pints.SingleOutputProblem(model, times, values)
-        self.objective_function = pints.SumOfSquaresError(self.problem)
+        self.problems = []
+        self.error_measure = None
+        self.patients_data = data
+
+        for i in range(len(self.patients_data)):
+            self.problems.append(
+                pints.SingleOutputProblem(models[i], self.patients_data[i][1], self.patients_data[i][2]))
+
+        print(self.problems[0])
+        self.objective_function = None
+        self.set_objective_function(pints.SumOfSquaresError)
+
         self.optimiser = pints.CMAES
         self.initial_parameter_uncertainty = None
         self.parameter_boundaries = None
@@ -33,8 +45,7 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         self.estimated_parameters = None
         self.objective_score = None
 
-
-    def find_optimal_parameter(self, initial_parameter:np.ndarray) -> None:
+    def find_optimal_parameter(self, initial_parameter: np.ndarray) -> None:
         """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the
         distance of the model to the data with respect to the objective function.
 
@@ -52,8 +63,7 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
 
         self.estimated_parameters, self.objective_score = optimisation.run()
 
-
-    def set_objective_function(self, objective_function: pints.ErrorMeasure) -> None:
+    def set_objective_function(self, error_measure: pints.ErrorMeasure) -> None:
         """Sets the objective function which is minimised to find the optimal parameter set.
 
         Arguments:
@@ -62,11 +72,16 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         """
         valid_obj_func = [pints.MeanSquaredError, pints.RootMeanSquaredError, pints.SumOfSquaresError]
 
-        if objective_function not in valid_obj_func:
+        if error_measure not in valid_obj_func:
             raise ValueError('Objective function is not supported.')
 
-        self.objective_function = objective_function(self.problem)
+        self.errors = []
 
+        for problem in self.problems:
+            problem_i = problem
+            self.errors.append(error_measure(problem_i))
+
+        self.objective_function = pints.SumOfErrors(self.errors)
 
     def set_optimiser(self, optimiser: pints.Optimiser) -> None:
         """Sets the optimiser to find the "global" minimum of the objective function.
@@ -81,8 +96,7 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
 
         self.optimiser = optimiser
 
-
-    def set_parameter_boundaries(self, boundaries:List):
+    def set_parameter_boundaries(self, boundaries: List):
         """Sets the parameter boundaries for inference.
 
         Arguments:
@@ -90,7 +104,6 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         """
         min_values, max_values = boundaries[0], boundaries[1]
         self.parameter_boundaries = pints.RectangularBoundaries(min_values, max_values)
-
 
     def get_estimate(self) -> List:
         """Returns the estimated parameters that minimise the objective function in a dictionary and the corresponding
@@ -105,8 +118,7 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
 
         return [parameter_dict, self.objective_score]
 
-
-    def _create_parameter_dict(self, estimated_parameter:np.ndarray) -> Dict:
+    def _create_parameter_dict(self, estimated_parameter: np.ndarray) -> Dict:
         """Creates a dictionary of the optimal parameters by assigning the corresponding names to them.
 
         Arguments:
@@ -116,16 +128,16 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
             {Dict} -- Estimated parameter values with their name as key.
         """
         state_dimension = 1
-        state_name = self.problem._model.state_name
-        parameter_names = self.problem._model.parameter_names
+        state_name = self.problems[0]._model.state_name
+        parameter_names = self.problems[0]._model.parameter_names
 
         parameter_dict = {}
-        # Note that the estimated parameters are [inital values, model parameter].
+        # Note that the estimated parameters are [initial values, model parameter].
         for parameter_id, value in enumerate(estimated_parameter):
             if parameter_id < state_dimension:
                 parameter_dict[state_name] = value
             else:
-                reset_id = parameter_id-state_dimension
+                reset_id = parameter_id - state_dimension
                 parameter_dict[parameter_names[reset_id]] = value
 
         return parameter_dict
@@ -135,6 +147,7 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
     """Multi-output inverse problem based on pints.MultiOutputProblem https://pints.readthedocs.io/. Default objective function
     is pints.SumOfSquaresError and default optimiser is pints.CMAES.
     """
+
     def __init__(self, model: m.MultiOutputModel, times: np.ndarray, values: np.ndarray):
         """Initialises a multi-output inference problem with default objective function pints.SumOfSquaresError
         and default optimiser pints.CMAES. Standard deviation in initial starting point of optimisation as well as
@@ -157,8 +170,7 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         self.estimated_parameters = None
         self.objective_score = None
 
-
-    def find_optimal_parameter(self, initial_parameter:np.ndarray) -> None:
+    def find_optimal_parameter(self, initial_parameter: np.ndarray) -> None:
         """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the
         distance of the model to the data with respect to the objective function.
 
@@ -176,7 +188,6 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
 
         self.estimated_parameters, self.objective_score = optimisation.run()
 
-
     def set_objective_function(self, objective_function: pints.ErrorMeasure) -> None:
         """Sets the objective function which is minimised to find the optimal parameter set.
 
@@ -191,7 +202,6 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
 
         self.objective_function = objective_function(self.problem)
 
-
     def set_optimiser(self, optimiser: pints.Optimiser) -> None:
         """Sets the optimiser to find the "global" minimum of the objective function.
 
@@ -205,8 +215,7 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
 
         self.optimiser = optimiser
 
-
-    def set_parameter_boundaries(self, boundaries:List):
+    def set_parameter_boundaries(self, boundaries: List):
         """Sets the parameter boundaries for inference.
 
         Arguments:
@@ -214,7 +223,6 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         """
         min_values, max_values = boundaries[0], boundaries[1]
         self.parameter_boundaries = pints.RectangularBoundaries(min_values, max_values)
-
 
     def get_estimate(self) -> List:
         """Returns the estimated parameters that minimise the objective function in a dictionary and the corresponding
@@ -229,8 +237,7 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
 
         return [parameter_dict, self.objective_score]
 
-
-    def _create_parameter_dict(self, estimated_parameter:np.ndarray) -> Dict:
+    def _create_parameter_dict(self, estimated_parameter: np.ndarray) -> Dict:
         """Creates a dictionary of the optimal parameters by assigning the corresponding names to them.
 
         Arguments:
@@ -249,8 +256,7 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
             if parameter_id < state_dimension:
                 parameter_dict[state_names[parameter_id]] = value
             else:
-                reset_id = parameter_id-state_dimension
+                reset_id = parameter_id - state_dimension
                 parameter_dict[parameter_names[reset_id]] = value
 
         return parameter_dict
-
