@@ -45,8 +45,8 @@ class SimulationTab(QtWidgets.QDialog):
         time_label, state_labels = data.keys()[0], data.keys()[1:]
 
         # check dimensionality of problem for plotting and inference
-        self.state_dimension = len(state_labels)
-        self.is_single_output_model = self.state_dimension == 1
+        self.data_dimension = len(state_labels)
+        self.is_single_output_model = self.data_dimension == 1
 
         # sort into time and state data
         self.time_data = data[time_label].to_numpy()
@@ -76,8 +76,8 @@ class SimulationTab(QtWidgets.QDialog):
             self.data_model_figure.clf()
 
             # create subplots for each compartment
-            self.data_model_ax = self.data_model_figure.subplots(nrows=self.state_dimension, sharex=True)
-            for dim in range(self.state_dimension):
+            self.data_model_ax = self.data_model_figure.subplots(nrows=self.data_dimension, sharex=True)
+            for dim in range(self.data_dimension):
                 self.data_model_ax[dim].scatter(x=self.time_data, y=self.state_data[:, dim], label='data', marker='o',
                                                 color='darkgreen', edgecolor='black', alpha=0.5)
                 self.data_model_ax[dim].set_ylabel(state_labels[dim])
@@ -524,11 +524,11 @@ class SimulationTab(QtWidgets.QDialog):
 
         # remove previous graphs from subplots to avoid fludding the figure
         if self.enable_line_removal:
-            for dim in range(self.state_dimension):
+            for dim in range(self.data_dimension):
                 self.data_model_ax[dim].lines.pop()
 
         # plot model
-        for dim in range(self.state_dimension):
+        for dim in range(self.data_dimension):
             self.data_model_ax[dim].plot(self.times, self.state_values[:, dim], linestyle='dashed', color='grey')
 
         # refresh canvas
@@ -690,13 +690,13 @@ class SimulationTab(QtWidgets.QDialog):
             self.data_model_ax.legend()
         else: # multi-output problem
             # remove all lines from figure
-            for dim in range(self.state_dimension):
+            for dim in range(self.data_dimension):
                 lines = self.data_model_ax[dim].lines
                 while lines:
                     lines.pop()
 
             # plot model
-            for dim in range(self.state_dimension):
+            for dim in range(self.data_dimension):
                 self.data_model_ax[dim].plot(times, state_values[:, dim], color='black', label='model')
                 self.data_model_ax[dim].legend()
 

@@ -161,6 +161,12 @@ class MainWindow(abstractGui.AbstractMainWindow):
                                                                 values=self.simulation.state_data)
                 else:
                     self.model = m.MultiOutputModel(self.model_file)
+
+                    # set model output dimension to data dimension
+                    self.model.set_output_dimension(self.simulation.data_dimension)
+                    # TODO: generate parameter dict once and refernce from it???
+                    self.model.get_default_output_names(self.model.simulation._model)
+
                     self.problem = inf.MultiOutputInverseProblem(model=self.model,
                                                                 times=self.simulation.time_data,
                                                                 values=self.simulation.state_data)

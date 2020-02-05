@@ -141,7 +141,8 @@ class MultiOutputModel(AbstractModel):
         # get state, parameter and output names
         self.state_names = [state.qname() for state in model.states()]
         self.state_dimension = model.count_states()
-        self.output_names = self._get_default_output_names(model)
+        self.output_names = None
+        self.output_dimension = None
         self.parameter_names = self._get_parameter_names(model)
         self.number_parameters_to_fit = model.count_variables(inter=False, bound=False)
 
@@ -151,24 +152,6 @@ class MultiOutputModel(AbstractModel):
 
     ### TODO: adapt function and continue fixing changes.
     ### Oriantate on init and singleoutput problme.
-    def _get_default_output_names(self, model:myokit.Model):
-        """Returns 'centralCompartment.drugConcentration' as output_name by default. If variable does not exist in model, first state
-        variable name is returned.
-
-        Arguments:
-            model {myokit.Model} -- A myokit model.
-
-        Returns:
-            str -- Output name of model.
-        """
-        default_output_name = 'centralCompartment.drugConcentration'
-        if model.has_variable(default_output_name):
-            return default_output_name
-        else:
-            # if default output name does not exist, output first state variable
-            first_state_name = self.state_names[0]
-            return first_state_name
-
 
     def n_parameters(self) -> int:
         """Returns the number of parameters of the model, i.e. initial conditions and model
@@ -186,7 +169,7 @@ class MultiOutputModel(AbstractModel):
         Returns:
             int -- Dimensionality of the output.
         """
-        return self.state_dimension
+        return self.output_dimension
 
 
     def simulate(self, parameters:np.ndarray, times:np.ndarray) -> np.ndarray:
@@ -222,3 +205,40 @@ class MultiOutputModel(AbstractModel):
         for param_id, value in enumerate(parameters[self.state_dimension:]):
             self.simulation.set_constant(self.parameter_names[param_id], value)
 
+
+    def set_output_dimension(self, data_dimension:int):
+        """Set output dimension to data dimension.
+
+        Arguments:
+            data_dimension {int} -- Dimensionality of input data.
+        """
+        self.output_dimension = data_dimension
+
+
+    def get_default_output_names(self, model:myokit.Model):
+        """Returns 'centralCompartment.drugConcentration' as output_name by default. If variable does not exist in model, first state
+        variable name is returned.
+
+        Arguments:
+            model {myokit.Model} -- A myokit model.
+
+        Returns:
+            str -- Output names of model.
+        """
+        default_output_names = []
+        default_output_variable = 'drugConcentration'
+
+        # iterate through components and fill with default variables
+        model_components = model.components(sort=True)
+        for component in model_components:
+            if component.has_variable(default_output_variable):
+                variable_name = component.name() + '.' + default_output_variable
+                default_output_names.append(variable_name)
+
+        # check dimensional compatibility
+        if len(default_output_names) >= self.output_dimension:
+            return default_output_names[:self.output_dimension]
+        elif self.state_dimension >= self.output_dimension:
+            return self.state_names[:self.output_dimension]
+        else:
+            return None
