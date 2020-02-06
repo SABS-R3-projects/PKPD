@@ -12,7 +12,6 @@ model = m.MultiOutputModel(file_name)
 
 # set dimensionality of data
 model.set_output_dimension(2)
-model.set_default_output_names()
 
 # List of parameters: ['central_compartment.drug', 'dose_compartment.drug', 'peripheral_compartment.drug', 'central_compartment.CL',
 # 'central_compartment.Kcp', 'central_compartment.V', 'dose_compartment.Ka', 'peripheral_compartment.Kpc', 'peripheral_compartment.V']
