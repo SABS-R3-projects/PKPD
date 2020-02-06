@@ -134,34 +134,38 @@ class TestMultiOutputModel(unittest.TestCase):
         """Tests whether the simulate method works as expected. Tests implicitly also whether
         the _set_parameters method works properly.
         """
-        # Test case I: 1-compartment model
-        parameters = [0, 0, 1, 3, 5, 2, 2]
-        parameter_names = ['central_compartment.drug',
-                           'peripheral_compartment.drug',
-                           'central_compartment.CL',
+        output_names = ['central_compartment.drug_concentration',
+                        'peripheral_compartment.drug_concentration']
+        state_dimension = 2
+        parameters = [0, 0, 1, 3, 5, 2, 2] # states + parameters
+        parameter_names = ['central_compartment.CL',
                            'central_compartment.Kcp',
                            'central_compartment.V',
                            'peripheral_compartment.Kpc',
                            'peripheral_compartment.V'
                            ]
-        times = np.arange(25)
+        times = np.arange(100)
 
         ## expected
         # initialise model
         model, protocol, _ = myokit.load(self.file_name)
 
         # set initial conditions and parameter values
-        model.set_state([parameters[:self.output_dimension]])
+        model.set_state(parameters[:state_dimension])
         for parameter_id, name in enumerate(parameter_names):
-            model.set_value(name, parameters[parameter_id])
+            model.set_value(name, parameters[state_dimension + parameter_id])
 
         # solve model
         simulation = myokit.Simulation(model, protocol)
-        myokit_result = simulation.run(duration=times[-1]+1, log=['bolus.y_c'], log_times = times)
-        expected_result = myokit_result.get('bolus.y_c')
-        np_expected_result = np.array(expected_result)[:, np.newaxis] # in MultiOutputModel results are stored in 2d array.
+        myokit_result = simulation.run(duration=times[-1]+1, log=output_names, log_times = times)
+
+        # get expected result
+        expected_result = []
+        for name in output_names:
+            expected_result.append(myokit_result.get(name))
+        np_expected_result = np.array(expected_result)
 
         ## assert that Model.simulate returns the same result.
-        model_result = self.two_comp_model.simulate(parameters, times)
-   
+        model_result = self.two_comp_model.simulate(parameters, times).transpose()
+
         assert np.allclose(np_expected_result, model_result)
