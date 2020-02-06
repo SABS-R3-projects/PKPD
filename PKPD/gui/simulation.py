@@ -6,6 +6,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from PyQt5 import QtCore, QtWidgets
+from tabulate import tabulate
 
 from PKPD.gui.utils import slider as sl
 from PKPD.inference import inference as inf
@@ -62,7 +63,7 @@ class SimulationTab(QtWidgets.QDialog):
         self.patients_dose = {}
 
         # sort and clean data into {id: (time, state data)} and {id:(time, dosing)} for each individual patient and append to patients_data
-        states = data
+        states = data.copy()
         states.drop(states.loc[states[state_labels[0]] == '.'].index, inplace=True)
         states = states.groupby(id_label)
 
@@ -70,8 +71,9 @@ class SimulationTab(QtWidgets.QDialog):
             time_data = states.get_group(name)[time_label].to_numpy()
             state_data = states.get_group(name)[state_labels].to_numpy()
             self.patients_data[int(name)] = (time_data.astype(np.float), state_data.astype(np.float))
+            print(name)
 
-        dose = data
+        dose = data.copy()
         dose.drop(dose.loc[dose[dose_label] == '.'].index, inplace=True)
         dose = dose.groupby(id_label)
 
@@ -79,6 +81,7 @@ class SimulationTab(QtWidgets.QDialog):
             time_data = dose.get_group(name)[time_label].to_numpy()
             dosing_data = dose.get_group(name)[dose_label].to_numpy()
             self.patients_dose[int(name)] = (time_data.astype(np.float), dosing_data.astype(np.float))
+            print(name)
 
         # plot data
         if self.is_single_output_model:  # single output
@@ -94,7 +97,6 @@ class SimulationTab(QtWidgets.QDialog):
 
             for patient_id in self.patients_data:
                 label = 'patient ' + str(patient_id)
-                print(patient_id)
                 self.data_model_ax.scatter(x=self.patients_data[patient_id][0],
                                            y=self.patients_data[patient_id][1][:, 0], label=label, marker='o',
                                            color=colours[patient_id-1],

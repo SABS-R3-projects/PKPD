@@ -11,13 +11,21 @@ class SingleOutputModel(AbstractModel):
     myokit package are employed. The sole difference to the MultiOutputProblem is that the simulate method
     returns a 1d array instead of a 2d array.
     """
-    def __init__(self, mmtfile:str) -> None:
+    def __init__(self, mmtfile:str, dosing=None, duration=0.5) -> None:
         """Initialises the model class.
 
         Arguments:
             mmtfile {str} -- Path to the mmtfile defining the model and the protocol.
+            dosing -- either None or a tuple of an array of times and and array of dosing amounts. If None, uses
+                    protocol in mmtfile.
         """
-        model, protocol, _ = myokit.load(mmtfile)
+        if dosing==None:
+            model, protocol, _ = myokit.load(mmtfile)
+        else:
+            model, _, _ = myokit.load(mmtfile)
+            protocol = myokit.Protocol()
+            for i in range(len(dosing[0])):
+                protocol.schedule(dosing[1][i], dosing[0][i], duration)
         state_dimension = model.count_states()
         if state_dimension > 1:
             raise NotImplementedError(
