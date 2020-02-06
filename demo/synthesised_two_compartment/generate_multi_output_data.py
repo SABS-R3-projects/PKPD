@@ -20,7 +20,6 @@ true_parameters = [0, 0, 0, 1, 3, 5, 2, 2, 2]
 
 times = np.linspace(0.0, 24.0, 100)
 model_result = model.simulate(true_parameters, times)
-print(model_result.size)
 
 # add white noise to generate data
 scale = np.mean(model_result) * 0.05 # arbitrary choice of noise (not too much, not too little)
