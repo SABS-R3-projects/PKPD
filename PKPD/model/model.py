@@ -1,4 +1,5 @@
 from array import array
+from typing import List
 
 import myokit
 import numpy as np
@@ -141,7 +142,7 @@ class MultiOutputModel(AbstractModel):
         # get state, parameter and output names
         self.state_names = [state.qname() for state in model.states()]
         self.state_dimension = model.count_states()
-        self.output_names = None
+        self.output_names = []
         self.output_dimension = None
         self.parameter_names = self._get_parameter_names(model)
         self.number_parameters_to_fit = model.count_variables(inter=False, bound=False)
@@ -220,15 +221,21 @@ class MultiOutputModel(AbstractModel):
 
 
     def set_output_dimension(self, data_dimension:int):
-        """Set output dimension to data dimension.
+        """Set output dimension to data dimension, so optimisation/inference can be performed.
+        Output state will be set to default output names.
 
         Arguments:
             data_dimension {int} -- Dimensionality of input data.
         """
+        # set output dimension
         self.output_dimension = data_dimension
 
+        # if dimension of outputs does not match, fill with default outputs
+        if len(self.output_names) != self.output_dimension:
+            self._set_default_output_names()
 
-    def set_default_output_names(self):
+
+    def _set_default_output_names(self):
         """Returns 'central_compartment.drug_concentration' as output_name by default. If variable does not exist in model, first state
         variable name is returned.
 
@@ -254,5 +261,13 @@ class MultiOutputModel(AbstractModel):
             self.output_names = default_output_names[:self.output_dimension]
         elif self.state_dimension >= self.output_dimension:
             self.output_names = self.state_names[:self.output_dimension]
-        else:
-            self.output_names = None
+
+
+    def set_output(self, output_names:List):
+        """Set output of the model.
+
+        Arguments:
+            output_names {List} -- List of (state) variable names in the model.
+        """
+        self.output_dimension = len(output_names)
+        self.output_names = output_names
