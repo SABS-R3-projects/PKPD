@@ -193,7 +193,7 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         Arguments:
             optimiser {pints.Optimiser} -- Valid optimisers are [CMAES, NelderMead, PSO, SNES, XNES] in pints.
         """
-        valid_optimisers = [pints.CMAES, pints.NelderMead, pints.SNES, pints.XNES]
+        valid_optimisers = [pints.CMAES, pints.NelderMead, pints.PSO, pints.SNES, pints.XNES]
 
         if optimiser not in valid_optimisers:
             raise ValueError('Method is not supported.')
