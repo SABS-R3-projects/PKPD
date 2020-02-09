@@ -74,7 +74,7 @@ class TestSingleOutputProblem(unittest.TestCase):
                                                        values=self.data_one_comp_model
                                                        )
 
-        # solve inverse problem
+        # iterate through valid optimisers
         valid_optimisers = [pints.CMAES, pints.NelderMead, pints.PSO, pints.SNES, pints.XNES]
         for opt in valid_optimisers:
             problem.set_optimiser(optimiser=opt)
