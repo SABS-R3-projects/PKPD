@@ -590,10 +590,10 @@ class SimulationTab(QtWidgets.QDialog):
         self.enable_line_removal = False
 
         # get initial parameters from slider text fields
-        initial_parameters = []
-        for parameter_text_field in self.parameter_text_field_container:
+        initial_parameters = np.empty(len(self.parameter_values))
+        for parameter_id, parameter_text_field in enumerate(self.parameter_text_field_container):
             value = float(parameter_text_field.text())
-            initial_parameters.append(value) # Note: order of text fields matches order of params in inverse problem class
+            initial_parameters[parameter_id] = value # Note: order of text fields matches order of params in inverse problem class
 
         # set parameter boundaries
         self._set_parameter_boundaries(initial_parameters)
