@@ -13,6 +13,8 @@ class HomeTab(abstractGui.AbstractHomeTab):
         super().__init__()
         self.name = 'Model/Data'
         self.main_window = main_window
+        self.is_model_file_valid = False
+        self.is_data_file_valid = False
 
         # arrange content
         grid = QtWidgets.QGridLayout()
@@ -171,9 +173,9 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
         if file_path:
             # check format of file
-            is_file_valid = self._is_model_file_valid(file_path)
+            self.is_model_file_valid = self._is_model_file_valid(file_path)
 
-            if is_file_valid:
+            if self.is_model_file_valid:
                 # update QLineEdit in the GUI to selected file
                 self.model_path_text_field.setText(file_path)
 
