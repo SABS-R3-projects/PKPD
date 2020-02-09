@@ -11,7 +11,7 @@ from PKPD.inference import inference
 class TestSingleOutputProblem(unittest.TestCase):
     """Testing the methods of the SingleOutputinverseProblem class.
     """
-    ## Test case I: One Compartment Model
+    ## Test case: Linear One Compartment Model with Bolus dosing
     # generating data
     file_name = 'PKPD/modelRepository/1comp_bolus_linear.mmt'
     one_comp_model = m.SingleOutputModel(file_name)
