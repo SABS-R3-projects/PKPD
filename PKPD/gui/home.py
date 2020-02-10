@@ -38,12 +38,12 @@ class HomeTab(abstractGui.AbstractHomeTab):
         file_dialog = self._create_file_dialog()
 
         # create display of mmt file
-        model_diplay = self._create_model_display()
+        model_display = self._create_model_display()
 
         # arrange button/text and label vertically
         vbox = QtWidgets.QVBoxLayout()
         vbox.addLayout(file_dialog)
-        vbox.addLayout(model_diplay)
+        vbox.addLayout(model_display)
         vbox.addStretch(1)
 
         group.setLayout(vbox)
