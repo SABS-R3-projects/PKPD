@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from PKPD.gui import abstractGui, mainWindow
@@ -15,6 +16,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
         self.main_window = main_window
         self.is_model_file_valid = False
         self.is_data_file_valid = False
+        self.library_directory = 'PKPD/modelRepository/'
+        self.selection_criteria = ['Number of Compartments',
+                                   'Dosing',
+                                   'Transition rate'
+                                   ]
 
         # arrange content
         grid = QtWidgets.QGridLayout()
@@ -34,15 +40,15 @@ class HomeTab(abstractGui.AbstractHomeTab):
         """
         group = QtWidgets.QGroupBox('Model:')
 
-        # create file dialog button and text field
-        file_dialog = self._create_file_dialog()
+        # create model selection group
+        model_selection_group = self._create_model_selection_group()
 
         # create display of mmt file
         model_display = self._create_model_display()
 
         # arrange button/text and label vertically
         vbox = QtWidgets.QVBoxLayout()
-        vbox.addLayout(file_dialog)
+        vbox.addLayout(model_selection_group)
         vbox.addLayout(model_display)
         vbox.addStretch(1)
 
@@ -51,10 +57,13 @@ class HomeTab(abstractGui.AbstractHomeTab):
         return group
 
 
-    def _create_file_dialog(self):
-        # generate file dialog
-        button = QtWidgets.QPushButton('select model file')
-        button.clicked.connect(self.on_model_click)
+    def _create_model_selection_group(self):
+        # create model selection button
+        model_selection_button = QtWidgets.QPushButton('select model')
+        model_selection_button.clicked.connect(self.on_select_model_click)
+
+        # create model selection window
+        self._create_model_selection_window()
 
         # display path to model file
         self.model_path_text_field = QtWidgets.QLineEdit('no file selected')
@@ -67,11 +76,69 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
         # arrange button and text horizontally
         hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(button)
+        hbox.addWidget(model_selection_button)
         hbox.addWidget(self.model_path_text_field)
         hbox.addWidget(self.model_check_mark)
 
         return hbox
+
+
+    def _create_model_selection_window(self):
+        # initialise pop-up window
+        self.model_selection_window = QtWidgets.QDialog()
+        self.model_selection_window.setWindowTitle('Model Selection')
+
+        # create 'select from library' group
+        model_library_group = self._create_model_library_group()
+
+        # create 'select from files' group
+        button = QtWidgets.QPushButton('select model file')
+        button.clicked.connect(self.on_model_click)
+
+        # arange window content vertically
+        vbox = QtWidgets.QVBoxLayout()
+        vbox.addWidget(model_library_group)
+        vbox.addWidget(button)
+
+        # add options to window
+        self.model_selection_window.setLayout(vbox)
+
+
+    def _create_model_library_group(self):
+        # initialise group
+        group = QtWidgets.QGroupBox('Select model from library:')
+
+        # create number of compartments options
+        self.compartment_options = self._create_compartment_options()
+
+        # arange vertically
+        vbox = QtWidgets.QVBoxLayout()
+        vbox.addLayout(self.compartment_options)
+        vbox.addStretch(1)
+        group.setLayout(vbox)
+
+        return group
+
+
+    def _create_compartment_options(self):
+        # create label
+        label = QtWidgets.QLabel('number of compartments:')
+
+        # define options
+        valid_numbers = ['1', '2']
+
+        # create dropdown menu for options
+        self.compartment_dropdown_menu = QtWidgets.QComboBox()
+        for number in valid_numbers:
+            self.compartment_dropdown_menu.addItem(number)
+
+        # arange label and dropdown menu horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(label)
+        hbox.addWidget(self.compartment_dropdown_menu)
+
+        return hbox
+
 
 
     def _create_model_display(self):
@@ -161,6 +228,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
         label.setPixmap(self.main_window.rescaled_qm)
 
         return label
+
+
+    @QtCore.pyqtSlot()
+    def on_select_model_click(self):
+        self.model_selection_window.open()
 
 
     @QtCore.pyqtSlot()
