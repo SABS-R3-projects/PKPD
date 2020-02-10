@@ -1,3 +1,5 @@
+import os
+
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from PKPD.gui import abstractGui, mainWindow
@@ -11,6 +13,8 @@ class HomeTab(abstractGui.AbstractHomeTab):
         super().__init__()
         self.name = 'Model/Data'
         self.main_window = main_window
+        self.is_model_file_valid = False
+        self.is_data_file_valid = False
 
         # arrange content
         grid = QtWidgets.QGridLayout()
@@ -28,25 +32,78 @@ class HomeTab(abstractGui.AbstractHomeTab):
         Returns:
             {QGroupBox} -- Returns model group object.
         """
-        group = QtWidgets.QGroupBox('Model/Protocol:')
-        # generate file dialog
-        button = QtWidgets.QPushButton('select model file')
-        button.clicked.connect(self.on_model_click)
-        self.model_text = QtWidgets.QLineEdit('no file selected')
-        self.model_check_mark = self._create_file_check_mark()
-        # arrange button and text horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(button)
-        hbox.addWidget(self.model_text)
-        hbox.addWidget(self.model_check_mark)
+        group = QtWidgets.QGroupBox('Model:')
+
+        # create file dialog button and text field
+        file_dialog = self._create_file_dialog()
+
+        # create display of mmt file
+        model_display = self._create_model_display()
+
         # arrange button/text and label vertically
         vbox = QtWidgets.QVBoxLayout()
-        vbox.addLayout(hbox)
+        vbox.addLayout(file_dialog)
+        vbox.addLayout(model_display)
         vbox.addStretch(1)
 
         group.setLayout(vbox)
 
         return group
+
+
+    def _create_file_dialog(self):
+        # generate file dialog
+        button = QtWidgets.QPushButton('select model file')
+        button.clicked.connect(self.on_model_click)
+
+        # display path to model file
+        self.model_path_text_field = QtWidgets.QLineEdit('no file selected')
+
+        # make text field non-editable
+        self.model_path_text_field.setReadOnly(True)
+
+        # create file check mark
+        self.model_check_mark = self._create_file_check_mark()
+
+        # arrange button and text horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(button)
+        hbox.addWidget(self.model_path_text_field)
+        hbox.addWidget(self.model_check_mark)
+
+        return hbox
+
+
+    def _create_model_display(self):
+        # create text field to display model
+        self.model_display_text_field = QtWidgets.QTextEdit()
+
+        # adjust color of text field
+        self.model_display_text_field.setStyleSheet("background-color: rgb(128,128,128);")
+
+        # make text field non-editable
+        self.model_display_text_field.setReadOnly(True)
+
+        # make display scrollable, such that window is never exceeded
+        scroll = QtWidgets.QScrollArea()
+        scroll.setWidget(self.model_display_text_field)
+        scroll.setWidgetResizable(True)
+
+        # fix vertical space that display can take up
+        height = 0.35 * self.main_window.height
+        scroll.setFixedHeight(height)
+
+        # fix horizontal space that display can take up
+        width = 0.9 * self.main_window.width
+        scroll.setFixedWidth(width)
+
+        # arrange display window horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addStretch(2)
+        hbox.addWidget(scroll)
+        hbox.addStretch(1)
+
+        return hbox
 
 
     def _create_data_group(self):
@@ -112,12 +169,42 @@ class HomeTab(abstractGui.AbstractHomeTab):
         directory and the check mark. Only .mmt files can be selected.
         """
         options = QtWidgets.QFileDialog.Options()
-        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","Model Files (*.mmt)", options=options)
-        if fileName:
-            # update QLineEdit in the GUI to selected file
-            self.model_text.setText(fileName)
-            # update check mark
-            self.model_check_mark.setPixmap(self.main_window.rescaled_cm)
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","Model Files (*.mmt)", options=options)
+
+        if file_path:
+            # check format of file
+            self.is_model_file_valid = self._is_model_file_valid(file_path)
+
+            if self.is_model_file_valid:
+                # update QLineEdit in the GUI to selected file
+                self.model_path_text_field.setText(file_path)
+
+                # update check mark
+                self.model_check_mark.setPixmap(self.main_window.rescaled_cm)
+
+                # update model display
+                with open(file_path, 'r') as model_file:
+                    contents = model_file.read()
+                    self.model_display_text_field.setText(contents)
+            else:
+                # update QLineEdit in the GUI
+                self.model_path_text_field.setText('The selected file is invalid!')
+
+                # update check mark
+                self.model_check_mark.setPixmap(self.main_window.rescaled_rc)
+
+
+    def _is_model_file_valid(self, file_path:str):
+        # check existence
+        is_file_existent = os.path.isfile(file_path)
+
+        # check format
+        is_format_correct = file_path.split('.')[-1] == 'mmt'
+
+        # are both citeria satisifed
+        is_path_valid = is_file_existent and is_format_correct
+
+        return is_path_valid
 
 
     @QtCore.pyqtSlot()

@@ -142,8 +142,10 @@ class MainWindow(abstractGui.AbstractMainWindow):
         """Switches to the simulation tab, when triggered by clicking the 'next' QPushButton on the home tab.
         """
         #TODO: refactor this construction when structure of webApp is clear.
-        correct_model, correct_data = self._are_files_correct()
-        if correct_model and correct_data:
+        correct_data = self._are_files_correct()
+        if self.home.is_model_file_valid and correct_data:
+            # make file names globally accessible
+            self.model_file = self.home.model_path_text_field.text()
             #TODO: check that .csv has correct arrangement to be read or come up with dynamic solution.
             try:
                 # plot data in simulation tab
@@ -180,7 +182,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 QtWidgets.QMessageBox.question(self, 'Data structure not compatible!', error_message, QtWidgets.QMessageBox.Yes)
         else:
             # update file dialog icons
-            if not correct_model:
+            if not self.home.is_model_file_valid:
                 self.home.model_check_mark.setPixmap(self.rescaled_rc)
             else:
                 self.home.model_check_mark.setPixmap(self.rescaled_cm)
@@ -200,19 +202,13 @@ class MainWindow(abstractGui.AbstractMainWindow):
         Returns:
             {List[bool]} -- Returns flags for the model and data file.
         """
-        # model sanity check
-        self.model_file = self.home.model_text.text()
-        model_is_file = os.path.isfile(self.model_file)
-        model_correct_format = self.model_file.split('.')[-1] == 'mmt'
-        correct_model = model_is_file and model_correct_format
-
         # data sanity check
         self.data_file = self.home.data_text.text()
         data_is_file = os.path.isfile(self.data_file)
         data_correct_format = self.data_file.split('.')[-1] == 'csv'
         correct_data = data_is_file and data_correct_format
 
-        return [correct_model, correct_data]
+        return correct_data
 
 
 
