@@ -145,7 +145,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
         correct_data = self._are_files_correct()
         if self.home.is_model_file_valid and correct_data:
             # make file names globally accessible
-            self.model_file = self.home.model_path_text_field.text()
+            self.home.model_file
             #TODO: check that .csv has correct arrangement to be read or come up with dynamic solution.
             try:
                 # plot data in simulation tab
@@ -157,12 +157,12 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
                 # instantiate model and inverse problem
                 if self.simulation.is_single_output_model:
-                    self.model = m.SingleOutputModel(self.model_file)
+                    self.model = m.SingleOutputModel(self.home.model_file)
                     self.problem = inf.SingleOutputInverseProblem(model=self.model,
                                                                 times=self.simulation.time_data,
                                                                 values=self.simulation.state_data)
                 else:
-                    self.model = m.MultiOutputModel(self.model_file)
+                    self.model = m.MultiOutputModel(self.home.model_file)
 
                     # set model output dimension to data dimension
                     self.model.set_output_dimension(self.simulation.data_dimension)

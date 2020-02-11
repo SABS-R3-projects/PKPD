@@ -17,10 +17,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         self.is_model_file_valid = False
         self.is_data_file_valid = False
         self.library_directory = 'PKPD/modelRepository/'
-        self.selection_criteria = ['Number of Compartments',
-                                   'Dosing',
-                                   'Transition rate'
-                                   ]
+        self.model_file = None
 
         # arrange content
         grid = QtWidgets.QGridLayout()
@@ -88,17 +85,19 @@ class HomeTab(abstractGui.AbstractHomeTab):
         self.model_selection_window = QtWidgets.QDialog()
         self.model_selection_window.setWindowTitle('Model Selection')
 
+        # define dropdown dimension (otherwise the width will differ as number of char varies)
+        self.dropdown_menu_width = 100 # value arbitrary
+
         # create 'select from library' group
         model_library_group = self._create_model_library_group()
 
-        # create 'select from files' group
-        button = QtWidgets.QPushButton('select model file')
-        button.clicked.connect(self.on_model_click)
+        # create select, cancel, file button group
+        button_group = self._create_model_button_group()
 
         # arange window content vertically
         vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(model_library_group)
-        vbox.addWidget(button)
+        vbox.addLayout(button_group)
 
         # add options to window
         self.model_selection_window.setLayout(vbox)
@@ -106,14 +105,22 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
     def _create_model_library_group(self):
         # initialise group
-        group = QtWidgets.QGroupBox('Select model from library:')
+        group = QtWidgets.QGroupBox('Model library:')
 
         # create number of compartments options
-        self.compartment_options = self._create_compartment_options()
+        compartment_options = self._create_compartment_options()
+
+        # create dosing options
+        dose_options = self._create_dose_options()
+
+        # create trasition rate options
+        transition_rate_options = self._create_transition_rate_options()
 
         # arange vertically
         vbox = QtWidgets.QVBoxLayout()
-        vbox.addLayout(self.compartment_options)
+        vbox.addLayout(compartment_options)
+        vbox.addLayout(dose_options)
+        vbox.addLayout(transition_rate_options)
         vbox.addStretch(1)
         group.setLayout(vbox)
 
@@ -129,6 +136,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
         # create dropdown menu for options
         self.compartment_dropdown_menu = QtWidgets.QComboBox()
+        self.compartment_dropdown_menu.setMaximumWidth(self.dropdown_menu_width)
         for number in valid_numbers:
             self.compartment_dropdown_menu.addItem(number)
 
@@ -139,6 +147,69 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
         return hbox
 
+
+    def _create_dose_options(self):
+        # create label
+        label = QtWidgets.QLabel('dose type:')
+
+        # define options
+        valid_types = ['bolus', 'subcut']
+
+        # create dropdown menu for options
+        self.dose_type_dropdown_menu = QtWidgets.QComboBox()
+        self.dose_type_dropdown_menu.setMaximumWidth(self.dropdown_menu_width)
+        for dose_type in valid_types:
+            self.dose_type_dropdown_menu.addItem(dose_type)
+
+        # arange label and dropdown menu horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(label)
+        hbox.addWidget(self.dose_type_dropdown_menu)
+
+        return hbox
+
+
+    def _create_transition_rate_options(self):
+        # create label
+        label = QtWidgets.QLabel('transition rates:')
+
+        # define options
+        valid_rates = ['linear']
+
+        # create dropdown menu for options
+        self.transition_rate_dropdown_menu = QtWidgets.QComboBox()
+        self.transition_rate_dropdown_menu.setMaximumWidth(self.dropdown_menu_width)
+        for transition_rate in valid_rates:
+            self.transition_rate_dropdown_menu.addItem(transition_rate)
+
+        # arange label and dropdown menu horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(label)
+        hbox.addWidget(self.transition_rate_dropdown_menu)
+
+        return hbox
+
+
+    def _create_model_button_group(self):
+        # create 'select from files' button
+        select_button = QtWidgets.QPushButton('select model')
+        select_button.clicked.connect(self.on_model_select_click)
+
+        # create 'select from files' button
+        cancel_button = QtWidgets.QPushButton('cancel')
+        cancel_button.clicked.connect(self.on_model_cancel_click)
+
+        # create 'select from files' button
+        file_button = QtWidgets.QPushButton('select from file')
+        file_button.clicked.connect(self.on_model_file_click)
+
+        # arange buttons horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(select_button)
+        hbox.addWidget(cancel_button)
+        hbox.addWidget(file_button)
+
+        return hbox
 
 
     def _create_model_display(self):
@@ -236,34 +307,81 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
 
     @QtCore.pyqtSlot()
-    def on_model_click(self):
-        """Opens a file dialog upon pressing the 'select model/protocol file' and updates after selection the displayed path
+    def on_model_select_click(self):
+        # mark selected file as valid
+        self.is_model_file_valid = True
+
+        # get model descriptives
+        descriptives = [
+            self.compartment_dropdown_menu.currentText(),
+            self.dose_type_dropdown_menu.currentText(),
+            self.transition_rate_dropdown_menu.currentText()
+        ]
+
+        # reconstruct model file
+        self.model_file = self.library_directory + '_'.join(descriptives) + '.mmt'
+
+        # update QLineEdit in the GUI to selected file
+        meta_data = [
+            'No. Copmartments: ',
+            'Dose Type: ',
+            'Transition Rates: '
+        ]
+        text = ''
+        for desc_id, descriptive in enumerate(descriptives):
+            text = text + meta_data[desc_id] + descriptive + '; '
+
+        self.model_path_text_field.setText(text)
+
+        # update check mark
+        self.model_check_mark.setPixmap(self.main_window.rescaled_cm)
+
+        # update model display
+        with open(self.model_file, 'r') as model_file:
+            contents = model_file.read()
+            self.model_display_text_field.setText(contents)
+
+        # close select model window
+        self.model_selection_window.close()
+
+
+    @QtCore.pyqtSlot()
+    def on_model_cancel_click(self):
+        self.model_selection_window.close()
+
+
+    @QtCore.pyqtSlot()
+    def on_model_file_click(self):
+        """Opens a file dialog and updates after selection the displayed path
         directory and the check mark. Only .mmt files can be selected.
         """
         options = QtWidgets.QFileDialog.Options()
         file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","Model Files (*.mmt)", options=options)
 
-        if file_path:
-            # check format of file
-            self.is_model_file_valid = self._is_model_file_valid(file_path)
+        # check format of file
+        self.is_model_file_valid = self._is_model_file_valid(file_path)
 
-            if self.is_model_file_valid:
-                # update QLineEdit in the GUI to selected file
-                self.model_path_text_field.setText(file_path)
+        if self.is_model_file_valid:
+            # make model globally accessible
+            self.model_file = file_path
 
-                # update check mark
-                self.model_check_mark.setPixmap(self.main_window.rescaled_cm)
+            # update QLineEdit in the GUI to selected file
+            self.model_path_text_field.setText(self.model_file)
 
-                # update model display
-                with open(file_path, 'r') as model_file:
-                    contents = model_file.read()
-                    self.model_display_text_field.setText(contents)
-            else:
-                # update QLineEdit in the GUI
-                self.model_path_text_field.setText('The selected file is invalid!')
+            # update check mark
+            self.model_check_mark.setPixmap(self.main_window.rescaled_cm)
 
-                # update check mark
-                self.model_check_mark.setPixmap(self.main_window.rescaled_rc)
+            # update model display
+            with open(self.model_file, 'r') as model_file:
+                contents = model_file.read()
+                self.model_display_text_field.setText(contents)
+
+            # close select model window
+            self.model_selection_window.close()
+        else:
+            # generate error message
+            error_message = 'The selected model file is invalid! Please, select a model from the library or choose a valid model file.'
+            QtWidgets.QMessageBox.question(self, 'Model file invalid!', error_message, QtWidgets.QMessageBox.Yes)
 
 
     def _is_model_file_valid(self, file_path:str):
@@ -298,14 +416,3 @@ class HomeTab(abstractGui.AbstractHomeTab):
         """Executes the MainWindow.next_tab method.
         """
         self.main_window.next_tab()
-
-
-class TestTab(QtWidgets.QWidget):
-    """temporary tab class to test the functionality of tab production in MainWindow"""
-    def __init__(self, tab_name):
-        super().__init__()
-        layout = QtWidgets.QVBoxLayout()
-        text = QtWidgets.QPlainTextEdit()
-        layout.addWidget(text)
-        self.setLayout(layout)
-        self.name = tab_name
