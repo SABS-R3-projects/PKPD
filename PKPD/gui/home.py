@@ -29,8 +29,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
 
     def _create_model_group(self):
-        """Creates the model file dialog group consisting of a label, a button that opens the file dialog, a text field that displays
-        the selected file and a check mark symbol that gives feedback whether or not the chosen file is valid.
+        """Creates the model file dialog group consisting of a label, the model selection group and a display window of the model .mmt file.
 
         Returns:
             {QGroupBox} -- Returns model group object.
@@ -55,6 +54,12 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
 
     def _create_model_selection_group(self):
+        """Creates the model selection group consisting of a 'select model' button, that opens a model selection window, a
+        text field detailing further information about the model and an image response to the validity of the chosen model.
+
+        Returns:
+            {QGroupBox} -- Returns model selection group object.
+        """
         # create model selection button
         model_selection_button = QtWidgets.QPushButton('select model')
         model_selection_button.clicked.connect(self.on_select_model_click)
@@ -81,6 +86,9 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
 
     def _create_model_selection_window(self):
+        """Creates model selection window consisting of the model library and buttons to either choose a model
+        from the library or from a local directory.
+        """
         # initialise pop-up window
         self.model_selection_window = QtWidgets.QDialog()
         self.model_selection_window.setWindowTitle('Model Selection')
@@ -104,6 +112,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
 
     def _create_model_library_group(self):
+        """Creates model library, consisting of dropdown menus detailing the properties of the models.
+
+        Returns:
+            {QGroupBox} -- Returns model library group object.
+        """
         # initialise group
         group = QtWidgets.QGroupBox('Model library:')
 
@@ -128,6 +141,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
 
     def _create_compartment_options(self):
+        """Creates number of compartments dropdown menu.
+
+        Returns:
+            {QHBoxLayout} -- Returns dropdown menu with label.
+        """
         # create label
         label = QtWidgets.QLabel('number of compartments:')
 
@@ -149,6 +167,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
 
     def _create_dose_options(self):
+        """Creates dose type dropdown menu.
+
+        Returns:
+            {QHBoxLayout} -- Returns dropdown menu with label.
+        """
         # create label
         label = QtWidgets.QLabel('dose type:')
 
@@ -170,6 +193,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
 
     def _create_transition_rate_options(self):
+        """Creates transition rates dropdown menu.
+
+        Returns:
+            {QHBoxLayout} -- Returns dropdown menu with label.
+        """
         # create label
         label = QtWidgets.QLabel('transition rates:')
 
@@ -191,6 +219,13 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
 
     def _create_model_button_group(self):
+        """Creates model button group consisting of a 'select model', 'cancel' and 'select from file' button.
+        'select model' selects the chosen model from the libray, 'cancel' closes the window and 'select from file'
+        opens a file dialog.
+
+        Returns:
+            {QHBoxLayout} -- Returns model button group object.
+        """
         # create 'select from files' button
         select_button = QtWidgets.QPushButton('select model')
         select_button.clicked.connect(self.on_model_select_click)
@@ -213,6 +248,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
 
     def _create_model_display(self):
+        """Creates display for the model .mmt file.
+
+        Returns:
+            {QHBoxLayout} -- Returns model display object.
+        """
         # create text field to display model
         self.model_display_text_field = QtWidgets.QTextEdit()
 
@@ -303,11 +343,16 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
     @QtCore.pyqtSlot()
     def on_select_model_click(self):
+        """Reaction to clicking the 'select model' button in the home tab. Opens the model selection window.
+        """
         self.model_selection_window.open()
 
 
     @QtCore.pyqtSlot()
     def on_model_select_click(self):
+        """Reaction to clicking the 'select model' button in the model selection window. Gets model file,
+        updates the model text field and the model display.
+        """
         # mark selected file as valid
         self.is_model_file_valid = True
 
@@ -347,6 +392,8 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
     @QtCore.pyqtSlot()
     def on_model_cancel_click(self):
+        """Closes the model selection window.
+        """
         self.model_selection_window.close()
 
 
@@ -385,6 +432,14 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
 
     def _is_model_file_valid(self, file_path:str):
+        """Checks the validity of the chosen model file.
+
+        Arguments:
+            file_path {str} -- path to model file.
+        
+        Returns:
+            {bool} -- True if valid, False if invalid.
+        """
         # check existence
         is_file_existent = os.path.isfile(file_path)
 
