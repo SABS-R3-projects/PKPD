@@ -13,7 +13,7 @@ class TestSingleOutputProblem(unittest.TestCase):
     """
     ## Test case: Linear One Compartment Model with Bolus dosing
     # generating data
-    file_name = 'PKPD/modelRepository/1comp_bolus_linear.mmt'
+    file_name = 'PKPD/modelRepository/1_bolus_linear.mmt'
     one_comp_model = m.SingleOutputModel(file_name)
     true_parameters_one_comp_model = [2, 2, 4] # # [initial drug, CL, V]
 
@@ -84,7 +84,7 @@ class TestMultiOutputProblem(unittest.TestCase):
     """
     ## Test case: Linear Two Compartment Model with Subcutaneous Dosing
     # generating data
-    file_name = 'PKPD/modelRepository/2comp_bolus_linear.mmt'
+    file_name = 'PKPD/modelRepository/2_bolus_linear.mmt'
     two_comp_model = m.MultiOutputModel(file_name)
 
     # set dimensionality of data
