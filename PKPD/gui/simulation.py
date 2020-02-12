@@ -123,8 +123,8 @@ class SimulationTab(QtWidgets.QDialog):
                 for patient_id in self.patients_data:
                     label = 'patient ' + str(patient_id)
                     colour = int(len(self.colours) * (patient_id - self.first_patient_id) / len(self.patients_data))
-                    self.data_model_ax.scatter(x=self.patients_data[patient_id][0],
-                                               y=self.patients_data[patient_id][1][:, 0], label=label, marker='o',
+                    self.data_model_ax[dim].scatter(x=self.patients_data[patient_id][0],
+                                               y=self.patients_data[patient_id][1][:, dim], label=label, marker='o',
                                                color=self.colours[colour],
                                                edgecolor='black', alpha=0.5)
                 self.data_model_ax[dim].set_ylabel(state_labels[dim])
@@ -541,8 +541,8 @@ class SimulationTab(QtWidgets.QDialog):
                 times=self.times
                 )
 
-            colour = int(len(self.colours)*(patient_id - self.first_patient_id)/len(self.patients_data))
             # plot model
+            colour = int(len(self.colours)*(patient_id - self.first_patient_id)/len(self.patients_data))
             self.data_model_ax.plot(self.times, self.state_values, linestyle='dashed', color=self.colours[colour])
 
         # refresh canvas
@@ -551,20 +551,23 @@ class SimulationTab(QtWidgets.QDialog):
     def _plot_multi_output_model(self):
         """Plots the model in dashed, grey lines. Each state dimension is plotted to a separate subplot.
         """
-        # solve forward problem for current parameter set
-        self.state_values = self.main_window.model[self.first_patient_id].simulate(
-            parameters=self.parameter_values,
-            times=self.times
-            )
-
         # remove previous graphs from subplots to avoid flooding the figure
         if self.enable_line_removal:
-            for dim in range(self.state_dimension):
-                self.data_model_ax[dim].lines.pop()
+            for i in self.patients_data:
+                for dim in range(self.state_dimension):
+                    self.data_model_ax[dim].lines.pop()
 
-        # plot model
-        for dim in range(self.state_dimension):
-            self.data_model_ax[dim].plot(self.times, self.state_values[:, dim], linestyle='dashed', color='grey')
+        for patient_id in self.patients_data:
+            # solve forward problem for current parameter set
+            self.state_values = self.main_window.model[patient_id].simulate(
+                parameters=self.parameter_values,
+                times=self.times
+                )
+
+            # plot model
+            colour = int(len(self.colours)*(patient_id - self.first_patient_id)/len(self.patients_data))
+            for dim in range(self.state_dimension):
+                self.data_model_ax[dim].plot(self.times, self.state_values[:, dim], linestyle='dashed', color=self.colours[colour])
 
         # refresh canvas
         self.canvas.draw()
@@ -728,13 +731,16 @@ class SimulationTab(QtWidgets.QDialog):
                 times=times
                 )
             colour = int(len(self.colours) * (patient_id - self.first_patient_id) / len(self.patients_data))
+            label = None
+            if patient_id == self.first_patient_id:
+                label = 'inferred model'
             # plot model
             if self.is_single_output_model:  # single-output problem
-                self.data_model_ax.plot(times, state_values, color=self.colours[colour], label='model')
+                self.data_model_ax.plot(times, state_values, color=self.colours[colour], label=label)
                 self.data_model_ax.legend()
             else:  # multi-output problem
                 for dim in range(self.state_dimension):
-                    self.data_model_ax[dim].plot(times, state_values[:, dim], color='black', label='model')
+                    self.data_model_ax[dim].plot(times, state_values[:, dim], color=self.colours[colour], label=label)
                     self.data_model_ax[dim].legend()
 
         # refresh canvas

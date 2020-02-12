@@ -34,7 +34,6 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
             self.problems.append(
                 pints.SingleOutputProblem(models[i], self.patients_data[i][0], self.patients_data[i][1]))
 
-        print(self.problems[0])
         self.objective_function = None
         self.set_objective_function(pints.SumOfSquaresError)
 
@@ -148,21 +147,31 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
     is pints.SumOfSquaresError and default optimiser is pints.CMAES.
     """
 
-    def __init__(self, model: m.MultiOutputModel, times: np.ndarray, values: np.ndarray):
+    def __init__(self, models: dict, data: dict):
         """Initialises a multi-output inference problem with default objective function pints.SumOfSquaresError
         and default optimiser pints.CMAES. Standard deviation in initial starting point of optimisation as well as
         restricted domain of support for inferred parameters is disabled by default.
 
         Arguments:
-            model {m.MultiOutputModel} -- Model which parameters are to be inferred.
-            times {np.ndarray} -- Times of data points.
-            values {np.ndarray} -- State values of data points.
-
+            models {dict} -- A dictionary of Models (m.SingleOutputModel) for each patient ID on which parameters are to
+                be inferred.
+            data {dict} -- A dictionary of tuples for each patient ID, where the the tuple contains an np.ndarray of
+                times and an np.ndarray of state values.
         Return:
             None
         """
-        self.problem = pints.MultiOutputProblem(model, times, values)
-        self.objective_function = pints.SumOfSquaresError(self.problem)
+
+        self.problems = []
+        self.error_measure = None
+        self.patients_data = data
+
+        for i in models:
+            self.problems.append(
+                pints.SingleOutputProblem(models[i], self.patients_data[i][0], self.patients_data[i][1]))
+
+        self.objective_function = None
+        self.set_objective_function(pints.SumOfSquaresError)
+
         self.optimiser = pints.CMAES
         self.initial_parameter_uncertainty = None
         self.parameter_boundaries = None
@@ -188,19 +197,25 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
 
         self.estimated_parameters, self.objective_score = optimisation.run()
 
-    def set_objective_function(self, objective_function: pints.ErrorMeasure) -> None:
+    def set_objective_function(self, error_measure: pints.ErrorMeasure) -> None:
         """Sets the objective function which is minimised to find the optimal parameter set.
 
         Arguments:
-            objective_function {pints.ErrorMeasure} -- Valid objective functions are [MeanSquaredError,
+            error_measure {pints.ErrorMeasure} -- Valid objective functions are [MeanSquaredError,
             SumOfSquaresError] in pints.
         """
         valid_obj_func = [pints.MeanSquaredError, pints.SumOfSquaresError]
 
-        if objective_function not in valid_obj_func:
+        if error_measure not in valid_obj_func:
             raise ValueError('Objective function is not supported.')
 
-        self.objective_function = objective_function(self.problem)
+        self.errors = []
+
+        for problem in self.problems:
+            problem_i = problem
+            self.errors.append(error_measure(problem_i))
+
+        self.objective_function = pints.SumOfErrors(self.errors)
 
     def set_optimiser(self, optimiser: pints.Optimiser) -> None:
         """Sets the optimiser to find the "global" minimum of the objective function.
@@ -246,9 +261,9 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         Return:
             {Dict} -- Estimated parameter values with their name as key.
         """
-        state_dimension = self.problem._model.n_outputs()
-        state_names = self.problem._model.state_names
-        parameter_names = self.problem._model.parameter_names
+        state_dimension =  self.problems[0]._model.n_outputs()
+        state_names =  self.problems[0]._model.state_names
+        parameter_names =  self.problems[0]._model.parameter_names
 
         parameter_dict = {}
         # Note that the estimated parameters are [inital values, model parameter].

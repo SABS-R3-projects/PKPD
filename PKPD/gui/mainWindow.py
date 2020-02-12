@@ -158,7 +158,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 else:
                     self.model = {}
                     for patient_id in self.simulation.patients_data:
-                        self.model[patient_id] = m.SingleOutputModel(self.model_file,
+                        self.model[patient_id] = m.MultiOutputModel(self.model_file,
                                                                      self.simulation.patients_dose[patient_id])
                     self.problem = inf.MultiOutputInverseProblem(self.model, self.simulation.patients_data)
 
