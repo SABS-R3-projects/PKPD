@@ -132,11 +132,15 @@ class SingleOutputModel(AbstractModel):
         """
         code = {'p' : 'Peripheral', 'c' : 'Central', 'd' : 'Dosing'}
         self.state_dictionary = {}
-        for name in self.state_names:
-            label = code[name[0]]
-            if myokit_model.has_variable(name+'Concentration'): # ensure conc variable in myokit
-                self.state_dictionary[label + ' (conc)'] = name + 'Concentration'
-            self.state_dictionary[label + ' (mass)'] = name #add mass
+        # Iterate over all state variables
+        for state_var in myokit_model.variables(bound=False, const=False, sort=True):
+            try: #see if expected conc mass/format
+                key = state_var.qname().replace('_', ' ').replace('.', ' (') + ')'
+                self.state_dictionary[key] = state_var.qname()
+            except:
+                key = state_var.qname()
+                self.state_dictionary[key] = state_var.qname()
+
 
 
 class MultiOutputModel(AbstractModel):
@@ -305,6 +309,7 @@ def set_unit_format():
     # Set Preferred Representation in Myokit
     for name, unit in common_units.items():
         myokit.Unit.register_preferred_representation(name, unit)
+
 
 set_unit_format()
 
