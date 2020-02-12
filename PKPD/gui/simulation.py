@@ -695,30 +695,31 @@ class SimulationTab(QtWidgets.QDialog):
                             num=100
                             )
 
-        # solve forward problem
-        state_values = self.main_window.model[next(iter(self.main_window.model))].simulate(parameters=self.main_window.problem.estimated_parameters,
-                                                          times=times
-                                                          )
+        # remove all lines from figure
+
         if self.is_single_output_model:  # single-output problem
-            # remove all lines from figure
             lines = self.data_model_ax.lines
             while lines:
                 lines.pop()
-
-            # plot model
-            self.data_model_ax.plot(times, state_values, color='black', label='model')
-            self.data_model_ax.legend()
         else:  # multi-output problem
-            # remove all lines from figure
             for dim in range(self.state_dimension):
                 lines = self.data_model_ax[dim].lines
                 while lines:
                     lines.pop()
 
+        # solve forward problem
+        for patient_id in self.main_window.model:
+            state_values = self.main_window.model[patient_id].simulate(parameters=self.main_window.problem.estimated_parameters,
+                                                          times=times
+                                                          )
             # plot model
-            for dim in range(self.state_dimension):
-                self.data_model_ax[dim].plot(times, state_values[:, dim], color='black', label='model')
-                self.data_model_ax[dim].legend()
+            if self.is_single_output_model:  # single-output problem
+                self.data_model_ax.plot(times, state_values, color='black', label='model')
+                self.data_model_ax.legend()
+            else:  # multi-output problem
+                for dim in range(self.state_dimension):
+                    self.data_model_ax[dim].plot(times, state_values[:, dim], color='black', label='model')
+                    self.data_model_ax[dim].legend()
 
         # refresh canvas
         self.canvas.draw()
