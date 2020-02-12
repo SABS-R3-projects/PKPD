@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from PKPD.gui import abstractGui, mainWindow
@@ -325,7 +326,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # create file check mark
         self.data_check_mark = self._create_file_check_mark()
 
-        # arrange button and text horizontally
+        # arange button and text horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(button)
         hbox.addWidget(self.data_path_text_field)
@@ -341,24 +342,24 @@ class HomeTab(abstractGui.AbstractHomeTab):
             {QHBoxLayout} -- Returns data display object.
         """
         # create text field to display data
-        self.data_display_text_field = QtWidgets.QTextEdit()
+        self.data_display = QtWidgets.QTableView()
 
         # adjust color of text field
-        self.data_display_text_field.setStyleSheet("background-color: rgb(128,128,128);")
+        self.data_display.setStyleSheet("background-color: rgb(128,128,128);")
 
-        # make text field non-editable
-        self.data_display_text_field.setReadOnly(True)
+        # # make text field non-editable
+        # self.data_display.setReadOnly(True)
 
         # make display scrollable, such that window is never exceeded
         scroll = QtWidgets.QScrollArea()
-        scroll.setWidget(self.data_display_text_field)
+        scroll.setWidget(self.data_display)
         scroll.setWidgetResizable(True)
 
         # fix vertical space that display can take up
         height = 0.3 * self.main_window.height
         scroll.setFixedHeight(height)
 
-        # arrange display window horizontally
+        # arange display window horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(scroll)
 
@@ -373,6 +374,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         """
         button = QtWidgets.QPushButton('next')
         button.clicked.connect(self.on_next_click)
+
         # arrange button and text horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addStretch(1)
@@ -484,7 +486,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
             QtWidgets.QMessageBox.question(self, 'Model file invalid!', error_message, QtWidgets.QMessageBox.Yes)
 
 
-    def _is_model_file_valid(self, file_path:str):
+    def _is_model_file_valid(self, file_path:str) -> bool:
         """Checks the validity of the chosen model file.
 
         Arguments:
@@ -507,16 +509,58 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
     @QtCore.pyqtSlot()
     def on_data_click(self):
-        """Opens a file dialog upon pressing the 'select data file' and updates after selection the displayed path
-        directory and the check mark. Only .csv files can be selected.
+        """Opens a file dialog and updates after selection the displayed path directory, as well as the dosplay window and the check mark.
+        Only .csv files can be selected.
         """
         options = QtWidgets.QFileDialog.Options()
-        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","Data Files (*.csv)", options=options)
-        if fileName:
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","Data Files (*.csv)", options=options)
+
+        # check format of file
+        self.is_data_file_valid = self._is_data_file_valid(file_path)
+
+        if self.is_data_file_valid:
+            # make model globally accessible
+            self.data_file = file_path
+
+            # read in data file
+            self.data_df = pd.read_csv(file_path)
+
             # update QLineEdit in the GUI to selected file
-            self.data_text.setText(fileName)
+            self.data_path_text_field.setText(file_path)
+
             # update check mark
             self.data_check_mark.setPixmap(self.main_window.rescaled_cm)
+
+            # update data display
+            self.data_display.setModel(PandasModel(self.data_df))
+
+            # make content fill the reserved space of the table view
+            self.data_display.resizeColumnsToContents()
+        else:
+            # generate error message
+            error_message = 'The selected data file is invalid! Please, try again.'
+            QtWidgets.QMessageBox.question(self, 'Data file invalid!', error_message, QtWidgets.QMessageBox.Yes)
+
+
+    def _is_data_file_valid(self, file_path:str) -> bool:
+        """Checks the validity of the chosen model file.
+
+        Arguments:
+            file_path {str} -- path to model file.
+        
+        Returns:
+            {bool} -- True if valid, False if invalid.
+        """
+        # check existence
+        is_file_existent = os.path.isfile(file_path)
+
+        # check format
+        is_format_correct = file_path.split('.')[-1] == 'csv'
+
+        # are both citeria satisifed
+        is_path_valid = is_file_existent and is_format_correct
+
+        return is_path_valid
 
 
     @QtCore.pyqtSlot()
@@ -524,3 +568,28 @@ class HomeTab(abstractGui.AbstractHomeTab):
         """Executes the MainWindow.next_tab method.
         """
         self.main_window.next_tab()
+
+
+###### TO BE REMOVED ####
+class PandasModel(QtCore.QAbstractTableModel):
+
+    def __init__(self, data):
+        QtCore.QAbstractTableModel.__init__(self)
+        self._data = data
+
+    def rowCount(self, parent=None):
+        return self._data.shape[0]
+
+    def columnCount(self, parnet=None):
+        return self._data.shape[1]
+
+    def data(self, index, role=QtCore.Qt.DisplayRole):
+        if index.isValid():
+            if role == QtCore.Qt.DisplayRole:
+                return str(self._data.iloc[index.row(), index.column()])
+        return None
+
+    def headerData(self, col, orientation, role):
+        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+            return self._data.columns[col]
+        return None

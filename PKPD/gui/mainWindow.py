@@ -32,7 +32,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
         self._format_images()
 
         # fill the empty window with content
-        self._arrange_window_content()
+        self._arange_window_content()
 
 
     def _set_window_size(self):
@@ -85,7 +85,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
         self.rescaled_rc = red_cross.scaledToHeight(self.desktop_height * 0.03)
 
 
-    def _arrange_window_content(self):
+    def _arange_window_content(self):
         """Defines the layout of the main window.
         """
         self.setWindowTitle(self.window_title)
