@@ -6,22 +6,29 @@ author: SABS:R3
 centralCompartment.drug = 0 [ng]
 
 [centralCompartment]
-doseRate = 0 bind pace
+doseRate = 0 [ng/h]
+    in [ng/h]
+    bind pace
     desc: Dose rate in ng/h. Controlled by protocol.
-time = 0 bind time
+time = 0 [h] bind time
+    in [h]
     desc: independent time variable in h.
 
 CL = 2 [mL/h]
+    in [mL/h]
     desc: Clearance/elimination rate from central compartment.
 V = 4 [mL]
+    in [mL]
     desc: Volume of central compartment.
 
 dot(drug) = doseRate - drug * CL / V
-    desc: Drug in central compartment in ng.
+    desc: Drug in central compartment in ng
+    in [ng]
 
 drugConcentration = drug / V
+    in [ng/mL]
     desc: Drug concentration in central compartment in ng/mL.
 
 [[protocol]]
 # Level  Start    Length   Period   Multiplier
-2.0      2.0      0.5      6        0
+1.0      8.0      1.0      0        0

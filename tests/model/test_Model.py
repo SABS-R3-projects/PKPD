@@ -11,17 +11,18 @@ class TestSingleOutputModel(unittest.TestCase):
     """Tests the functionality of all methods of the SingleOutputModel class.
     """
     # Test case I: 1-compartment model
-    file_name = 'PKPD/modelRepository/1comp_bolus_linear.mmt'
+    file_name = 'PKPD/modelRepository/1_bolus_linear.mmt'
     one_comp_model = m.SingleOutputModel(file_name)
+
 
     def test_init(self):
         """Tests whether the Model class initialises as expected.
         """
         # Test case I: 1-compartment model
         ## expected:
-        state_names = ['centralCompartment.drug']
-        output_name = 'centralCompartment.drugConcentration'
-        parameter_names = ['centralCompartment.CL', 'centralCompartment.V']
+        state_names = ['central_compartment.drug']
+        output_name = 'central_compartment.drug_concentration'
+        parameter_names = ['central_compartment.CL', 'central_compartment.V']
         number_parameters_to_fit = 3
 
         ## assert initilised values coincide
@@ -30,6 +31,7 @@ class TestSingleOutputModel(unittest.TestCase):
         for parameter_id, parameter in enumerate(self.one_comp_model.parameter_names):
             assert parameter_names[parameter_id] == parameter
         assert number_parameters_to_fit == self.one_comp_model.number_parameters_to_fit
+
 
     def test_n_parameters(self):
         """Tests whether the n_parameter method returns the correct number of fit parameters.
@@ -41,6 +43,7 @@ class TestSingleOutputModel(unittest.TestCase):
         ## assert correct number of parameters is returned.
         assert n_parameters == self.one_comp_model.n_parameters()
 
+
     def test_n_outputs(self):
         """Tests whether the n_outputs method returns the correct number of outputs.
         """
@@ -50,6 +53,7 @@ class TestSingleOutputModel(unittest.TestCase):
 
         ## assert correct number of outputs.
         assert n_outputs == self.one_comp_model.n_outputs()
+
 
     def test_simulate(self):
         """Tests whether the simulate method works as expected. Tests implicitly also whether
@@ -62,11 +66,11 @@ class TestSingleOutputModel(unittest.TestCase):
         ## expected
         model, protocol, _ = myokit.load(self.file_name)
         model.set_state([parameters[0]])
-        model.set_value('centralCompartment.CL', parameters[1])
-        model.set_value('centralCompartment.V', parameters[2])
+        model.set_value('central_compartment.CL', parameters[1])
+        model.set_value('central_compartment.V', parameters[2])
         simulation = myokit.Simulation(model, protocol)
-        myokit_result = simulation.run(duration=times[-1]+1, log=['centralCompartment.drugConcentration'], log_times = times)
-        expected_result = myokit_result.get('centralCompartment.drugConcentration')
+        myokit_result = simulation.run(duration=times[-1]+1, log=['central_compartment.drug_concentration'], log_times = times)
+        expected_result = myokit_result.get('central_compartment.drug_concentration')
 
         ## assert that Model.simulate returns the same result.
         model_result = self.one_comp_model.simulate(parameters, times)
@@ -78,65 +82,90 @@ class TestMultiOutputModel(unittest.TestCase):
     """Tests the functionality of all methods of the MultiOutputModel class.
     """
     # Test case I: 1-compartment model
-    file_name = 'PKPD/mmt/one_compartment.mmt'
-    one_comp_model = m.MultiOutputModel(file_name)
+    file_name = 'PKPD/modelRepository/2_bolus_linear.mmt'
+    two_comp_model = m.MultiOutputModel(file_name)
+
+    # set dimensionality
+    output_dimension = 2
+    two_comp_model.set_output_dimension(output_dimension)
+
 
     def test_init(self):
         """Tests whether the Model class initialises as expected.
         """
         # Test case I: 1-compartment model
         ## expected:
-        state_names = ['bolus.y_c']
-        parameter_names = ['param.CL', 'param.V_c']
-        number_model_parameters = 2
-        number_parameters_to_fit = 3
+        state_names = ['central_compartment.drug', 'peripheral_compartment.drug']
+        parameter_names = ['central_compartment.CL',
+                           'central_compartment.Kcp',
+                           'central_compartment.V',
+                           'peripheral_compartment.Kpc',
+                           'peripheral_compartment.V'
+                           ]
 
         ## assert initilised values coincide
-        assert state_names == self.one_comp_model.state_names
-        for parameter_id, parameter in enumerate(self.one_comp_model.parameter_names):
-            assert parameter_names[parameter_id] == parameter
-        assert number_model_parameters == self.one_comp_model.number_model_parameters
-        assert number_parameters_to_fit == self.one_comp_model.number_parameters_to_fit
+        assert state_names == self.two_comp_model.state_names
+        assert parameter_names == self.two_comp_model.parameter_names
+
 
     def test_n_parameters(self):
         """Tests whether the n_parameter method returns the correct number of fit parameters.
         """
         # Test case I: 1-compartment model
         ## expected
-        n_parameters = 3
+        n_parameters = 7
 
         ## assert correct number of parameters is returned.
-        assert n_parameters == self.one_comp_model.n_parameters()
+        assert n_parameters == self.two_comp_model.n_parameters()
+
 
     def test_n_outputs(self):
         """Tests whether the n_outputs method returns the correct number of outputs.
         """
         # Test case I: 1-compartment model
         ## expected
-        n_outputs = 1
+        n_outputs = 2
 
         ## assert correct number of outputs.
-        assert n_outputs == self.one_comp_model.n_outputs()
+        assert n_outputs == self.two_comp_model.n_outputs()
+
 
     def test_simulate(self):
         """Tests whether the simulate method works as expected. Tests implicitly also whether
         the _set_parameters method works properly.
         """
-        # Test case I: 1-compartment model
-        parameters = [20, 2, 4] # different from initialsed parameters
-        times = np.arange(25)
+        output_names = ['central_compartment.drug_concentration',
+                        'peripheral_compartment.drug_concentration']
+        state_dimension = 2
+        parameters = [0, 0, 1, 3, 5, 2, 2] # states + parameters
+        parameter_names = ['central_compartment.CL',
+                           'central_compartment.Kcp',
+                           'central_compartment.V',
+                           'peripheral_compartment.Kpc',
+                           'peripheral_compartment.V'
+                           ]
+        times = np.arange(100)
 
         ## expected
+        # initialise model
         model, protocol, _ = myokit.load(self.file_name)
-        model.set_state([parameters[0]])
-        model.set_value('param.CL', parameters[1])
-        model.set_value('param.V_c', parameters[2])
+
+        # set initial conditions and parameter values
+        model.set_state(parameters[:state_dimension])
+        for parameter_id, name in enumerate(parameter_names):
+            model.set_value(name, parameters[state_dimension + parameter_id])
+
+        # solve model
         simulation = myokit.Simulation(model, protocol)
-        myokit_result = simulation.run(duration=times[-1]+1, log=['bolus.y_c'], log_times = times)
-        expected_result = myokit_result.get('bolus.y_c')
-        np_expected_result = np.array(expected_result)[:, np.newaxis] # in MultiOutputModel results are stored in 2d array.
+        myokit_result = simulation.run(duration=times[-1]+1, log=output_names, log_times = times)
+
+        # get expected result
+        expected_result = []
+        for name in output_names:
+            expected_result.append(myokit_result.get(name))
+        np_expected_result = np.array(expected_result)
 
         ## assert that Model.simulate returns the same result.
-        model_result = self.one_comp_model.simulate(parameters, times)
-   
+        model_result = self.two_comp_model.simulate(parameters, times).transpose()
+
         assert np.allclose(np_expected_result, model_result)

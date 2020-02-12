@@ -7,12 +7,23 @@ from PKPD.model import model as m
 from PKPD.inference import inference
 
 # generating data
-file_name = 'demo/synthesised_two_compartment/2comp_subcut_linear.mmt'
-model = m.MultiOutputModel(file_name)
+file_name = 'demo/synthesised_3_compartment/3_bolus_linear.mmt'
+model = m.SingleOutputModel(file_name)
 
-# List of parameters: ['centralCompartment.drug', 'doseCompartment.drug', 'peripheralCompartment.drug', 'centralCompartment.CL',
-# 'centralCompartment.Kcp', 'centralCompartment.V', 'doseCompartment.Ka', 'peripheralCompartment.Kpc', 'peripheralCompartment.V']
-true_parameters = [0, 0, 0, 1, 3, 5, 2, 2, 2]
+# List of parameters
+true_parameters = [
+    0, # central_compartment.drug
+    0, # peripheral_compartment_1.drug
+    0, # peripheral_compartment_2.drug
+    1, # central_compartment.CL
+    3, # central_compartment.Kcp1
+    2, # central_compartment.Kcp2
+    5, # central_compartment.V
+    2, # peripheral_compartment_1.Kpc
+    2, # peripheral_compartment_1.V
+    2, # peripheral_compartment_2.Kpc
+    2 # peripheral_compartment_2.V
+]
 
 times = np.linspace(0.0, 24.0, 100)
 model_result = model.simulate(true_parameters, times)
@@ -25,5 +36,4 @@ data = model_result + np.random.normal(loc=0.0,
 )
 
 df = pd.DataFrame({'time_h': times, 'concentration_ng_mL': data})
-df.to_csv('demo/synthesised_two_compartment/two_compartment_multi_output.csv', index=False)
-
+df.to_csv('demo/synthesised_3_compartment/three_compartment_single_output.csv', index=False)
