@@ -399,11 +399,12 @@ class SimulationTab(QtWidgets.QDialog):
     def _set_boundary_check(self):
         """Sets boundaries_are_on to True if the checkbox is checked when apply is clicked
         """
-        print(self.boundarytoggle.checkState())
-        if self.boundarytoggle.checkState() < 0:
+        if self.boundarytoggle.checkState() > 0:
             self.boundaries_are_on = True
+            print('boundaries turned on')
         else:
             self.boundaries_are_on = False
+            print('boundaries turned off')
 
 
     @QtCore.pyqtSlot()
@@ -788,8 +789,9 @@ class SimulationTab(QtWidgets.QDialog):
         max_values = []
 
         # if boundaries are turned off, send None to optimiser
-        if self.boundaries_are_on is True:
+        if self.boundaries_are_on is False:
             self.main_window.problem.set_parameter_boundaries(None)
+            self.correct_initial_values = True
 
         # if boundaries are turned on, get from sliders
         else:
