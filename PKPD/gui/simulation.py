@@ -78,7 +78,7 @@ class SimulationTab(QtWidgets.QDialog):
             time_data = states.get_group(name)[time_label].to_numpy()
             state_data = states.get_group(name)[state_labels].to_numpy()
             self.patients_data[int(name)] = (time_data.astype(np.float), state_data.astype(np.float))
-            print(name)
+
 
         dose = data.copy()
         dose.drop(dose.loc[dose[dose_label] == '.'].index, inplace=True)

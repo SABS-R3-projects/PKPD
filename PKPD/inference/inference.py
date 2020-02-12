@@ -165,10 +165,15 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         self.error_measure = None
         self.patients_data = data
         print('inf 1')
+        print(models)
 
         for i in models:
-            print('infmodel', self.patients_data[i][1:])
-            self.problems.append(pints.MultiOutputProblem(models[i], self.patients_data[i][0], self.patients_data[i][1:]))
+            x = np.asarray(self.patients_data[i][0][:])
+            print('infmodel', x.shape)
+            y = np.asarray(self.patients_data[i][1][:])
+            print('infmodel', y.shape)
+            print(models[i].n_outputs())
+            self.problems.append(pints.MultiOutputProblem(models[i], x, y))
             print('infmodel', i)
 
         self.objective_function = None

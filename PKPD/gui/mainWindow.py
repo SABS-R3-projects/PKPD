@@ -140,7 +140,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
         correct_model, correct_data = self._are_files_correct()
         if correct_model and correct_data:
             # TODO: check that .csv has correct arrangement to be read or come up with dynamic solution.
-            try:
+            # try:
                 # plot data in simulation tab
                 self.simulation.add_data_to_data_model_plot()
 
@@ -172,11 +172,11 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 # switch to simulation tab
                 self.tabs.setCurrentIndex(self.sim_tab_index)
                 print('done')
-            except ValueError:
-                # generate error message
-                error_message = 'The .csv file does not seem to be properly formatted. Please check again!'
-                QtWidgets.QMessageBox.question(self, 'Data structure not compatible!', error_message,
-                                               QtWidgets.QMessageBox.Yes)
+            # except ValueError:
+            #     # generate error message
+            #     error_message = 'The .csv file does not seem to be properly formatted. Please check again!'
+            #     QtWidgets.QMessageBox.question(self, 'Data structure not compatible!', error_message,
+            #                                    QtWidgets.QMessageBox.Yes)
         else:
             # update file dialog icons
             if not correct_model:
