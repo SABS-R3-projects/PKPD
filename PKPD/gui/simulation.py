@@ -548,7 +548,7 @@ class SimulationTab(QtWidgets.QDialog):
 
         Returns: slider_label -- appropriate parameter name (string)
         """
-        var = self.main_window.model.model.get(parameter_name)
+        var = self.main_window.model[self.first_patient_id].model.get(parameter_name)
         unit = var.unit()
         parameter_label = var.label()
 
