@@ -153,7 +153,7 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         restricted domain of support for inferred parameters is disabled by default.
 
         Arguments:
-            models {dict} -- A dictionary of Models (m.SingleOutputModel) for each patient ID on which parameters are to
+            models {dict} -- A dictionary of Models (m.MultiOutputModel) for each patient ID on which parameters are to
                 be inferred.
             data {dict} -- A dictionary of tuples for each patient ID, where the the tuple contains an np.ndarray of
                 times and an np.ndarray of state values.
@@ -164,20 +164,25 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         self.problems = []
         self.error_measure = None
         self.patients_data = data
+        print('inf 1')
 
         for i in models:
-            self.problems.append(
-                pints.SingleOutputProblem(models[i], self.patients_data[i][0], self.patients_data[i][1]))
+            print('infmodel', self.patients_data[i][1:])
+            self.problems.append(pints.MultiOutputProblem(models[i], self.patients_data[i][0], self.patients_data[i][1:]))
+            print('infmodel', i)
 
         self.objective_function = None
         self.set_objective_function(pints.SumOfSquaresError)
+        print('inf', 2)
 
         self.optimiser = pints.CMAES
         self.initial_parameter_uncertainty = None
         self.parameter_boundaries = None
+        print('inf', 3)
 
         self.estimated_parameters = None
         self.objective_score = None
+        print('inf', 4)
 
     def find_optimal_parameter(self, initial_parameter: np.ndarray) -> None:
         """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the
