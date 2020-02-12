@@ -141,11 +141,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
     def next_tab(self):
         """Switches to the simulation tab, when triggered by clicking the 'next' QPushButton on the home tab.
         """
-        # TODO: refactor this construction when structure of webApp is clear.
-        correct_data = self._are_files_correct()
-        if self.home.is_model_file_valid and correct_data:
-            # make file names globally accessible
-            self.home.model_file
+        if self.home.is_model_file_valid and self.home.is_data_file_valid:
             # TODO: check that .csv has correct arrangement to be read or come up with dynamic solution.
             try:
                 # plot data in simulation tab
@@ -170,6 +166,8 @@ class MainWindow(abstractGui.AbstractMainWindow):
                     self.problem = inf.MultiOutputInverseProblem(model=self.model,
                                                                 times=self.simulation.time_data,
                                                                 values=self.simulation.state_data)
+
+                # fill sliders, plot optinos and parameter tabel with parameters in model
                 self.simulation.fill_parameter_slider_group()
                 self.simulation.fill_plot_option_window()
                 self.simulation.fill_parameter_table()
@@ -186,7 +184,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 self.home.model_check_mark.setPixmap(self.rescaled_rc)
             else:
                 self.home.model_check_mark.setPixmap(self.rescaled_cm)
-            if not correct_data:
+            if not self.home.is_data_file_valid:
                 self.home.data_check_mark.setPixmap(self.rescaled_rc)
             else:
                 self.home.data_check_mark.setPixmap(self.rescaled_cm)

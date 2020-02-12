@@ -295,11 +295,14 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # create display of csv file
         data_display = self._create_data_display()
 
+        # create data format check box group
+        check_box_group = self._create_check_box_group()
+
         # arrange button/text and label vertically
         vbox = QtWidgets.QVBoxLayout()
         vbox.addLayout(data_selection_group)
         vbox.addLayout(data_display)
-        vbox.addStretch(1)
+        vbox.addLayout(check_box_group)
 
         group.setLayout(vbox)
 
@@ -362,6 +365,27 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # arange display window horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(scroll)
+
+        return hbox
+
+
+    def _create_check_box_group(self):
+        """Creates check boxes for the presence of patient IDs and doses in the data set.
+
+        Returns:
+            {QHBoxLayout} -- Returns check box group object.
+        """
+        # create check box for presence of patient ID data
+        self.patient_id_check_box = QtWidgets.QCheckBox('Patient ID provided')
+
+        # create check box for presence of doses in data
+        self.dose_schedule_check_box = QtWidgets.QCheckBox('Dosing provided')
+
+        # arange check boxes horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(self.patient_id_check_box)
+        hbox.addWidget(self.dose_schedule_check_box)
+        hbox.addStretch(1)
 
         return hbox
 
@@ -523,13 +547,16 @@ class HomeTab(abstractGui.AbstractHomeTab):
             self.data_file = file_path
 
             # read in data file
-            self.data_df = pd.read_csv(file_path)
+            self.data_df = pd.read_csv(file_path, na_values=['.'])
 
             # update QLineEdit in the GUI to selected file
             self.data_path_text_field.setText(file_path)
 
             # update check mark
             self.data_check_mark.setPixmap(self.main_window.rescaled_cm)
+
+            # check presence of patient IDs/doses and update check boxes
+            self._update_check_boxes()
 
             # update data display
             self.data_display.setModel(PandasModel(self.data_df))
@@ -561,6 +588,79 @@ class HomeTab(abstractGui.AbstractHomeTab):
         is_path_valid = is_file_existent and is_format_correct
 
         return is_path_valid
+
+
+    def _update_check_boxes(self):
+        """Updates the data check boxes based on the data's properties.
+        """
+        # check for presence of patient IDs in first column
+        self._check_data_for_patient_IDs()
+
+        # check for presence of doses in last column
+        self._check_data_for_doses()
+
+
+    def _check_data_for_patient_IDs(self):
+        """Checks whether patient IDs are provided in dataframe. Patient IDs are assumed to be present, if first column only consists of integer values.
+        """
+        # expected data type for patient IDs
+        expected_data_type = 'int64'
+
+        # get first column of data frame
+        first_column = self.data_df.iloc[:, 0]
+
+        # set check box to be ticked, if data types coincide
+        is_data_type_equal = expected_data_type == first_column.dtypes
+        self.patient_id_check_box.setChecked(is_data_type_equal)
+
+
+    def _check_data_for_doses(self):
+        """Checks whether dosing schedule is provided in dataframe and removes trailing empty columns.
+        """
+        # get the last non-empty column
+        is_last_column_empty = True
+        while is_last_column_empty:
+            # get last column in dataframe
+            last_column = self.data_df.iloc[:, -1]
+
+            # check whether column is empty
+            is_last_column_empty = last_column.dropna().empty
+
+            # drop empty column
+            if is_last_column_empty:
+                # get data keys
+                keys = self.data_df.keys()
+
+                # remove last column
+                self.data_df.drop(columns=[keys[-1]], inplace=True)
+
+        # check whether last column has format expected from dosing schedule
+        is_data_format_as_expected = self._dose_format_check(last_column)
+
+        # update check box
+        self.dose_schedule_check_box.setChecked(is_data_format_as_expected)
+
+
+    def _dose_format_check(self, last_column:pd.Series()):
+        """Hereustic method to check whether format coincides with the one expected from a dosing schedule (checks whether meaningful entries are evenly spaced).
+
+        Arguments:
+            last_column {pd.Series} -- Last non-empty column of dataframe.
+        """
+        # create mask for meaningful entries
+        mask_meaningful_entries = last_column.notnull()
+
+        # get meaningful entries' indices
+        indices = np.array(last_column.index[mask_meaningful_entries])
+
+        # if first two meaningful entries follow each other, the column is assumed to contain data
+        if indices[1] == 1:
+            return False
+
+        # check whether their spacing is regular
+        is_equally_spaced = np.all(indices[1] == np.diff(indices))
+
+        return is_equally_spaced
 
 
     @QtCore.pyqtSlot()
