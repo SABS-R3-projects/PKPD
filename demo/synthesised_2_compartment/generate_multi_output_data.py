@@ -29,5 +29,5 @@ noise =  np.random.normal(loc=0.0,
 data = model_result + noise
 
 df = pd.DataFrame({'time_h': times, 'central_ng_mL': data[:, 0], 'peripheral_ng_mL': data[:, 1]})
-df.to_csv('demo/synthesised_two_compartment/two_compartment_multi_output.csv', index=False)
+df.to_csv('demo/synthesised_2_compartment/two_compartment_multi_output.csv', index=False)
 
