@@ -285,7 +285,8 @@ def set_unit_format():
         'ng': myokit.units.g * 1e-9,
         'ng/mL': myokit.units.g * 1e-9 / (myokit.units.L * 1e-3),
         'h': myokit.units.h,
-        'ng/h': myokit.units.g * 1e-9 / myokit.units.h
+        'ng/h': myokit.units.g * 1e-9 / myokit.units.h,
+        '1/h' : 1/myokit.units.h
     }
 
     # Set Preferred Representation in Myokit

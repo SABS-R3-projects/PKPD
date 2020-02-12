@@ -329,7 +329,11 @@ class SimulationTab(QtWidgets.QDialog):
     def _change_yaxis_scaling(self):
 
         scale = self.yaxis_dropdown_menu.currentText()
-        self.data_model_ax.set_yscale(scale)
+        try:
+            self.data_model_ax.set_yscale(scale)
+        except:
+            for elem in range(self.data_dimension):
+                self.data_model_ax[elem].set_yscale(scale)
         self.canvas.draw() #refresh canvas
 
 
