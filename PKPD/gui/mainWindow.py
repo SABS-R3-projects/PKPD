@@ -143,7 +143,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
     def next_tab(self):
         """Switches to the simulation tab, when triggered by clicking the 'next' QPushButton on the home tab.
         """
-        #TODO: refactor this construction when structure of webApp is clear.
+        # TODO: refactor this construction when structure of webApp is clear.
         correct_model, correct_data = self._are_files_correct()
         if correct_model and correct_data:
             #TODO: check that .csv has correct arrangement to be read or come up with dynamic solution.

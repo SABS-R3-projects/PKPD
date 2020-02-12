@@ -24,6 +24,7 @@ class SimulationTab(QtWidgets.QDialog):
         self.enable_line_removal = False
         self.is_single_output_model = True
         self.parameter_values = None
+        self.boundaries_are_on = True
 
         # initialising the figure
         self.data_model_figure = Figure()
@@ -191,6 +192,7 @@ class SimulationTab(QtWidgets.QDialog):
         # create inference options
         optimiser_options = self._create_optimiser_options()
         objective_function_options = self._create_objective_function_options()
+        boundary_toggle = self._create_boundary_toggle()
 
         # create apply / cancel buttons
         apply_cancel_buttons = self._create_apply_cancel_buttons()
@@ -199,6 +201,7 @@ class SimulationTab(QtWidgets.QDialog):
         vbox = QtWidgets.QVBoxLayout()
         vbox.addLayout(optimiser_options)
         vbox.addLayout(objective_function_options)
+        vbox.addLayout(boundary_toggle)
         vbox.addLayout(apply_cancel_buttons)
 
         # add options to window
@@ -257,6 +260,19 @@ class SimulationTab(QtWidgets.QDialog):
         return hbox
 
 
+    def _create_boundary_toggle(self):
+
+        label = QtWidgets.QLabel('turn on boundary checking:')
+        self.boundarytoggle = QtWidgets.QCheckBox()
+
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(label)
+        hbox.addWidget(self.boundarytoggle)
+        self.boundarytoggle.setChecked(True)
+
+        return hbox
+
+
     def _create_apply_cancel_buttons(self):
         """Creates an apply and cancel button to either update the inference settings or
         closing the option window without updating.
@@ -309,6 +325,7 @@ class SimulationTab(QtWidgets.QDialog):
         # update infer options
         self._set_optimiser()
         self._set_error_measure()
+        self._set_boundary_check()
 
         # close option window
         self.infer_option_window.close()
@@ -377,6 +394,16 @@ class SimulationTab(QtWidgets.QDialog):
 
         # update error measure
         self.main_window.problem.set_objective_function(measure)
+
+
+    def _set_boundary_check(self):
+        """Sets boundaries_are_on to True if the checkbox is checked when apply is clicked
+        """
+        print(self.boundarytoggle.checkState())
+        if self.boundarytoggle.checkState() < 0:
+            self.boundaries_are_on = True
+        else:
+            self.boundaries_are_on = False
 
 
     @QtCore.pyqtSlot()
@@ -759,32 +786,39 @@ class SimulationTab(QtWidgets.QDialog):
         # get boundaries from sliders
         min_values = []
         max_values = []
-        for param_id, slider in enumerate(self.slider_container):
-            minimum = slider.minimum() - increment # extend boundaries for stability
-            maximum = slider.maximum() + increment
-            initial_value = initial_parameters[param_id]
-            print(minimum, initial_value, maximum)
 
-            # check whether initial value lies within boundaries
-            if (initial_value < minimum) or (initial_value > maximum):
-                # flag that there is problem with the initial values
-                self.correct_initial_values = False
+        # if boundaries are turned off, send None to optimiser
+        if self.boundaries_are_on is True:
+            self.main_window.problem.set_parameter_boundaries(None)
 
-                # generate error message
-                error_message = 'Initial parameters do not lie within boundaries. Please check again!'
-                QtWidgets.QMessageBox.question(self, 'Parameters outside boundaries!', error_message, QtWidgets.QMessageBox.Yes)
-                break
-            else:
-                # flag that initial values are correct
-                self.correct_initial_values = True
+        # if boundaries are turned on, get from sliders
+        else:
+            for param_id, slider in enumerate(self.slider_container):
+                minimum = slider.minimum() - increment # extend boundaries for stability
+                maximum = slider.maximum() + increment
+                initial_value = initial_parameters[param_id]
+                print(minimum, initial_value, maximum)
 
-                # collect boundaries
-                min_values.append(minimum)
-                max_values.append(maximum)
+                # check whether initial value lies within boundaries
+                if (initial_value < minimum) or (initial_value > maximum):
+                    # flag that there is problem with the initial values
+                    self.correct_initial_values = False
 
-        # set boundaries for inference
-        if self.correct_initial_values:
-            self.main_window.problem.set_parameter_boundaries([min_values, max_values])
+                    # generate error message
+                    error_message = 'Initial parameters do not lie within boundaries. Please check again!'
+                    QtWidgets.QMessageBox.question(self, 'Parameters outside boundaries!', error_message, QtWidgets.QMessageBox.Yes)
+                    break
+                else:
+                    # flag that initial values are correct
+                    self.correct_initial_values = True
+
+                    # collect boundaries
+                    min_values.append(minimum)
+                    max_values.append(maximum)
+
+            # set boundaries for inference
+            if self.correct_initial_values:
+                self.main_window.problem.set_parameter_boundaries([min_values, max_values])
 
 
     def _plot_infered_model(self):
