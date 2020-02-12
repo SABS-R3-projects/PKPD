@@ -23,4 +23,3 @@ data = model_result + np.random.normal(loc=0.0,
 
 df = pd.DataFrame({'time_h': times, 'concentration_ng_mL': data})
 df.to_csv('demo/synthesised_1_compartment/one_compartment.csv', index=False)
-

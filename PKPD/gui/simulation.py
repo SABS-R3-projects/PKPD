@@ -293,7 +293,7 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _set_optimiser(self):
-        #TODO: Nelder-Mead does not support boundaries. So should be cross-linked with tunring boundaries off.
+        # TODO: Nelder-Mead does not support boundaries. So should be cross-linked with tunring boundaries off.
         """Sets the optimiser method for inference to the in the dropdown menu selected method.
         """
         # get selected optimiser
@@ -454,14 +454,14 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def fill_plot_option_window(self):
-        # TODO: finish this!
+        #  TODO: finish this!
         # create text fields
         for slider in self.slider_container:
             pass
 
 
     def fill_infer_option_window(self):
-        # TODO: finish this!
+        #  TODO: finish this!
         # create text fields
         for slider in self.slider_container:
             pass

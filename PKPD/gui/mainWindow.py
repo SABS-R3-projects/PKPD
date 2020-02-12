@@ -141,12 +141,12 @@ class MainWindow(abstractGui.AbstractMainWindow):
     def next_tab(self):
         """Switches to the simulation tab, when triggered by clicking the 'next' QPushButton on the home tab.
         """
-        #TODO: refactor this construction when structure of webApp is clear.
+        # TODO: refactor this construction when structure of webApp is clear.
         correct_data = self._are_files_correct()
         if self.home.is_model_file_valid and correct_data:
             # make file names globally accessible
             self.home.model_file
-            #TODO: check that .csv has correct arrangement to be read or come up with dynamic solution.
+            # TODO: check that .csv has correct arrangement to be read or come up with dynamic solution.
             try:
                 # plot data in simulation tab
                 self.simulation.add_data_to_data_model_plot()
@@ -209,7 +209,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
         correct_data = data_is_file and data_correct_format
 
         return correct_data
-
 
 
 if __name__ == '__main__':

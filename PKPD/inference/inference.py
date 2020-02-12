@@ -36,17 +36,19 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
 
     def find_optimal_parameter(self, initial_parameter:np.ndarray, number_of_iterations:int=5) -> None:
         """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the
-        distance of the model to the data with respect to the objective function.
+        distance of the model to the data with respect to the objective function. Optimisation is run number_of_iterations times and
+        result with minimal score is returned.
 
         Arguments:
             initial_parameter {np.ndarray} -- Starting point in parameter space of the optimisation algorithm.
+            number_of_iterations {int} -- Number of times optimisation is run. Default: 5 (arbitrary).
 
         Return:
             None
         """
         # set default randomness in initial parameter values, if not specified in GUI
         if self.initial_parameter_uncertainty is None:
-            #TODO: evaluate how to choose uncertainty best, to obtain most stable results
+            # TODO: evaluate how to choose uncertainty best, to obtain most stable results
             self.initial_parameter_uncertainty = initial_parameter + 0.1 # arbitrary
 
         # initialise optimisation
@@ -147,7 +149,7 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         """
         # set default randomness in initial parameter values, if not specified in GUI
         if self.initial_parameter_uncertainty is None:
-            #TODO: evaluate how to choose uncertainty best, to obtain most stable results
+            # TODO: evaluate how to choose uncertainty best, to obtain most stable results
             self.initial_parameter_uncertainty = initial_parameter + 0.1 # arbitrary
 
         # initialise optimisation
