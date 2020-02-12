@@ -1,4 +1,5 @@
 from array import array
+from typing import List
 
 import myokit
 import numpy as np
@@ -26,17 +27,51 @@ class SingleOutputModel(AbstractModel):
             protocol = myokit.Protocol()
             for i in range(len(dosing[0])):
                 protocol.schedule(dosing[1][i], dosing[0][i], duration)
-        state_dimension = model.count_states()
-        if state_dimension > 1:
-            raise NotImplementedError(
-                'The output seems to be multi-dimensional. You might want to try a MultiOutputProblem instead.'
-                )
-        self.state_name = next(model.states()).qname()
-        # TODO: automate name 'param'
-        self.parameter_names = sorted([var.qname() for var in model.get('param').variables()])
-        self.number_model_parameters = len(self.parameter_names)
-        self.number_parameters_to_fit = 1 + self.number_model_parameters
+
+        # get state, parameter and output names
+        self.state_names = [state.qname() for state in model.states()]
+        self.state_dimension = model.count_states()
+        self.output_name = self._get_default_output_name(model)
+        self.parameter_names = self._get_parameter_names(model)
+        self.number_parameters_to_fit = model.count_variables(inter=False, bound=False)
+
+        # instantiate the simulation
         self.simulation = myokit.Simulation(model, protocol)
+
+
+    def _get_default_output_name(self, model:myokit.Model):
+        """Returns 'central_compartment.drug_concentration' as output_name by default. If variable does not exist in model, first state
+        variable name is returned.
+
+        Arguments:
+            model {myokit.Model} -- A myokit model.
+
+        Returns:
+            str -- Output name of model.
+        """
+        default_output_name = 'central_compartment.drug_concentration'
+        if model.has_variable(default_output_name):
+            return default_output_name
+        else:
+            # if default output name does not exist, output first state variable
+            first_state_name = self.state_names[0]
+            return first_state_name
+
+
+    def _get_parameter_names(self, model:myokit.Model):
+        """Gets parameter names of the ODE model, i.e. initial conditions are excluded.
+
+        Arguments:
+            model {myokit.Model} -- A myokit model.
+
+        Returns:
+            List -- List of parameter names.
+        """
+        parameter_names = []
+        for component in model.components(sort=True):
+            parameter_names += [var.qname() for var in component.variables(state=False, inter=False, bound=False, sort=True)]
+
+        return parameter_names
 
 
     def n_parameters(self) -> int:
@@ -58,6 +93,15 @@ class SingleOutputModel(AbstractModel):
         return 1
 
 
+    def set_output(self, output_name):
+        """Sets the output of the model.
+
+        Arguments:
+            output_name {[type]} -- [description]
+        """
+        self.output_name = output_name
+
+
     def simulate(self, parameters:np.ndarray, times:np.ndarray) -> array:
         """Solves the forward problem and returns the state values evaluated at the times provided.
 
@@ -72,9 +116,9 @@ class SingleOutputModel(AbstractModel):
         self._set_parameters(parameters)
 
         # duration is the last time point plus an increment to iclude the last time step.
-        result = self.simulation.run(duration=times[-1]+1, log=[self.state_name], log_times = times)
+        result = self.simulation.run(duration=times[-1]+1, log=[self.output_name], log_times = times)
 
-        return result[self.state_name]
+        return result[self.output_name]
 
 
     def _set_parameters(self, parameters:np.ndarray) -> None:
@@ -83,8 +127,8 @@ class SingleOutputModel(AbstractModel):
         Arguments:
             parameters {np.ndarray} -- Parameters of the model. By convention [initial condition, model parameters].
         """
-        self.simulation.set_state(parameters[:1])
-        for param_id, value in enumerate(parameters[1:]):
+        self.simulation.set_state(parameters[:self.state_dimension])
+        for param_id, value in enumerate(parameters[self.state_dimension:]):
             self.simulation.set_constant(self.parameter_names[param_id], value)
 
 
@@ -107,18 +151,33 @@ class MultiOutputModel(AbstractModel):
             protocol = myokit.Protocol()
             for i in range(len(dosing[0])):
                 protocol.schedule(dosing[1][i], dosing[0][i], duration)
+
+        # get state, parameter and output names
+        self.state_names = [state.qname() for state in model.states()]
         self.state_dimension = model.count_states()
-        if self.state_dimension == 1:
-            Warning(
-                'The output seems to be one-dimensional. For efficiency you might want to try a SingleOutputProblem instead.'
-                )
-        model_states = model.states()
-        self.state_names = [next(model_states).qname() for _ in range(self.state_dimension)]
-        # TODO: automate name 'param'
-        self.parameter_names = sorted([var.qname() for var in model.get('param').variables()])
-        self.number_model_parameters = len(self.parameter_names)
-        self.number_parameters_to_fit = self.state_dimension + self.number_model_parameters
+        self.output_names = []
+        self.output_dimension = None
+        self.parameter_names = self._get_parameter_names(model)
+        self.number_parameters_to_fit = model.count_variables(inter=False, bound=False)
+
+        # instantiate the simulation
         self.simulation = myokit.Simulation(model, protocol)
+
+
+    def _get_parameter_names(self, model:myokit.Model):
+        """Gets parameter names of the ODE model, i.e. initial conditions are excluded.
+
+        Arguments:
+            model {myokit.Model} -- A myokit model.
+
+        Returns:
+            List -- List of parameter names.
+        """
+        parameter_names = []
+        for component in model.components(sort=True):
+            parameter_names += [var.qname() for var in component.variables(state=False, inter=False, bound=False, sort=True)]
+
+        return parameter_names
 
 
     def n_parameters(self) -> int:
@@ -137,7 +196,7 @@ class MultiOutputModel(AbstractModel):
         Returns:
             int -- Dimensionality of the output.
         """
-        return self.state_dimension
+        return self.output_dimension
 
 
     def simulate(self, parameters:np.ndarray, times:np.ndarray) -> np.ndarray:
@@ -154,11 +213,11 @@ class MultiOutputModel(AbstractModel):
         self._set_parameters(parameters)
 
         # duration is the last time point plus an increment to iclude the last time step.
-        output = self.simulation.run(duration=times[-1]+1, log=self.state_names, log_times = times)
+        output = self.simulation.run(duration=times[-1]+1, log=self.output_names, log_times = times)
 
         result = []
-        for state in self.state_names:
-            result.append(output[state])
+        for name in self.output_names:
+            result.append(output[name])
 
         return np.array(result).transpose()
 
@@ -173,3 +232,55 @@ class MultiOutputModel(AbstractModel):
         for param_id, value in enumerate(parameters[self.state_dimension:]):
             self.simulation.set_constant(self.parameter_names[param_id], value)
 
+
+    def set_output_dimension(self, data_dimension:int):
+        """Set output dimension to data dimension, so optimisation/inference can be performed.
+        Output state will be set to default output names.
+
+        Arguments:
+            data_dimension {int} -- Dimensionality of input data.
+        """
+        # set output dimension
+        self.output_dimension = data_dimension
+
+        # if dimension of outputs does not match, fill with default outputs
+        if len(self.output_names) != self.output_dimension:
+            self._set_default_output_names()
+
+
+    def _set_default_output_names(self):
+        """Returns 'central_compartment.drug_concentration' as output_name by default. If variable does not exist in model, first state
+        variable name is returned.
+
+        Arguments:
+            model {myokit.Model} -- A myokit model.
+
+        Returns:
+            str -- Output names of model.
+        """
+        default_output_names = []
+        default_output_variable = 'drug_concentration'
+        model = self.simulation._model
+
+        # iterate through components and fill with default variables
+        model_components = model.components(sort=True)
+        for component in model_components:
+            if component.has_variable(default_output_variable):
+                variable_name = component.name() + '.' + default_output_variable
+                default_output_names.append(variable_name)
+
+        # check dimensional compatibility
+        if len(default_output_names) >= self.output_dimension:
+            self.output_names = default_output_names[:self.output_dimension]
+        elif self.state_dimension >= self.output_dimension:
+            self.output_names = self.state_names[:self.output_dimension]
+
+
+    def set_output(self, output_names:list):
+        """Set output of the model.
+
+        Arguments:
+            output_names {List} -- List of (state) variable names in the model.
+        """
+        self.output_dimension = len(output_names)
+        self.output_names = output_names

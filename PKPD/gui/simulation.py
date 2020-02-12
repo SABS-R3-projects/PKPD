@@ -63,8 +63,8 @@ class SimulationTab(QtWidgets.QDialog):
         num_patients = data[id_label].nunique()
 
         # check dimensionality of problem for plotting and inference
-        self.state_dimension = len(state_labels)
-        self.is_single_output_model = self.state_dimension == 1
+        self.data_dimension = len(state_labels)
+        self.is_single_output_model = self.data_dimension == 1
 
         self.patients_data = {}
         self.patients_dose = {}
@@ -119,7 +119,7 @@ class SimulationTab(QtWidgets.QDialog):
 
             # create subplots for each compartment
             self.data_model_ax = self.data_model_figure.subplots(nrows=self.state_dimension, sharex=True)
-            for dim in range(self.state_dimension):
+            for dim in range(self.data_dimension):
                 for patient_id in self.patients_data:
                     label = 'patient ' + str(patient_id)
                     colour = int(len(self.colours) * (patient_id - self.first_patient_id) / len(self.patients_data))
@@ -309,7 +309,7 @@ class SimulationTab(QtWidgets.QDialog):
         cancel_button = QtWidgets.QPushButton('cancel')
         cancel_button.clicked.connect(self.on_infer_option_cancel_button_click)
 
-        # arange buttons horizontally
+        # arrange buttons horizontally
         h_box = QtWidgets.QHBoxLayout()
         h_box.addStretch(1)
         h_box.addWidget(apply_button)
@@ -330,7 +330,7 @@ class SimulationTab(QtWidgets.QDialog):
         self.infer_option_window.close()
 
     def _set_optimiser(self):
-        # TODO: Nelder-Mead does not support boundaries. So should be cross-linked with turning boundaries off.
+        # TODO: Nelder-Mead does not support boundaries. So should be cross-linked with tunring boundaries off.
         """Sets the optimiser method for inference to the in the dropdown menu selected method.
         """
         # get selected optimiser
@@ -380,12 +380,9 @@ class SimulationTab(QtWidgets.QDialog):
         self._clear_slider_group()
 
         # get parameter names
-        if self.is_single_output_model:
-            state_names = [self.main_window.model[self.first_patient_id].state_name]
-        else:
-            state_names = self.main_window.model[self.first_patient_id].state_names
-        model_param_names = self.main_window.model[self.first_patient_id].parameter_names  # parameters except initial conditions
-        parameter_names = state_names + model_param_names  # parameters including initial conditions
+        state_names = self.main_window.model[self.first_patient_id].state_names
+        model_param_names = self.main_window.model[self.first_patient_id].parameter_names # parameters except initial conditions
+        parameter_names = state_names + model_param_names # parameters including initial conditions
 
         # fill up grid with slider objects
         self.slider_container = []  # store in list to be able to update later
@@ -486,13 +483,13 @@ class SimulationTab(QtWidgets.QDialog):
             self._plot_multi_output_model()
 
     def fill_plot_option_window(self):
-        # TODO: finish this!
+        #  TODO: finish this!
         # create text fields
         for slider in self.slider_container:
             pass
 
     def fill_infer_option_window(self):
-        # TODO: finish this!
+        #  TODO: finish this!
         # create text fields
         for slider in self.slider_container:
             pass
@@ -554,7 +551,7 @@ class SimulationTab(QtWidgets.QDialog):
         # remove previous graphs from subplots to avoid flooding the figure
         if self.enable_line_removal:
             for i in self.patients_data:
-                for dim in range(self.state_dimension):
+                for dim in range(self.data_dimension):
                     self.data_model_ax[dim].lines.pop()
 
         for patient_id in self.patients_data:
@@ -566,7 +563,7 @@ class SimulationTab(QtWidgets.QDialog):
 
             # plot model
             colour = int(len(self.colours)*(patient_id - self.first_patient_id)/len(self.patients_data))
-            for dim in range(self.state_dimension):
+            for dim in range(self.data_dimension):
                 self.data_model_ax[dim].plot(self.times, self.state_values[:, dim], linestyle='dashed', color=self.colours[colour])
 
         # refresh canvas
@@ -591,10 +588,7 @@ class SimulationTab(QtWidgets.QDialog):
         empty cell for the inferred value.
         """
         # get fit parameter names
-        if self.is_single_output_model:
-            state_names = [self.main_window.model[self.first_patient_id].state_name]
-        else:
-            state_names = self.main_window.model[self.first_patient_id].state_names
+        state_names = self.main_window.model[self.first_patient_id].state_names
         model_param_names = self.main_window.model[self.first_patient_id].parameter_names
         parameter_names = state_names + model_param_names
         number_parameters = len(parameter_names)
@@ -627,10 +621,10 @@ class SimulationTab(QtWidgets.QDialog):
         self.enable_line_removal = False
 
         # get initial parameters from slider text fields
-        initial_parameters = []
-        for parameter_text_field in self.parameter_text_field_container:
+        initial_parameters = np.empty(len(self.parameter_values))
+        for parameter_id, parameter_text_field in enumerate(self.parameter_text_field_container):
             value = float(parameter_text_field.text())
-            initial_parameters.append(value)
+            initial_parameters[parameter_id] = value
             # Note: order of text fields matches order of params in inverse problem class
 
         # set parameter boundaries
@@ -719,7 +713,7 @@ class SimulationTab(QtWidgets.QDialog):
             while lines:
                 lines.pop()
         else:  # multi-output problem
-            for dim in range(self.state_dimension):
+            for dim in range(self.data_dimension):
                 lines = self.data_model_ax[dim].lines
                 while lines:
                     lines.pop()
@@ -739,7 +733,7 @@ class SimulationTab(QtWidgets.QDialog):
                 self.data_model_ax.plot(times, state_values, color=self.colours[colour], label=label)
                 self.data_model_ax.legend()
             else:  # multi-output problem
-                for dim in range(self.state_dimension):
+                for dim in range(self.data_dimension):
                     self.data_model_ax[dim].plot(times, state_values[:, dim], color=self.colours[colour], label=label)
                     self.data_model_ax[dim].legend()
 

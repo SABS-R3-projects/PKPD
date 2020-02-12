@@ -137,10 +137,12 @@ class MainWindow(abstractGui.AbstractMainWindow):
         """Switches to the simulation tab, when triggered by clicking the 'next' QPushButton on the home tab.
         """
         # TODO: refactor this construction when structure of webApp is clear.
-        correct_model, correct_data = self._are_files_correct()
-        if correct_model and correct_data:
+        correct_data = self._are_files_correct()
+        if self.home.is_model_file_valid and correct_data:
+            # make file names globally accessible
+            self.home.model_file
             # TODO: check that .csv has correct arrangement to be read or come up with dynamic solution.
-            # try:
+            try:
                 # plot data in simulation tab
                 self.simulation.add_data_to_data_model_plot()
 
@@ -152,14 +154,15 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 if self.simulation.is_single_output_model:
                     self.model = {}
                     for patient_id in self.simulation.patients_data:
-                        self.model[patient_id] = m.SingleOutputModel(self.model_file, self.simulation.patients_dose[patient_id])
+                        self.model[patient_id] = m.SingleOutputModel(self.home.model_file, self.simulation.patients_dose[patient_id])
                     self.problem = inf.SingleOutputInverseProblem(self.model,
                                                                   self.simulation.patients_data)
                 else:
                     self.model = {}
                     for patient_id in self.simulation.patients_data:
-                        self.model[patient_id] = m.MultiOutputModel(self.model_file,
+                        self.model[patient_id] = m.MultiOutputModel(self.home.model_file,
                                                                      self.simulation.patients_dose[patient_id])
+                        self.model[patient_id].set_output_dimension(self.simulation.data_dimension)
                     self.problem = inf.MultiOutputInverseProblem(self.model, self.simulation.patients_data)
 
                 self.simulation.fill_parameter_slider_group()
@@ -175,7 +178,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
             #                                    QtWidgets.QMessageBox.Yes)
         else:
             # update file dialog icons
-            if not correct_model:
+            if not self.home.is_model_file_valid:
                 self.home.model_check_mark.setPixmap(self.rescaled_rc)
             else:
                 self.home.model_check_mark.setPixmap(self.rescaled_cm)
@@ -194,20 +197,13 @@ class MainWindow(abstractGui.AbstractMainWindow):
         Returns:
             {List[bool]} -- Returns flags for the model and data file.
         """
-        # model sanity check
-        self.model_file = self.home.model_text.text()
-        model_is_file = os.path.isfile(self.model_file)
-        model_correct_format = self.model_file.split('.')[-1] == 'mmt'
-        correct_model = model_is_file and model_correct_format
-
         # data sanity check
         self.data_file = self.home.data_text.text()
         data_is_file = os.path.isfile(self.data_file)
         data_correct_format = self.data_file.split('.')[-1] == 'csv'
         correct_data = data_is_file and data_correct_format
 
-        return [correct_model, correct_data]
-
+        return correct_data
 
 if __name__ == '__main__':
     # Create window instance
