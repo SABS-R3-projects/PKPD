@@ -60,6 +60,7 @@ use central_compartment.Kcp1 as Kcp
 
 # state variable
 dot(drug) = central_compartment.drug * Kcp - drug * Kpc
+    in [ng]
 
 # convert to concentration
 drug_concentration = drug / V
@@ -80,6 +81,7 @@ use central_compartment.Kcp2 as Kcp
 
 # state variable
 dot(drug) = central_compartment.drug * Kcp - drug * Kpc
+    in [ng]
 
 # convert to concentration
 drug_concentration = drug / V

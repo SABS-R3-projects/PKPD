@@ -1,5 +1,6 @@
 import os
 import sys
+import myokit
 from typing import List
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -127,6 +128,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
         Returns:
             {QLabel} -- Returns SABS R3 logo.
+            {QLabel} -- Returns SABS R3 logo.
         """
         label = QtWidgets.QLabel(self)
         label.setPixmap(self.rescaled_sabs)
@@ -174,7 +176,14 @@ class MainWindow(abstractGui.AbstractMainWindow):
             except ValueError:
                 # generate error message
                 error_message = 'The .csv file does not seem to be properly formatted. Please check again!'
-                QtWidgets.QMessageBox.question(self, 'Data structure not compatible!', error_message,
+                QtWidgets.QMessageBox.question(self, 'Data structure not compatible!', error_message, QtWidgets.QMessageBox.Yes)
+
+            # Check Units in MMT file
+            try:
+                self.model.model.check_units(mode=myokit.UNIT_STRICT)
+            except Exception as e: # Display Warning if Inconsistent
+                warning_message = 'Warning: Units may be inconsistent'
+                QtWidgets.QMessageBox.question(self, warning_message, str(e),
                                                QtWidgets.QMessageBox.Yes)
         else:
             # update file dialog icons

@@ -192,7 +192,7 @@ class SimulationTab(QtWidgets.QDialog):
         option_button.clicked.connect(self.on_plot_option_click)
 
         # initialise option window
-        self.plot_option_window = QtWidgets.QDialog()
+        self._create_plot_option_window()
 
         # arrange button horizontally
         h_box = QtWidgets.QHBoxLayout()
@@ -317,6 +317,28 @@ class SimulationTab(QtWidgets.QDialog):
 
         return h_box
 
+    def _plot_options_apply_cancel_buttons(self):
+        """Creates an apply and cancel button to either update the inference settings or
+        closing the option window without updating.
+
+        Returns:
+            hbox {QHBoxLayout} -- Returns layout aranging the apply and cancel button.
+        """
+        # create apply and cancel button
+        apply_button = QtWidgets.QPushButton('apply')
+        apply_button.clicked.connect(self.on_plot_option_apply_click)
+        cancel_button = QtWidgets.QPushButton('cancel')
+        cancel_button.clicked.connect(self.on_plot_option_cancel_click)
+
+        # arange buttons horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addStretch(1)
+        hbox.addWidget(apply_button)
+        hbox.addWidget(cancel_button)
+
+        return hbox
+
+
     @QtCore.pyqtSlot()
     def on_infer_option_apply_click(self):
         """Reaction to left-clicking the infer option 'apply' button. Updates the inference settings
@@ -328,6 +350,37 @@ class SimulationTab(QtWidgets.QDialog):
 
         # close option window
         self.infer_option_window.close()
+
+
+    @QtCore.pyqtSlot()
+    def on_plot_option_apply_click(self):
+        """Reaction to left-clicking the infer option 'apply' button. Updates the inference settings
+        and closes the option window.
+        """
+        # update plot options
+        self._change_yaxis_scaling()
+
+        # close option window
+        self.plot_option_window.close()
+
+
+    def _change_yaxis_scaling(self):
+
+        scale = self.yaxis_dropdown_menu.currentText()
+        try:
+            self.data_model_ax.set_yscale(scale)
+        except:
+            for elem in range(self.data_dimension):
+                self.data_model_ax[elem].set_yscale(scale)
+        self.canvas.draw() #refresh canvas
+
+
+    def on_plot_option_cancel_click(self):
+        """Reaction to left-clicking the infer option 'cancel' button. Closes the window.
+        """
+        # close option window
+        self.plot_option_window.close()
+
 
     def _set_optimiser(self):
         # TODO: Nelder-Mead does not support boundaries. So should be cross-linked with tunring boundaries off.
@@ -373,6 +426,53 @@ class SimulationTab(QtWidgets.QDialog):
         # close option window
         self.infer_option_window.close()
 
+
+    def _create_plot_option_window(self):
+        """Creates an option window to set the plotting settings.
+        """
+        # create option window
+        self.plot_option_window = QtWidgets.QDialog()
+        self.plot_option_window.setWindowTitle('Plotting options')
+
+        # define dropdown dimension
+        self.dropdown_menu_width = 190 # to match inference option window
+
+        # create plotting options
+        yaxis_options = self._create_yaxis_options()
+
+        # create apply / cancel buttons
+        apply_cancel_buttons = self._plot_options_apply_cancel_buttons()
+
+        # vertical layout
+        vbox = QtWidgets.QVBoxLayout()
+        vbox.addLayout(yaxis_options)
+        vbox.addLayout(apply_cancel_buttons)
+
+        # add options to window
+        self.plot_option_window.setLayout(vbox)
+
+
+    def _create_yaxis_options(self):
+        # create label
+        label = QtWidgets.QLabel('y axis scaling:')
+
+        # define options
+        axis_types = ['linear', 'log']
+
+        # create dropdown menu for options
+        self.yaxis_dropdown_menu = QtWidgets.QComboBox()
+        self.yaxis_dropdown_menu.setMinimumWidth(self.dropdown_menu_width)
+        for scale in axis_types:
+            self.yaxis_dropdown_menu.addItem(scale)
+
+        # arange label and dropdown menu horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(label)
+        hbox.addWidget(self.yaxis_dropdown_menu)
+
+        return hbox
+
+
     def fill_parameter_slider_group(self):
         """Fills the initialised slider group with parameter sliders (the number of sliders is determined by the
         number of parameters in the model).
@@ -382,6 +482,8 @@ class SimulationTab(QtWidgets.QDialog):
         # get parameter names
         state_names = self.main_window.model[self.first_patient_id].state_names
         model_param_names = self.main_window.model[self.first_patient_id].parameter_names # parameters except initial conditions
+        print(model_param_names)
+        print(state_names)
         parameter_names = state_names + model_param_names # parameters including initial conditions
 
         # fill up grid with slider objects
@@ -413,7 +515,7 @@ class SimulationTab(QtWidgets.QDialog):
             slider_box {QGroupBox} -- Returns a widget containing labels, a value slider and a value text field for the parameter.
         """
         # initialise widget
-        slider_box = QtWidgets.QGroupBox(parameter_name)
+        slider_box = QtWidgets.QGroupBox(self._give_param_label(parameter_name))
 
         # create horizontal slider
         slider = sl.DoubleSlider()
@@ -438,7 +540,33 @@ class SimulationTab(QtWidgets.QDialog):
 
         return slider_box
 
-    def _create_min_current_max_value_label(self, slider: QtWidgets.QSlider):
+    def _give_param_label(self, parameter_name):
+        """Takes a parameter name and returns a string with the parameter label (if exists), name (if no label),
+        and units.
+
+        Arguments: parameter_name -- name of myokit parameter (string)
+
+        Returns: slider_label -- appropriate parameter name (string)
+        """
+        var = self.main_window.model.model.get(parameter_name)
+        unit = var.unit()
+        parameter_label = var.label()
+
+        # If there's a label or units, add them to the naming string.
+        if parameter_label is not None:
+            if unit is not None:
+                slider_label = str(parameter_label + ' ' + str(unit))
+            else:
+                slider_label = str(parameter_label)
+        else:
+            if unit is not None:
+                slider_label = str(parameter_name + ' ' + str(unit))
+            else:
+                slider_label = str(parameter_name)
+
+        return slider_label
+
+    def _create_min_current_max_value_label(self, slider:QtWidgets.QSlider):
         """Creates labels for a slider displaying the current position of the slider and the minimum and
         maximum value of the slider.
 
