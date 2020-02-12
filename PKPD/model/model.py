@@ -128,16 +128,16 @@ class SingleOutputModel(AbstractModel):
 
     def create_state_dictionary(self, myokit_model):
         """
-        Temporary Function to create dictionary for state labels
+        Function to create dictionary for state labels
         """
-        code = {'p' : 'Peripheral', 'c' : 'Central', 'd' : 'Dosing'}
         self.state_dictionary = {}
-        # Iterate over all state variables
+
+        # Iterate over all state variables (exclude constant variables & time)
         for state_var in myokit_model.variables(bound=False, const=False, sort=True):
-            try: #see if expected conc mass/format
+            try: # if expected conc mass/format
                 key = state_var.qname().replace('_', ' ').replace('.', ' (') + ')'
                 self.state_dictionary[key] = state_var.qname()
-            except:
+            except: # display raw variable name if not correct format
                 key = state_var.qname()
                 self.state_dictionary[key] = state_var.qname()
 

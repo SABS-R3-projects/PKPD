@@ -676,7 +676,7 @@ class SimulationTab(QtWidgets.QDialog):
         self.data_model_ax.set_title(self.state_dropdown_menu.currentText()) # add title
 
         state_to_plot = self.main_window.model.state_dictionary[self.state_dropdown_menu.currentText()]
-        ylabel = self.state_dropdown_menu.currentText()[-5:-1] #conc or mass
+        ylabel = self.state_dropdown_menu.currentText().split('(')[-1][:-1]
         unit = self.main_window.model.model.get(state_to_plot).unit()
         if unit is not None:
             ylabel += ' ' + str(unit)
