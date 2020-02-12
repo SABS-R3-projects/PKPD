@@ -157,10 +157,11 @@ class MainWindow(abstractGui.AbstractMainWindow):
                                                                   self.simulation.patients_data)
                 else:
                     self.model = {}
-                    self.model[4] = m.MultiOutputModel(self.model_file)
-                    self.problem = inf.MultiOutputInverseProblem(model=self.model[4],
-                                                                 times=self.simulation.patients_data[4][0],
-                                                                 values=self.simulation.patients_data[4][1])
+                    for patient_id in self.simulation.patients_data:
+                        self.model[patient_id] = m.SingleOutputModel(self.model_file,
+                                                                     self.simulation.patients_dose[patient_id])
+                    self.problem = inf.MultiOutputInverseProblem(self.model, self.simulation.patients_data)
+
                 self.simulation.fill_parameter_slider_group()
                 self.simulation.fill_plot_option_window()
                 self.simulation.fill_parameter_table()
