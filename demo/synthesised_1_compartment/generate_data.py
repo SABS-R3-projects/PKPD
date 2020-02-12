@@ -1,4 +1,4 @@
-"""Generates time-series drug concentration data based on .1comp_concentration_bolus_linear.mmt and saves it to .csv file.
+"""Generates time-series drug concentration data based on .1comp_bolus_linear.mmt and saves it to .csv file.
 """
 import numpy as np
 import pandas as pd
@@ -7,7 +7,7 @@ from PKPD.model import model as m
 from PKPD.inference import inference
 
 # generating data
-file_name = 'demo/synthesised_one_compartment/1comp_concentration_bolus_linear.mmt'
+file_name = 'demo/synthesised_1_compartment/1comp_bolus_linear.mmt'
 one_comp_model = m.SingleOutputModel(file_name)
 true_parameters = [0, 2, 4] # [initial drug, CL, V]
 
@@ -22,5 +22,4 @@ data = model_result + np.random.normal(loc=0.0,
 )
 
 df = pd.DataFrame({'time_h': times, 'concentration_ng_mL': data})
-df.to_csv('demo/synthesised_one_compartment/one_compartment.csv', index=False)
-
+df.to_csv('demo/synthesised_1_compartment/one_compartment.csv', index=False)

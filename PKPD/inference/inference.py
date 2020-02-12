@@ -34,23 +34,41 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         self.objective_score = None
 
 
-    def find_optimal_parameter(self, initial_parameter:np.ndarray) -> None:
+    def find_optimal_parameter(self, initial_parameter:np.ndarray, number_of_iterations:int=5) -> None:
         """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the
-        distance of the model to the data with respect to the objective function.
+        distance of the model to the data with respect to the objective function. Optimisation is run number_of_iterations times and
+        result with minimal score is returned.
 
         Arguments:
             initial_parameter {np.ndarray} -- Starting point in parameter space of the optimisation algorithm.
+            number_of_iterations {int} -- Number of times optimisation is run. Default: 5 (arbitrary).
 
         Return:
             None
         """
+        # set default randomness in initial parameter values, if not specified in GUI
+        if self.initial_parameter_uncertainty is None:
+            # TODO: evaluate how to choose uncertainty best, to obtain most stable results
+            self.initial_parameter_uncertainty = initial_parameter + 0.1 # arbitrary
+
+        # initialise optimisation
         optimisation = pints.OptimisationController(function=self.objective_function,
                                                     x0=initial_parameter,
                                                     sigma0=self.initial_parameter_uncertainty,
                                                     boundaries=self.parameter_boundaries,
                                                     method=self.optimiser)
 
-        self.estimated_parameters, self.objective_score = optimisation.run()
+        # run optimisation 'number_of_iterations' times
+        estimate_container = []
+        score_container = []
+        for _ in range(number_of_iterations):
+            estimates, score = optimisation.run()
+            estimate_container.append(estimates)
+            score_container.append(score)
+
+        # return parameters with minimal score
+        min_score_id = np.argmin(score_container)
+        self.estimated_parameters, self.objective_score = [estimate_container[min_score_id], score_container[min_score_id]]
 
 
     def set_objective_function(self, objective_function: pints.ErrorMeasure) -> None:
@@ -74,7 +92,7 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         Arguments:
             optimiser {pints.Optimiser} -- Valid optimisers are [CMAES, NelderMead, PSO, SNES, XNES] in pints.
         """
-        valid_optimisers = [pints.CMAES, pints.NelderMead, pints.SNES, pints.XNES]
+        valid_optimisers = [pints.CMAES, pints.NelderMead, pints.PSO, pints.SNES, pints.XNES]
 
         if optimiser not in valid_optimisers:
             raise ValueError('Method is not supported.')
@@ -123,7 +141,7 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         self.objective_score = None
 
 
-    def find_optimal_parameter(self, initial_parameter:np.ndarray) -> None:
+    def find_optimal_parameter(self, initial_parameter:np.ndarray, number_of_iterations:int=5) -> None:
         """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the
         distance of the model to the data with respect to the objective function.
 
@@ -133,13 +151,31 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         Return:
             None
         """
+        # set default randomness in initial parameter values, if not specified in GUI
+        if self.initial_parameter_uncertainty is None:
+            # TODO: evaluate how to choose uncertainty best, to obtain most stable results
+            self.initial_parameter_uncertainty = initial_parameter + 0.1 # arbitrary
+
+        # initialise optimisation
         optimisation = pints.OptimisationController(function=self.objective_function,
                                                     x0=initial_parameter,
                                                     sigma0=self.initial_parameter_uncertainty,
                                                     boundaries=self.parameter_boundaries,
                                                     method=self.optimiser)
 
-        self.estimated_parameters, self.objective_score = optimisation.run()
+        # run optimisation 'number_of_iterations' times
+        estimate_container = []
+        score_container = []
+        for _ in range(number_of_iterations):
+            estimates, score = optimisation.run()
+            estimate_container.append(estimates)
+            score_container.append(score)
+            print(estimates)
+            print(score)
+
+        # return parameters with minimal score
+        min_score_id = np.argmin(score_container)
+        self.estimated_parameters, self.objective_score = [estimate_container[min_score_id], score_container[min_score_id]]
 
 
     def set_objective_function(self, objective_function: pints.ErrorMeasure) -> None:
@@ -163,7 +199,7 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         Arguments:
             optimiser {pints.Optimiser} -- Valid optimisers are [CMAES, NelderMead, PSO, SNES, XNES] in pints.
         """
-        valid_optimisers = [pints.CMAES, pints.NelderMead, pints.SNES, pints.XNES]
+        valid_optimisers = [pints.CMAES, pints.NelderMead, pints.PSO, pints.SNES, pints.XNES]
 
         if optimiser not in valid_optimisers:
             raise ValueError('Method is not supported.')

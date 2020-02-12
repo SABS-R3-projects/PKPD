@@ -46,8 +46,8 @@ class SimulationTab(QtWidgets.QDialog):
         time_label, state_labels = data.keys()[0], data.keys()[1:]
 
         # check dimensionality of problem for plotting and inference
-        self.state_dimension = len(state_labels)
-        self.is_single_output_model = self.state_dimension == 1
+        self.data_dimension = len(state_labels)
+        self.is_single_output_model = self.data_dimension == 1
 
         # sort into time and state data
         self.time_data = data[time_label].to_numpy()
@@ -77,8 +77,8 @@ class SimulationTab(QtWidgets.QDialog):
             self.data_model_figure.clf()
 
             # create subplots for each compartment
-            self.data_model_ax = self.data_model_figure.subplots(nrows=self.state_dimension, sharex=True)
-            for dim in range(self.state_dimension):
+            self.data_model_ax = self.data_model_figure.subplots(nrows=self.data_dimension, sharex=True)
+            for dim in range(self.data_dimension):
                 self.data_model_ax[dim].scatter(x=self.time_data, y=self.state_data[:, dim], label='data', marker='o',
                                                 color='darkgreen', edgecolor='black', alpha=0.5)
                 self.data_model_ax[dim].set_ylabel(state_labels[dim])
@@ -346,7 +346,11 @@ class SimulationTab(QtWidgets.QDialog):
     def _change_yaxis_scaling(self):
 
         scale = self.yaxis_dropdown_menu.currentText()
-        self.data_model_ax.set_yscale(scale)
+        try:
+            self.data_model_ax.set_yscale(scale)
+        except:
+            for elem in range(self.data_dimension):
+                self.data_model_ax[elem].set_yscale(scale)
         self.canvas.draw() #refresh canvas
 
 
@@ -358,7 +362,7 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _set_optimiser(self):
-        #TODO: Nelder-Mead does not support boundaries. So should be cross-linked with tunring boundaries off.
+        # TODO: Nelder-Mead does not support boundaries. So should be cross-linked with tunring boundaries off.
         """Sets the optimiser method for inference to the in the dropdown menu selected method.
         """
         # get selected optimiser
@@ -603,14 +607,14 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def fill_plot_option_window(self):
-        # TODO: finish this!
+        #  TODO: finish this!
         # create text fields
         for slider in self.slider_container:
             pass
 
 
     def fill_infer_option_window(self):
-        # TODO: finish this!
+        #  TODO: finish this!
         # create text fields
         for slider in self.slider_container:
             pass
@@ -673,11 +677,11 @@ class SimulationTab(QtWidgets.QDialog):
 
         # remove previous graphs from subplots to avoid fludding the figure
         if self.enable_line_removal:
-            for dim in range(self.state_dimension):
+            for dim in range(self.data_dimension):
                 self.data_model_ax[dim].lines.pop()
 
         # plot model
-        for dim in range(self.state_dimension):
+        for dim in range(self.data_dimension):
             self.data_model_ax[dim].plot(self.times, self.state_values[:, dim], linestyle='dashed', color='grey')
 
         # refresh canvas
@@ -739,10 +743,10 @@ class SimulationTab(QtWidgets.QDialog):
         self.enable_line_removal = False
 
         # get initial parameters from slider text fields
-        initial_parameters = []
-        for parameter_text_field in self.parameter_text_field_container:
+        initial_parameters = np.empty(len(self.parameter_values))
+        for parameter_id, parameter_text_field in enumerate(self.parameter_text_field_container):
             value = float(parameter_text_field.text())
-            initial_parameters.append(value) # Note: order of text fields matches order of params in inverse problem class
+            initial_parameters[parameter_id] = value # Note: order of text fields matches order of params in inverse problem class
 
         # set parameter boundaries
         self._set_parameter_boundaries(initial_parameters)
@@ -847,13 +851,13 @@ class SimulationTab(QtWidgets.QDialog):
             self.data_model_ax.legend()
         else: # multi-output problem
             # remove all lines from figure
-            for dim in range(self.state_dimension):
+            for dim in range(self.data_dimension):
                 lines = self.data_model_ax[dim].lines
                 while lines:
                     lines.pop()
 
             # plot model
-            for dim in range(self.state_dimension):
+            for dim in range(self.data_dimension):
                 self.data_model_ax[dim].plot(times, state_values[:, dim], color='black', label='model')
                 self.data_model_ax[dim].legend()
 
