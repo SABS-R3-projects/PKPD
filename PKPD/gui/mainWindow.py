@@ -160,18 +160,14 @@ class MainWindow(abstractGui.AbstractMainWindow):
                     for patient_id in self.simulation.patients_data:
                         self.model[patient_id] = m.MultiOutputModel(self.model_file,
                                                                      self.simulation.patients_dose[patient_id])
-                        print(patient_id)
                     self.problem = inf.MultiOutputInverseProblem(self.model, self.simulation.patients_data)
-                    print(13)
 
                 self.simulation.fill_parameter_slider_group()
                 self.simulation.fill_plot_option_window()
                 self.simulation.fill_parameter_table()
-                print(14)
 
                 # switch to simulation tab
                 self.tabs.setCurrentIndex(self.sim_tab_index)
-                print('done')
             # except ValueError:
             #     # generate error message
             #     error_message = 'The .csv file does not seem to be properly formatted. Please check again!'

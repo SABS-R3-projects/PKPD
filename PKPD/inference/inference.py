@@ -164,30 +164,21 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         self.problems = []
         self.error_measure = None
         self.patients_data = data
-        print('inf 1')
-        print(models)
 
         for i in models:
             x = np.asarray(self.patients_data[i][0][:])
-            print('infmodel', x.shape)
             y = np.asarray(self.patients_data[i][1][:])
-            print('infmodel', y.shape)
-            print(models[i].n_outputs())
             self.problems.append(pints.MultiOutputProblem(models[i], x, y))
-            print('infmodel', i)
 
         self.objective_function = None
         self.set_objective_function(pints.SumOfSquaresError)
-        print('inf', 2)
 
         self.optimiser = pints.CMAES
         self.initial_parameter_uncertainty = None
         self.parameter_boundaries = None
-        print('inf', 3)
 
         self.estimated_parameters = None
         self.objective_score = None
-        print('inf', 4)
 
     def find_optimal_parameter(self, initial_parameter: np.ndarray) -> None:
         """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the

@@ -88,7 +88,7 @@ class SimulationTab(QtWidgets.QDialog):
             time_data = dose.get_group(name)[time_label].to_numpy()
             dosing_data = dose.get_group(name)[dose_label].to_numpy()
             self.patients_dose[int(name)] = (time_data.astype(np.float), dosing_data.astype(np.float))
-            print(name)
+
 
         self.first_patient_id = next(iter(self.patients_data))
         # plot data
