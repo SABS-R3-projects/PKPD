@@ -107,6 +107,8 @@ class SimulationTab(QtWidgets.QDialog):
                                            edgecolor='black', alpha=0.5)
             self.data_model_ax.set_xlabel(time_label)
             self.data_model_ax.set_ylabel(state_labels[0])
+            self.data_model_ax.set_xlim(left=0.0)
+            self.data_model_ax.set_ylim(bottom=0.0)
             self.data_model_ax.legend()
 
             # refresh canvas
@@ -525,18 +527,23 @@ class SimulationTab(QtWidgets.QDialog):
     def _plot_single_output_model(self):
         """Plots the model in dashed, grey lines.
         """
-        # solve forward problem for current parameter set
-        self.state_values = self.main_window.model[self.first_patient_id].simulate(
-            parameters=self.parameter_values,
-            times=self.times
-            )
 
-        # remove previous graph to avoid fludding the figure
+        # remove previous graph to avoid flooding the figure
         if self.enable_line_removal:
-            self.data_model_ax.lines.pop()
+            lines = self.data_model_ax.lines
+            for i in self.patients_data:
+                lines.pop()
 
-        # plot model
-        self.data_model_ax.plot(self.times, self.state_values, linestyle='dashed', color='grey')
+        for patient_id in self.patients_data:
+            # solve forward problem for current parameter set
+            self.state_values = self.main_window.model[patient_id].simulate(
+                parameters=self.parameter_values,
+                times=self.times
+                )
+
+            colour = int(len(self.colours)*(patient_id - self.first_patient_id)/len(self.patients_data))
+            # plot model
+            self.data_model_ax.plot(self.times, self.state_values, linestyle='dashed', color=self.colours[colour])
 
         # refresh canvas
         self.canvas.draw()
