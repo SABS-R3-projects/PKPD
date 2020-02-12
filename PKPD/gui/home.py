@@ -268,18 +268,12 @@ class HomeTab(abstractGui.AbstractHomeTab):
         scroll.setWidgetResizable(True)
 
         # fix vertical space that display can take up
-        height = 0.35 * self.main_window.height
+        height = 0.3 * self.main_window.height
         scroll.setFixedHeight(height)
-
-        # fix horizontal space that display can take up
-        width = 0.9 * self.main_window.width
-        scroll.setFixedWidth(width)
 
         # arrange display window horizontally
         hbox = QtWidgets.QHBoxLayout()
-        hbox.addStretch(2)
         hbox.addWidget(scroll)
-        hbox.addStretch(1)
 
         return hbox
 
@@ -291,25 +285,84 @@ class HomeTab(abstractGui.AbstractHomeTab):
         Returns:
             {QGroupBox} -- Returns data group object.
         """
+        # Create group label
         group = QtWidgets.QGroupBox('Data:')
-        # generate file dialog
-        button = QtWidgets.QPushButton('select data file')
-        button.clicked.connect(self.on_data_click)
-        self.data_text = QtWidgets.QLineEdit('no file selected')
-        self.data_check_mark = self._create_file_check_mark()
-        # arrange button and text horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(button)
-        hbox.addWidget(self.data_text)
-        hbox.addWidget(self.data_check_mark)
+
+        # create data selection group
+        data_selection_group = self._create_data_selection_group()
+
+        # create display of csv file
+        data_display = self._create_data_display()
+
         # arrange button/text and label vertically
         vbox = QtWidgets.QVBoxLayout()
-        vbox.addLayout(hbox)
+        vbox.addLayout(data_selection_group)
+        vbox.addLayout(data_display)
         vbox.addStretch(1)
 
         group.setLayout(vbox)
 
         return group
+
+
+    def _create_data_selection_group(self):
+        """Creates the data selection group consisting of a 'select data' button, that opens a file dialog, a
+        text field displaying the path to the data file and an image response to the validity of the chosen file.
+
+        Returns:
+            {QGroupBox} -- Returns a data selection group object.
+        """
+        # create data selection button
+        button = QtWidgets.QPushButton('select data file')
+        button.clicked.connect(self.on_data_click)
+
+        # display path to model file
+        self.data_path_text_field = QtWidgets.QLineEdit('no file selected')
+
+        # make text field non-editable
+        self.data_path_text_field.setReadOnly(True)
+
+        # create file check mark
+        self.data_check_mark = self._create_file_check_mark()
+
+        # arrange button and text horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(button)
+        hbox.addWidget(self.data_path_text_field)
+        hbox.addWidget(self.data_check_mark)
+
+        return hbox
+
+
+    def _create_data_display(self):
+        """Creates display for the data .csv file.
+
+        Returns:
+            {QHBoxLayout} -- Returns data display object.
+        """
+        # create text field to display data
+        self.data_display_text_field = QtWidgets.QTextEdit()
+
+        # adjust color of text field
+        self.data_display_text_field.setStyleSheet("background-color: rgb(128,128,128);")
+
+        # make text field non-editable
+        self.data_display_text_field.setReadOnly(True)
+
+        # make display scrollable, such that window is never exceeded
+        scroll = QtWidgets.QScrollArea()
+        scroll.setWidget(self.data_display_text_field)
+        scroll.setWidgetResizable(True)
+
+        # fix vertical space that display can take up
+        height = 0.3 * self.main_window.height
+        scroll.setFixedHeight(height)
+
+        # arrange display window horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(scroll)
+
+        return hbox
 
 
     def _create_next_button(self):
