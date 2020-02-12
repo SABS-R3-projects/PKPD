@@ -11,7 +11,7 @@ class TestSingleOutputModel(unittest.TestCase):
     """Tests the functionality of all methods of the SingleOutputModel class.
     """
     # Test case I: 1-compartment model
-    file_name = '../../PKPD/modelRepository/1_bolus_linear.mmt'
+    file_name = 'PKPD/modelRepository/1_bolus_linear.mmt'
     one_comp_model = m.SingleOutputModel(file_name)
 
 
@@ -82,7 +82,7 @@ class TestMultiOutputModel(unittest.TestCase):
     """Tests the functionality of all methods of the MultiOutputModel class.
     """
     # Test case I: 1-compartment model
-    file_name = '../../PKPD/modelRepository/2_bolus_linear.mmt'
+    file_name = 'PKPD/modelRepository/2_bolus_linear.mmt'
     two_comp_model = m.MultiOutputModel(file_name)
 
     # set dimensionality
