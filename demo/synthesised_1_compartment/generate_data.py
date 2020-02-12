@@ -7,7 +7,7 @@ from PKPD.model import model as m
 from PKPD.inference import inference
 
 # generating data
-file_name = 'demo/synthesised_one_compartment/1comp_bolus_linear.mmt'
+file_name = 'demo/synthesised_1_compartment/1comp_bolus_linear.mmt'
 one_comp_model = m.SingleOutputModel(file_name)
 true_parameters = [0, 2, 4] # [initial drug, CL, V]
 

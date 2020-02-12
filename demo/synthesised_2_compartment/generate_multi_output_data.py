@@ -7,7 +7,7 @@ from PKPD.model import model as m
 from PKPD.inference import inference
 
 # generating data
-file_name = 'demo/synthesised_two_compartment/2comp_subcut_linear.mmt'
+file_name = 'demo/synthesised_2_compartment/2comp_subcut_linear.mmt'
 model = m.MultiOutputModel(file_name)
 
 # set dimensionality of data
