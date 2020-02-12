@@ -69,7 +69,7 @@ Kpc = 0 [1/h]
     desc: Transition rate from the peripheral compartment to the central compartment.
 
 # compartment external parameters
-use central_compartment.Kcp1 as Kcp
+use central_compartment.Kcp2 as Kcp
 
 # state variable
 dot(drug) = central_compartment.drug * Kcp - drug * Kpc
