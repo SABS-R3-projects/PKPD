@@ -171,11 +171,11 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
                 # switch to simulation tab
                 self.tabs.setCurrentIndex(self.sim_tab_index)
-            # except ValueError:
-            #     # generate error message
-            #     error_message = 'The .csv file does not seem to be properly formatted. Please check again!'
-            #     QtWidgets.QMessageBox.question(self, 'Data structure not compatible!', error_message,
-            #                                    QtWidgets.QMessageBox.Yes)
+            except ValueError:
+                # generate error message
+                error_message = 'The .csv file does not seem to be properly formatted. Please check again!'
+                QtWidgets.QMessageBox.question(self, 'Data structure not compatible!', error_message,
+                                               QtWidgets.QMessageBox.Yes)
         else:
             # update file dialog icons
             if not self.home.is_model_file_valid:
