@@ -377,9 +377,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
         """
         # create check box for presence of patient ID data
         self.patient_id_check_box = QtWidgets.QCheckBox('Patient ID provided')
+        self.patient_id_check_box.stateChanged.connect(self.on_check_box_click)
 
         # create check box for presence of doses in data
         self.dose_schedule_check_box = QtWidgets.QCheckBox('Dosing provided')
+        self.dose_schedule_check_box.stateChanged.connect(self.on_check_box_click)
 
         # arange check boxes horizontally
         hbox = QtWidgets.QHBoxLayout()
@@ -558,8 +560,13 @@ class HomeTab(abstractGui.AbstractHomeTab):
             # check presence of patient IDs/doses and update check boxes
             self._update_check_boxes()
 
+            # TODO:
+            # 1. color the columns in the display according to their meaning/ indicate that the program things that they are different things
+            # 2. merge Rebeccas stuff into this branch
+            # 3. improve the data handling based on the information that is now already available.
+
             # update data display
-            self.data_display.setModel(PandasModel(self.data_df))
+            self.data_display.setModel(PandasModel(self.data_df, self.patient_id_check_box.isChecked(), self.dose_schedule_check_box.isChecked()))
 
             # make content fill the reserved space of the table view
             self.data_display.resizeColumnsToContents()
@@ -664,6 +671,15 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
 
     @QtCore.pyqtSlot()
+    def on_check_box_click(self):
+        # update data display
+        self.data_display.setModel(PandasModel(self.data_df, self.patient_id_check_box.isChecked(), self.dose_schedule_check_box.isChecked()))
+
+        # make content fill the reserved space of the table view
+        self.data_display.resizeColumnsToContents()
+
+
+    @QtCore.pyqtSlot()
     def on_next_click(self):
         """Executes the MainWindow.next_tab method.
         """
@@ -673,9 +689,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
 ###### TO BE REMOVED ####
 class PandasModel(QtCore.QAbstractTableModel):
 
-    def __init__(self, data):
+    def __init__(self, data, is_id_present, is_dosing_present):
         QtCore.QAbstractTableModel.__init__(self)
         self._data = data
+        self._is_id_present = is_id_present
+        self._is_dosing_present = is_dosing_present
 
     def rowCount(self, parent=None):
         return self._data.shape[0]
@@ -687,6 +705,26 @@ class PandasModel(QtCore.QAbstractTableModel):
         if index.isValid():
             if role == QtCore.Qt.DisplayRole:
                 return str(self._data.iloc[index.row(), index.column()])
+
+            if self._is_id_present:
+                # color id column blue grey
+                if role == QtCore.Qt.BackgroundRole and index.column() == 0:
+                    return QtGui.QBrush(QtGui.QColor(60, 60.4, 89.8))
+
+                # color time column (darker) grey
+                if role == QtCore.Qt.BackgroundRole and index.column() == 1:
+                    return QtGui.QBrush(QtGui.QColor(69.8, 69.8, 69.8))
+            else:
+                # color time column (darker) grey
+                if role == QtCore.Qt.BackgroundRole and index.column() == 0:
+                    return QtGui.QBrush(QtGui.QColor(69.8, 69.8, 69.8))
+
+            if self._is_dosing_present:
+                last_column_id = self.columnCount()-1
+                # color last column red grey
+                if role == QtCore.Qt.BackgroundRole and index.column() == last_column_id:
+                    return QtGui.QBrush(QtGui.QColor(89.8, 60, 61.2))
+
         return None
 
     def headerData(self, col, orientation, role):
