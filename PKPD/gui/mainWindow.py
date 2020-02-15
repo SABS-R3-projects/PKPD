@@ -142,7 +142,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
         """Switches to the simulation tab, when triggered by clicking the 'next' QPushButton on the home tab.
         """
         if self.home.is_model_file_valid and self.home.is_data_file_valid:
-            # TODO: check that .csv has correct arrangement to be read or come up with dynamic solution.
             try:
                 # plot data in simulation tab
                 self.simulation.add_data_to_data_model_plot()
