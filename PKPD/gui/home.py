@@ -19,6 +19,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         self.is_data_file_valid = False
         self.library_directory = 'PKPD/modelRepository/'
         self.model_file = None
+        self.data_df = None
 
         # arrange content
         grid = QtWidgets.QGridLayout()
@@ -377,11 +378,21 @@ class HomeTab(abstractGui.AbstractHomeTab):
         """
         # create check box for presence of patient ID data
         self.patient_id_check_box = QtWidgets.QCheckBox('Patient ID provided')
+
+        # connect un-/checking box to reaction
         self.patient_id_check_box.stateChanged.connect(self.on_check_box_click)
+
+        # disable checking, as long as no data has been selected
+        self.patient_id_check_box.setEnabled(False)
 
         # create check box for presence of doses in data
         self.dose_schedule_check_box = QtWidgets.QCheckBox('Dosing provided')
+
+        # connect un-/checking box to reaction
         self.dose_schedule_check_box.stateChanged.connect(self.on_check_box_click)
+
+        # disable checking, as long as no data has been selected
+        self.dose_schedule_check_box.setEnabled(False)
 
         # arange check boxes horizontally
         hbox = QtWidgets.QHBoxLayout()
@@ -557,6 +568,10 @@ class HomeTab(abstractGui.AbstractHomeTab):
             # update check mark
             self.data_check_mark.setPixmap(self.main_window.rescaled_cm)
 
+            # enable check boxes
+            self.patient_id_check_box.setEnabled(True)
+            self.dose_schedule_check_box.setEnabled(True)
+
             # check presence of patient IDs/doses and update check boxes
             self._update_check_boxes()
 
@@ -672,6 +687,10 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
     @QtCore.pyqtSlot()
     def on_check_box_click(self):
+        # TODO:
+        # 1. make sure that clicking doesnt do anything when no data is selected
+        # 2. error is thrown when data dimension is not suffient to also provide id and dose information
+
         # update data display
         self.data_display.setModel(PandasModel(self.data_df, self.patient_id_check_box.isChecked(), self.dose_schedule_check_box.isChecked()))
 
