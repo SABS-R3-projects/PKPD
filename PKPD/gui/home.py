@@ -5,6 +5,7 @@ import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from PKPD.gui import abstractGui, mainWindow
+from PKPD.gui.utils.tableViewModel import PandasModel
 
 class HomeTab(abstractGui.AbstractHomeTab):
     """HomeTab class responsible for model and data management.
@@ -555,6 +556,18 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # check format of file
         self.is_data_file_valid = self._is_data_file_valid(file_path)
 
+        # load data and remove empty trailing columns
+        if self.is_data_file_valid:
+            self._load_data(file_path)
+        else:
+            # generate error message
+            error_message = 'The selected data file is invalid! Please, try again.'
+            QtWidgets.QMessageBox.question(self, 'Data file invalid!', error_message, QtWidgets.QMessageBox.Yes)
+
+        # check whether dataframe has sensible dimension (at least time column and one state column)
+        is_dimensionality_compatible = self.data_df.shape[1] >= 2
+
+        # TODO: continue cleaning up and continue here!
         if self.is_data_file_valid:
             # make model globally accessible
             self.data_file = file_path
@@ -610,6 +623,30 @@ class HomeTab(abstractGui.AbstractHomeTab):
         is_path_valid = is_file_existent and is_format_correct
 
         return is_path_valid
+
+
+    def _load_data(self, file_path):
+        """Load csv file as pandas dataframe and remove trailing empty columns.
+        """
+        # load data
+        self.data_df = pd.read_csv(file_path, na_values=['.'])
+
+        # get the last non-empty column
+        is_last_column_empty = True
+        while is_last_column_empty:
+            # get last column in dataframe
+            last_column = self.data_df.iloc[:, -1]
+
+            # check whether column is empty
+            is_last_column_empty = last_column.dropna().empty
+
+            # drop empty column
+            if is_last_column_empty:
+                # get data keys
+                keys = self.data_df.keys()
+
+                # remove last column
+                self.data_df.drop(columns=[keys[-1]], inplace=True)
 
 
     def _update_check_boxes(self):
@@ -687,15 +724,38 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
     @QtCore.pyqtSlot()
     def on_check_box_click(self):
-        # TODO:
-        # 1. make sure that clicking doesnt do anything when no data is selected
-        # 2. error is thrown when data dimension is not suffient to also provide id and dose information
+        """Reaction to checking either the patient ID or the dose schedule check box. Data display is updated based on the
+        provided information about the existence of patient IDs and dose. If the dimensionality of the dataframe is not
+        compatible, error messages are thrown. It is assumed that a time and at least one state column is always existent.
+        """
+        # check whether patient ID and/or dosing schedule is provided
+        are_patient_ids_provided = self.patient_id_check_box.isChecked()
+        is_dosing_schedule_provided = self.dose_schedule_check_box.isChecked()
 
-        # update data display
-        self.data_display.setModel(PandasModel(self.data_df, self.patient_id_check_box.isChecked(), self.dose_schedule_check_box.isChecked()))
+        # get number dataframe's number of columns
+        number_of_columns = self.data_df.shape[1]
 
-        # make content fill the reserved space of the table view
-        self.data_display.resizeColumnsToContents()
+        # set minimal number of columns
+        if are_patient_ids_provided and is_dosing_schedule_provided:
+            minimal_number_of_columns = 4
+        elif (are_patient_ids_provided and not is_dosing_schedule_provided) or (not are_patient_ids_provided and is_dosing_schedule_provided):
+            minimal_number_of_columns = 3
+
+        # if dataframe is big enough update display, else through an error message
+        if number_of_columns >= minimal_number_of_columns:
+            # update data display
+            self.data_display.setModel(PandasModel(self.data_df, are_patient_ids_provided, is_dosing_schedule_provided))
+
+            # make content fill the reserved space of the table view
+            self.data_display.resizeColumnsToContents()
+        else:
+            # generate error message
+            if minimal_number_of_columns == 4:
+                error_message = 'The dataset is too low-dimensional to contain both patient IDs and dose schedule (There are not enough columns in the dataset).'
+                QtWidgets.QMessageBox.question(self, 'Dataset too low-dimensional!', error_message, QtWidgets.QMessageBox.Yes)
+            if minimal_number_of_columns == 3:
+                error_message = 'The dataset is too low-dimensional to contain either patient IDs nor dose schedule (There are not enough columns in the dataset).'
+                QtWidgets.QMessageBox.question(self, 'Dataset too low-dimensional!', error_message, QtWidgets.QMessageBox.Yes)
 
 
     @QtCore.pyqtSlot()
@@ -703,50 +763,3 @@ class HomeTab(abstractGui.AbstractHomeTab):
         """Executes the MainWindow.next_tab method.
         """
         self.main_window.next_tab()
-
-
-###### TO BE REMOVED ####
-class PandasModel(QtCore.QAbstractTableModel):
-
-    def __init__(self, data, is_id_present, is_dosing_present):
-        QtCore.QAbstractTableModel.__init__(self)
-        self._data = data
-        self._is_id_present = is_id_present
-        self._is_dosing_present = is_dosing_present
-
-    def rowCount(self, parent=None):
-        return self._data.shape[0]
-
-    def columnCount(self, parnet=None):
-        return self._data.shape[1]
-
-    def data(self, index, role=QtCore.Qt.DisplayRole):
-        if index.isValid():
-            if role == QtCore.Qt.DisplayRole:
-                return str(self._data.iloc[index.row(), index.column()])
-
-            if self._is_id_present:
-                # color id column blue grey
-                if role == QtCore.Qt.BackgroundRole and index.column() == 0:
-                    return QtGui.QBrush(QtGui.QColor(60, 60.4, 89.8))
-
-                # color time column (darker) grey
-                if role == QtCore.Qt.BackgroundRole and index.column() == 1:
-                    return QtGui.QBrush(QtGui.QColor(69.8, 69.8, 69.8))
-            else:
-                # color time column (darker) grey
-                if role == QtCore.Qt.BackgroundRole and index.column() == 0:
-                    return QtGui.QBrush(QtGui.QColor(69.8, 69.8, 69.8))
-
-            if self._is_dosing_present:
-                last_column_id = self.columnCount()-1
-                # color last column red grey
-                if role == QtCore.Qt.BackgroundRole and index.column() == last_column_id:
-                    return QtGui.QBrush(QtGui.QColor(89.8, 60, 61.2))
-
-        return None
-
-    def headerData(self, col, orientation, role):
-        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
-            return self._data.columns[col]
-        return None
