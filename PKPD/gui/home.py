@@ -547,7 +547,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
     @QtCore.pyqtSlot()
     def on_data_click(self):
-        """Opens a file dialog and updates after selection the displayed path directory, as well as the dosplay window and the check mark.
+        """Opens a file dialog and updates after selection the displayed path directory, as well as the display window and the check mark.
         Only .csv files can be selected.
         """
         options = QtWidgets.QFileDialog.Options()
@@ -556,48 +556,32 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # check format of file
         self.is_data_file_valid = self._is_data_file_valid(file_path)
 
-        # load data and remove empty trailing columns
         if self.is_data_file_valid:
+            # load data and remove empty trailing columns
             self._load_data(file_path)
-        else:
-            # generate error message
-            error_message = 'The selected data file is invalid! Please, try again.'
-            QtWidgets.QMessageBox.question(self, 'Data file invalid!', error_message, QtWidgets.QMessageBox.Yes)
 
-        # check whether dataframe has sensible dimension (at least time column and one state column)
-        is_dimensionality_compatible = self.data_df.shape[1] >= 2
+            # check whether dataframe has at least a time columns and a state column
+            is_dimensionality_compatible = self.data_df.shape[1] >= 2
 
-        # TODO: continue cleaning up and continue here!
-        if self.is_data_file_valid:
-            # make model globally accessible
-            self.data_file = file_path
+            if is_dimensionality_compatible:
+                # update QLineEdit in the GUI to selected file
+                self.data_path_text_field.setText(file_path)
 
-            # read in data file
-            self.data_df = pd.read_csv(file_path, na_values=['.'])
+                # update check mark
+                self.data_check_mark.setPixmap(self.main_window.rescaled_cm)
 
-            # update QLineEdit in the GUI to selected file
-            self.data_path_text_field.setText(file_path)
+                # check presence of patient IDs/doses and update check boxes
+                self._update_check_boxes()
 
-            # update check mark
-            self.data_check_mark.setPixmap(self.main_window.rescaled_cm)
+                # update data display
+                self.data_display.setModel(PandasModel(self.data_df, self.patient_id_check_box.isChecked(), self.dose_schedule_check_box.isChecked()))
 
-            # enable check boxes
-            self.patient_id_check_box.setEnabled(True)
-            self.dose_schedule_check_box.setEnabled(True)
-
-            # check presence of patient IDs/doses and update check boxes
-            self._update_check_boxes()
-
-            # TODO:
-            # 1. color the columns in the display according to their meaning/ indicate that the program things that they are different things
-            # 2. merge Rebeccas stuff into this branch
-            # 3. improve the data handling based on the information that is now already available.
-
-            # update data display
-            self.data_display.setModel(PandasModel(self.data_df, self.patient_id_check_box.isChecked(), self.dose_schedule_check_box.isChecked()))
-
-            # make content fill the reserved space of the table view
-            self.data_display.resizeColumnsToContents()
+                # make content fill the reserved space of the table view
+                self.data_display.resizeColumnsToContents()
+            else:
+                # generate error message
+                error_message = 'The selected dataset is not high dimensional enough! At least one time and one state column is expected.'
+                QtWidgets.QMessageBox.question(self, 'Dataset too low dimensional!', error_message, QtWidgets.QMessageBox.Yes)
         else:
             # generate error message
             error_message = 'The selected data file is invalid! Please, try again.'
@@ -609,7 +593,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
         Arguments:
             file_path {str} -- path to model file.
-        
+
         Returns:
             {bool} -- True if valid, False if invalid.
         """
@@ -652,11 +636,21 @@ class HomeTab(abstractGui.AbstractHomeTab):
     def _update_check_boxes(self):
         """Updates the data check boxes based on the data's properties.
         """
-        # check for presence of patient IDs in first column
-        self._check_data_for_patient_IDs()
+        number_of_columns = self.data_df.shape[1]
 
-        # check for presence of doses in last column
-        self._check_data_for_doses()
+        if number_of_columns > 2:
+            # enable check box
+            self.patient_id_check_box.setEnabled(True)
+
+            # check for presence of patient IDs in first column
+            self._check_data_for_patient_IDs()
+
+        if (number_of_columns > 2 and not self.patient_id_check_box.isChecked()) or (number_of_columns > 3):
+            # enable check box
+            self.patient_id_check_box.setEnabled(True)
+
+            # check for presence of doses in last column
+            self._check_data_for_doses()
 
 
     def _check_data_for_patient_IDs(self):
@@ -676,22 +670,8 @@ class HomeTab(abstractGui.AbstractHomeTab):
     def _check_data_for_doses(self):
         """Checks whether dosing schedule is provided in dataframe and removes trailing empty columns.
         """
-        # get the last non-empty column
-        is_last_column_empty = True
-        while is_last_column_empty:
-            # get last column in dataframe
-            last_column = self.data_df.iloc[:, -1]
-
-            # check whether column is empty
-            is_last_column_empty = last_column.dropna().empty
-
-            # drop empty column
-            if is_last_column_empty:
-                # get data keys
-                keys = self.data_df.keys()
-
-                # remove last column
-                self.data_df.drop(columns=[keys[-1]], inplace=True)
+        # get the last column
+        last_column = self.data_df.iloc[:, -1]
 
         # check whether last column has format expected from dosing schedule
         is_data_format_as_expected = self._dose_format_check(last_column)
@@ -725,9 +705,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
     @QtCore.pyqtSlot()
     def on_check_box_click(self):
         """Reaction to checking either the patient ID or the dose schedule check box. Data display is updated based on the
-        provided information about the existence of patient IDs and dose. If the dimensionality of the dataframe is not
-        compatible, error messages are thrown. It is assumed that a time and at least one state column is always existent.
+        provided information about the existence of patient IDs and dose.
         """
+        # TODO:
+        # enable checking of boxes based on presence of columns
+        
         # check whether patient ID and/or dosing schedule is provided
         are_patient_ids_provided = self.patient_id_check_box.isChecked()
         is_dosing_schedule_provided = self.dose_schedule_check_box.isChecked()
@@ -740,6 +722,8 @@ class HomeTab(abstractGui.AbstractHomeTab):
             minimal_number_of_columns = 4
         elif (are_patient_ids_provided and not is_dosing_schedule_provided) or (not are_patient_ids_provided and is_dosing_schedule_provided):
             minimal_number_of_columns = 3
+        else:
+            minimal_number_of_columns = 2
 
         # if dataframe is big enough update display, else through an error message
         if number_of_columns >= minimal_number_of_columns:
@@ -749,12 +733,16 @@ class HomeTab(abstractGui.AbstractHomeTab):
             # make content fill the reserved space of the table view
             self.data_display.resizeColumnsToContents()
         else:
+            # # uncheck check boxes
+            # self.patient_id_check_box.setChecked(False)
+            # self.dose_schedule_check_box.setChecked(False)
+
             # generate error message
             if minimal_number_of_columns == 4:
                 error_message = 'The dataset is too low-dimensional to contain both patient IDs and dose schedule (There are not enough columns in the dataset).'
                 QtWidgets.QMessageBox.question(self, 'Dataset too low-dimensional!', error_message, QtWidgets.QMessageBox.Yes)
             if minimal_number_of_columns == 3:
-                error_message = 'The dataset is too low-dimensional to contain either patient IDs nor dose schedule (There are not enough columns in the dataset).'
+                error_message = 'The dataset is too low-dimensional to contain neither patient IDs nor a dose schedule (There are not enough columns in the dataset).'
                 QtWidgets.QMessageBox.question(self, 'Dataset too low-dimensional!', error_message, QtWidgets.QMessageBox.Yes)
 
 
