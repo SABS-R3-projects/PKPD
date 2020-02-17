@@ -642,6 +642,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
     def _update_check_boxes(self):
         """Updates the data check boxes based on the data's properties.
         """
+        # get number of columns in dataset
         number_of_columns = self.data_df.shape[1]
 
         # check for patient IDs, if dataset has enough columns
@@ -726,9 +727,6 @@ class HomeTab(abstractGui.AbstractHomeTab):
         """Reaction to checking either the patient ID or the dose schedule check box. Data display is updated based on the
         provided information about the existence of patient IDs and dose.
         """
-        # TODO:
-        # enable checking of boxes based on presence of columns
-
         # check whether patient ID and/or dosing schedule is provided
         are_patient_ids_provided = self.patient_id_check_box.isChecked()
         is_dosing_schedule_provided = self.dose_schedule_check_box.isChecked()
@@ -736,33 +734,21 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # get number dataframe's number of columns
         number_of_columns = self.data_df.shape[1]
 
-        # set minimal number of columns
-        if are_patient_ids_provided and is_dosing_schedule_provided:
-            minimal_number_of_columns = 4
-        elif (are_patient_ids_provided and not is_dosing_schedule_provided) or (not are_patient_ids_provided and is_dosing_schedule_provided):
-            minimal_number_of_columns = 3
-        else:
-            minimal_number_of_columns = 2
+        # if # columns = 3, patient IDs and dose schedule cannot be present simultaneously
+        if number_of_columns == 3 and (are_patient_ids_provided or is_dosing_schedule_provided):
+            # disable the unchecked box, while the other is checked
+            self.patient_id_check_box.setEnabled(are_patient_ids_provided)
+            self.dose_schedule_check_box.setEnabled(is_dosing_schedule_provided)
+        elif number_of_columns == 3:
+            # enable both check boxes, if neither is checked
+            self.patient_id_check_box.setEnabled(True)
+            self.dose_schedule_check_box.setEnabled(True)
 
-        # if dataframe is big enough update display, else through an error message
-        if number_of_columns >= minimal_number_of_columns:
-            # update data display
-            self.data_display.setModel(PandasModel(self.data_df, are_patient_ids_provided, is_dosing_schedule_provided))
+        # update data display
+        self.data_display.setModel(PandasModel(self.data_df, are_patient_ids_provided, is_dosing_schedule_provided))
 
-            # make content fill the reserved space of the table view
-            self.data_display.resizeColumnsToContents()
-        else:
-            # # uncheck check boxes
-            # self.patient_id_check_box.setChecked(False)
-            # self.dose_schedule_check_box.setChecked(False)
-
-            # generate error message
-            if minimal_number_of_columns == 4:
-                error_message = 'The dataset is too low-dimensional to contain both patient IDs and dose schedule (There are not enough columns in the dataset).'
-                QtWidgets.QMessageBox.question(self, 'Dataset too low-dimensional!', error_message, QtWidgets.QMessageBox.Yes)
-            if minimal_number_of_columns == 3:
-                error_message = 'The dataset is too low-dimensional to contain neither patient IDs nor a dose schedule (There are not enough columns in the dataset).'
-                QtWidgets.QMessageBox.question(self, 'Dataset too low-dimensional!', error_message, QtWidgets.QMessageBox.Yes)
+        # make content fill the reserved space of the table view
+        self.data_display.resizeColumnsToContents()
 
 
     @QtCore.pyqtSlot()
