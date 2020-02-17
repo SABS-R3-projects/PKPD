@@ -560,6 +560,12 @@ class HomeTab(abstractGui.AbstractHomeTab):
             # load data and remove empty trailing columns
             self._load_data(file_path)
 
+            # reset check boxes
+            self.patient_id_check_box.setChecked(False)
+            self.patient_id_check_box.setEnabled(False)
+            self.dose_schedule_check_box.setChecked(False)
+            self.dose_schedule_check_box.setEnabled(False)
+
             # check whether dataframe has at least a time columns and a state column
             is_dimensionality_compatible = self.data_df.shape[1] >= 2
 
@@ -638,6 +644,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         """
         number_of_columns = self.data_df.shape[1]
 
+        # check for patient IDs, if dataset has enough columns
         if number_of_columns > 2:
             # enable check box
             self.patient_id_check_box.setEnabled(True)
@@ -645,9 +652,21 @@ class HomeTab(abstractGui.AbstractHomeTab):
             # check for presence of patient IDs in first column
             self._check_data_for_patient_IDs()
 
-        if (number_of_columns > 2 and not self.patient_id_check_box.isChecked()) or (number_of_columns > 3):
+        # check for dose schedule, if dataset has enough columns (conditional on presence of patient IDs)
+        if number_of_columns == 3 and not self.patient_id_check_box.isChecked():
+            # enable dose check box
+            self.dose_schedule_check_box.setEnabled(True)
+
+            # check for presence of doses in last column
+            self._check_data_for_doses()
+
+            # if dose schedule is present, disable patient ID check box
+            if self.dose_schedule_check_box.isChecked():
+                self.patient_id_check_box.setEnabled(False)
+
+        elif number_of_columns > 3:
             # enable check box
-            self.patient_id_check_box.setEnabled(True)
+            self.dose_schedule_check_box.setEnabled(True)
 
             # check for presence of doses in last column
             self._check_data_for_doses()
@@ -709,7 +728,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         """
         # TODO:
         # enable checking of boxes based on presence of columns
-        
+
         # check whether patient ID and/or dosing schedule is provided
         are_patient_ids_provided = self.patient_id_check_box.isChecked()
         is_dosing_schedule_provided = self.dose_schedule_check_box.isChecked()
