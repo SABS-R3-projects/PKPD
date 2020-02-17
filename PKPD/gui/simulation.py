@@ -79,18 +79,28 @@ class SimulationTab(QtWidgets.QDialog):
 
             # if no patient IDs are provided, plot data all at once
             if self.patient_ids is None:
+                # create scatter plot
                 self.data_model_ax.scatter(x=self.time_data, y=self.state_data, label='data', marker='o', color='darkgreen',
                                         edgecolor='black', alpha=0.5)
+
+                # add x, y labels
                 self.data_model_ax.set_xlabel(time_label)
                 self.data_model_ax.set_ylabel(state_label)
+
+                # add legend
                 self.data_model_ax.legend()
 
             # if patient IDs are provided, color patient data by ID
             else:
                 for patient_id in self.patient_ids:
+                    # create mask for patient specific data
                     mask = self.patient_ids_mask == patient_id
+
+                    # create scatter plot
                     self.data_model_ax.scatter(x=self.time_data[mask], y=self.state_data[mask], marker='o', edgecolor='black',
                                                alpha=0.5)
+
+                    # add x, y labels
                     self.data_model_ax.set_xlabel(time_label)
                     self.data_model_ax.set_ylabel(state_label)
 
@@ -104,12 +114,49 @@ class SimulationTab(QtWidgets.QDialog):
 
             # create subplots for each compartment
             self.data_model_ax = self.data_model_figure.subplots(nrows=self.data_dimension, sharex=True)
-            for dim in range(self.data_dimension):
-                self.data_model_ax[dim].scatter(x=self.time_data, y=self.state_data[:, dim], label='data', marker='o',
-                                                color='darkgreen', edgecolor='black', alpha=0.5)
-                self.data_model_ax[dim].set_ylabel(state_labels[dim])
-                self.data_model_ax[dim].legend()
-            self.data_model_ax[-1].set_xlabel(time_label)
+
+            # if no patient IDs are provided, plot data all at once
+            if self.patient_ids is None:
+
+                # create subplots for each measured compartment
+                for dim in range(self.data_dimension):
+                    # create scatter plot for compartment
+                    self.data_model_ax[dim].scatter(x=self.time_data, y=self.state_data[:, dim], label='data', marker='o',
+                                                    color='darkgreen', edgecolor='black', alpha=0.5)
+
+                    # add ylabel for compartment
+                    self.data_model_ax[dim].set_ylabel(state_labels[dim])
+
+                    # add legend to compartment subplot
+                    self.data_model_ax[dim].legend()
+
+                # add xlabel to the bottom of the vertically stacked subplots
+                self.data_model_ax[-1].set_xlabel(time_label)
+
+            # if patient IDs are provided, color patient data by ID
+            else:
+
+                # create subplots for each measured compartment
+                for dim in range(self.data_dimension):
+
+                    # color data by patient ID
+                    for patient_id in self.patient_ids:
+                        # create mask for patient specific data
+                        mask = self.patient_ids_mask == patient_id
+
+                        # create scatter plot
+                        self.data_model_ax[dim].scatter(x=self.time_data[mask], y=self.state_data[mask, dim], marker='o',
+                                                        edgecolor='black', alpha=0.5)
+
+                        # add ylabel for compartment
+                        self.data_model_ax[dim].set_ylabel(state_labels[dim])
+
+                    # add legend to compartment subplot (hack)
+                    self.data_model_ax[dim].scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
+                    self.data_model_ax[dim].legend()
+
+                # add xlabel to the bottom of the vertically stacked subplots
+                self.data_model_ax[-1].set_xlabel(time_label)
 
         # refresh canvas
         self.canvas.draw()
