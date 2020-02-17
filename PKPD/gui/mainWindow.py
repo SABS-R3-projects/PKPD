@@ -167,6 +167,8 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 # switch to simulation tab
                 self.tabs.setCurrentIndex(self.sim_tab_index)
 
+                # TODO: create container for problems, and see how Rebecca set up the oprimisation
+                
                 # # instantiate inverse problem (after switching to simulation tab to improve user experience)
                 # if self.simulation.is_single_output_model:
                 #     self.problem = inf.SingleOutputInverseProblem(model=self.model,
