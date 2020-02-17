@@ -5,6 +5,7 @@ import pints
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+from matplotlib import patches
 from PyQt5 import QtCore, QtWidgets
 
 from PKPD.gui.utils import slider as sl
@@ -47,6 +48,19 @@ class SimulationTab(QtWidgets.QDialog):
         self.data_dimension = len(state_labels)
         self.is_single_output_model = self.data_dimension == 1
 
+        # get patient IDs, if available
+        if patient_id_label is not None:
+            self.patient_ids_mask = self.main_window.home.data_df[patient_id_label].to_numpy()
+            self.patient_ids = np.unique(self.patient_ids_mask)
+        else:
+            self.patient_ids = None
+
+        # get dose schedule, if available
+        if dose_schedule_label is not None:
+            self.dose_schedule = self.main_window.home.data_df[dose_schedule_label].to_numpy()
+        else:
+            self.dose_schedule = None
+
         # sort into time and state data
         self.time_data = self.main_window.home.data_df[time_label].to_numpy()
         if self.is_single_output_model:
@@ -62,14 +76,28 @@ class SimulationTab(QtWidgets.QDialog):
 
             # create plot
             self.data_model_ax = self.data_model_figure.subplots()
-            self.data_model_ax.scatter(x=self.time_data, y=self.state_data, label='data', marker='o', color='darkgreen',
-                                       edgecolor='black', alpha=0.5)
-            self.data_model_ax.set_xlabel(time_label)
-            self.data_model_ax.set_ylabel(state_label)
-            self.data_model_ax.legend()
 
-            # refresh canvas
-            self.canvas.draw()
+            # if no patient IDs are provided, plot data all at once
+            if self.patient_ids is None:
+                self.data_model_ax.scatter(x=self.time_data, y=self.state_data, label='data', marker='o', color='darkgreen',
+                                        edgecolor='black', alpha=0.5)
+                self.data_model_ax.set_xlabel(time_label)
+                self.data_model_ax.set_ylabel(state_label)
+                self.data_model_ax.legend()
+
+            # if patient IDs are provided, color patient data by ID
+            else:
+                for patient_id in self.patient_ids:
+                    mask = self.patient_ids_mask == patient_id
+                    self.data_model_ax.scatter(x=self.time_data[mask], y=self.state_data[mask], marker='o', edgecolor='black',
+                                               alpha=0.5)
+                    self.data_model_ax.set_xlabel(time_label)
+                    self.data_model_ax.set_ylabel(state_label)
+
+                # add data label to legend (hack)
+                self.data_model_ax.scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
+                self.data_model_ax.legend()
+
         else: # multi output
             # clear figure
             self.data_model_figure.clf()
@@ -83,8 +111,8 @@ class SimulationTab(QtWidgets.QDialog):
                 self.data_model_ax[dim].legend()
             self.data_model_ax[-1].set_xlabel(time_label)
 
-            # refresh canvas
-            self.canvas.draw()
+        # refresh canvas
+        self.canvas.draw()
 
 
     def _get_data_labels(self):
