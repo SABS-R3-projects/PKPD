@@ -150,29 +150,32 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 self.simulation.enable_live_plotting = False
                 self.simulation.enable_line_removal = False
 
-                # # instantiate model and inverse problem
-                # if self.simulation.is_single_output_model:
-                #     self.model = m.SingleOutputModel(self.home.model_file)
-                #     self.problem = inf.SingleOutputInverseProblem(model=self.model,
-                #                                                 times=self.simulation.time_data,
-                #                                                 values=self.simulation.state_data)
-                # else:
-                #     self.model = m.MultiOutputModel(self.home.model_file)
+                # instantiate model
+                if self.simulation.is_single_output_model: # single output
+                    self.model = m.SingleOutputModel(self.home.model_file)
+                else: # multi output
+                    self.model = m.MultiOutputModel(self.home.model_file)
 
-                #     # set model output dimension to data dimension
-                #     self.model.set_output_dimension(self.simulation.data_dimension)
+                    # set model output dimension to data dimension
+                    self.model.set_output_dimension(self.simulation.data_dimension)
 
-                #     self.problem = inf.MultiOutputInverseProblem(model=self.model,
-                #                                                 times=self.simulation.time_data,
-                #                                                 values=self.simulation.state_data)
-
-                # # fill sliders, plot optinos and parameter tabel with parameters in model
-                # self.simulation.fill_parameter_slider_group()
-                # self.simulation.fill_plot_option_window()
-                # self.simulation.fill_parameter_table()
+                # fill sliders, plot optinos and parameter tabel with parameters in model
+                self.simulation.fill_parameter_slider_group()
+                self.simulation.fill_plot_option_window()
+                self.simulation.fill_parameter_table()
 
                 # switch to simulation tab
                 self.tabs.setCurrentIndex(self.sim_tab_index)
+
+                # # instantiate inverse problem (after switching to simulation tab to improve user experience)
+                # if self.simulation.is_single_output_model:
+                #     self.problem = inf.SingleOutputInverseProblem(model=self.model,
+                #                                                   times=self.simulation.time_data,
+                #                                                   values=self.simulation.state_data)
+                # else:
+                #     self.problem = inf.MultiOutputInverseProblem(model=self.model,
+                #                                                  times=self.simulation.time_data,
+                #                                                  values=self.simulation.state_data)
             except ValueError:
                 # generate error message
                 error_message = 'The .csv file does not seem to be properly formatted. Please check again!'
