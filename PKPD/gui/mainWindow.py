@@ -167,17 +167,59 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 # switch to simulation tab
                 self.tabs.setCurrentIndex(self.sim_tab_index)
 
-                # TODO: create container for problems, and see how Rebecca set up the oprimisation
-                
-                # # instantiate inverse problem (after switching to simulation tab to improve user experience)
-                # if self.simulation.is_single_output_model:
-                #     self.problem = inf.SingleOutputInverseProblem(model=self.model,
-                #                                                   times=self.simulation.time_data,
-                #                                                   values=self.simulation.state_data)
-                # else:
-                #     self.problem = inf.MultiOutputInverseProblem(model=self.model,
-                #                                                  times=self.simulation.time_data,
-                #                                                  values=self.simulation.state_data)
+                # filter data from time points with no information
+                self.simulation.filter_data()
+
+                # instantiate inverse problem (after switching to simulation tab to improve user experience)
+                if self.simulation.is_single_output_model:
+                    # if no patient IDs exist, initiate a single inverse problem
+                    if self.simulation.patient_ids is None:
+                        # create inverse problem
+                        self.problem = [inf.SingleOutputInverseProblem(model=self.model,
+                                                                       times=self.simulation.time_data,
+                                                                       values=self.simulation.state_data
+                                                                       )
+                        ]
+
+                    # if patient data exists, initiate patient-specific inverse problems
+                    else:
+                        self.problem = []
+                        for patient_id in self.simulation.patient_ids:
+                            # create mask for patient-specific data
+                            mask = self.simulation.patient_ids_mask == patient_id
+
+                            # create inverse problems
+                            self.problem.append(inf.SingleOutputInverseProblem(model=self.model,
+                                                                               times=self.simulation.time_data[mask],
+                                                                               values=self.simulation.state_data[mask]
+                                                                               )
+                            )
+
+                # if multi-output problem
+                else:
+                    # if no patient IDs exist, initiate a single inverse problem
+                    if self.simulation.patient_ids is None:
+                        # create inverse problem
+                        self.problem = [inf.MultiOutputInverseProblem(model=self.model,
+                                                                      times=self.simulation.time_data,
+                                                                      values=self.simulation.state_data
+                                                                      )
+                        ]
+                        
+                    # if patient data exists, initiate patient-specific inverse problems
+                    else:
+                        self.problem = []
+                        for patient_id in self.simulation.patient_ids:
+                            # create mask for patient-specific data
+                            mask = self.simulation.patient_ids_mask == patient_id
+
+                            # create inverse problems
+                            self.problem.append(inf.MultiOutputInverseProblem(model=self.model,
+                                                                              times=self.simulation.time_data[mask],
+                                                                              values=self.simulation.state_data[mask]
+                                                                              )
+                            )
+
             except ValueError:
                 # generate error message
                 error_message = 'The .csv file does not seem to be properly formatted. Please check again!'

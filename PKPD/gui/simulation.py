@@ -204,6 +204,37 @@ class SimulationTab(QtWidgets.QDialog):
             return patient_ID_label, time_label, state_labels, dose_label
 
 
+    def filter_data(self):
+        """Filter time and state data from rows for which the state only contains NaNs.
+        """
+        # if single output problem, remove all entries where state is NaN
+        if self.is_single_output_model:
+            # create NaN mask
+            mask =~ np.isnan(self.state_data)
+
+            # time and state data for non-NaN values
+            self.time_data = self.time_data[mask]
+            self.state_data = self.state_data[mask]
+
+            # update patient IDs mask and patient IDs
+            self.patient_ids_mask = self.patient_ids_mask[mask]
+            self.patient_ids = np.unique(self.patient_ids_mask)
+
+        # if multi output problem, remove only those rows where all state entries are NaN
+        else:
+            # create NaN mask
+            mask2d =~ np.isnan(self.state_data)
+            mask = np.all(mask2d, axis=1)
+
+            # mask patient_id_mask, time and state data for non-NaN values
+            self.time_data = self.time_data[mask]
+            self.state_data = self.state_data[mask, :]
+
+            # update patient IDs mask and patient IDs
+            self.patient_ids_mask = self.patient_ids_mask[mask]
+            self.patient_ids = np.unique(self.patient_ids_mask)
+
+
     def _init_plot_infer_model_group(self):
         """Initialises the functional sliders and buttons of the simulation tab.
 
