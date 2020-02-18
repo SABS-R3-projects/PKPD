@@ -167,6 +167,18 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 # switch to simulation tab
                 self.tabs.setCurrentIndex(self.sim_tab_index)
 
+                # get dose schedule
+                # TODO:
+                # 1. impelement this function based on non-NaN entries in dose and patient ID
+                # 2. change below problem setup, by creating model list and updating their protocol
+                #       - this may be best done by implementing helper function for protocol update (
+                #         could be used in the GUI to manually adjust protocol)
+                # 3. check whether inference works
+                # 4. extend to multi-output problem
+                # 5. write tests for added functions!!!! like filter_data etc.
+                
+                self.simulation.get_dose_schedule()
+
                 # filter data from time points with no information
                 self.simulation.filter_data()
 
@@ -175,11 +187,10 @@ class MainWindow(abstractGui.AbstractMainWindow):
                     # if no patient IDs exist, initiate a single inverse problem
                     if self.simulation.patient_ids is None:
                         # create inverse problem
-                        self.problem = [inf.SingleOutputInverseProblem(model=self.model,
-                                                                       times=self.simulation.time_data,
-                                                                       values=self.simulation.state_data
-                                                                       )
-                        ]
+                        self.problem = inf.SingleOutputInverseProblem(model=[self.model],
+                                                                      times=self.simulation.time_data,
+                                                                      values=self.simulation.state_data
+                                                                      )
 
                     # if patient data exists, initiate patient-specific inverse problems
                     else:
@@ -200,12 +211,11 @@ class MainWindow(abstractGui.AbstractMainWindow):
                     # if no patient IDs exist, initiate a single inverse problem
                     if self.simulation.patient_ids is None:
                         # create inverse problem
-                        self.problem = [inf.MultiOutputInverseProblem(model=self.model,
-                                                                      times=self.simulation.time_data,
-                                                                      values=self.simulation.state_data
-                                                                      )
-                        ]
-                        
+                        self.problem = inf.MultiOutputInverseProblem(model=self.model,
+                                                                     times=self.simulation.time_data,
+                                                                     values=self.simulation.state_data
+                                                                     )
+
                     # if patient data exists, initiate patient-specific inverse problems
                     else:
                         self.problem = []
