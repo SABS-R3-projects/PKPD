@@ -159,7 +159,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                     # set model output dimension to data dimension
                     self.model.set_output_dimension(self.simulation.data_dimension)
 
-                # fill sliders, plot optinos and parameter tabel with parameters in model
+                # fill sliders, plot options and parameter table with parameters in model
                 self.simulation.fill_parameter_slider_group()
                 self.simulation.fill_plot_option_window()
                 self.simulation.fill_parameter_table()
@@ -173,10 +173,12 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 # 2. change below problem setup, by creating model list and updating their protocol
                 #       - this may be best done by implementing helper function for protocol update (
                 #         could be used in the GUI to manually adjust protocol)
+                #       - changes in model!! Check simulation documentation.
+                #       - update dose amount as multiplier, not level
                 # 3. check whether inference works
                 # 4. extend to multi-output problem
                 # 5. write tests for added functions!!!! like filter_data etc.
-                
+
                 self.simulation.get_dose_schedule()
 
                 # filter data from time points with no information
@@ -187,9 +189,9 @@ class MainWindow(abstractGui.AbstractMainWindow):
                     # if no patient IDs exist, initiate a single inverse problem
                     if self.simulation.patient_ids is None:
                         # create inverse problem
-                        self.problem = inf.SingleOutputInverseProblem(model=[self.model],
-                                                                      times=self.simulation.time_data,
-                                                                      values=self.simulation.state_data
+                        self.problem = inf.SingleOutputInverseProblem(models=[self.model],
+                                                                      times=[self.simulation.time_data],
+                                                                      values=[self.simulation.state_data]
                                                                       )
 
                     # if patient data exists, initiate patient-specific inverse problems

@@ -25,6 +25,8 @@ class SimulationTab(QtWidgets.QDialog):
         self.enable_line_removal = False
         self.is_single_output_model = True
         self.parameter_values = None
+        self.patient_ids = None
+        self.dose_schedule = None
 
         # initialising the figure
         self.data_model_figure = Figure()
@@ -57,9 +59,9 @@ class SimulationTab(QtWidgets.QDialog):
 
         # get dose schedule, if available
         if dose_schedule_label is not None:
-            self.dose_schedule = self.main_window.home.data_df[dose_schedule_label].to_numpy()
+            self.raw_dose_schedule = self.main_window.home.data_df[dose_schedule_label].to_numpy()
         else:
-            self.dose_schedule = None
+            self.raw_dose_schedule = None
 
         # sort into time and state data
         self.time_data = self.main_window.home.data_df[time_label].to_numpy()
@@ -202,6 +204,19 @@ class SimulationTab(QtWidgets.QDialog):
             dose_label = None
 
             return patient_ID_label, time_label, state_labels, dose_label
+
+
+    def get_dose_schedule(self):
+        """Get dose schedule from data, if provided.
+        """
+        # if no dose schedule is provided, set dose schedule to None
+        if self.raw_dose_schedule is None:
+            self.dose_schedule = None
+
+        # if dose schedule is provided, extract protocols for patients
+        else:
+            sadml
+
 
 
     def filter_data(self):
