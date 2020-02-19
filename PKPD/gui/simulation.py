@@ -49,12 +49,16 @@ class SimulationTab(QtWidgets.QDialog):
         self.setLayout(layout)
 
     def add_data_to_data_model_plot(self):
-        """Adds the data from the in the home tab chosen data file to the previously initialised figure. For multi-
-        dimensional data, the figure is split into subplots. If no patient ID (with column title 'ID') is provided in
-        the data file then it will assign all data to an ID of 1. Also assumes that the final column is dosing data.
+        """Adds the data from the chosen data file selected in home tab to the previously initialised figure as a
+        scatter graph. For multi-dimensional data, the figure is split into subplots. For data from multiple
+        patients, the data is added to the same graph, with different assigned colours. If no patient ID (with
+        column title 'ID') is provided in the data file then it will assign all data to an ID of 1. Also assumes
+        that the final column is dosing data.
         """
         # load data
         data = pd.read_csv(self.main_window.data_file)
+
+        # Add patient ID if there is none
         if data.keys()[0] != 'ID':
             data.insert(0, 'ID', 1)
 
@@ -70,7 +74,8 @@ class SimulationTab(QtWidgets.QDialog):
         self.patients_data = {}
         self.patients_dose = {}
 
-        # sort and clean data into {id: (time, state data)} and {id:(time, dosing)} for each individual patient and append to patients_data
+        # sort and clean data into {id: (time, state data)} and {id:(time, dosing)} for each individual patient and
+        # append to patients_data
         states = data.copy()
         states.drop(states.loc[states[state_labels[0]] == '.'].index, inplace=True)
         states = states.groupby(id_label)
@@ -79,7 +84,6 @@ class SimulationTab(QtWidgets.QDialog):
             time_data = states.get_group(name)[time_label].to_numpy()
             state_data = states.get_group(name)[state_labels].to_numpy()
             self.patients_data[int(name)] = (time_data.astype(np.float), state_data.astype(np.float))
-
 
         dose = data.copy()
         dose.drop(dose.loc[dose[dose_label] == '.'].index, inplace=True)
@@ -90,8 +94,8 @@ class SimulationTab(QtWidgets.QDialog):
             dosing_data = dose.get_group(name)[dose_label].to_numpy()
             self.patients_dose[int(name)] = (time_data.astype(np.float), dosing_data.astype(np.float))
 
-
         self.first_patient_id = next(iter(self.patients_data))
+
         # plot data
         if self.is_single_output_model:  # single output
             # clear figure
@@ -99,9 +103,11 @@ class SimulationTab(QtWidgets.QDialog):
 
             # create plot
             self.data_model_ax = self.data_model_figure.subplots()
+
+            # iterate over each patient and add their data to the scatter plot
             for patient_id in self.patients_data:
                 label = 'patient ' + str(patient_id)
-                colour = int(len(self.colours)*(patient_id - self.first_patient_id)/len(self.patients_data))
+                colour = int(len(self.colours) * (patient_id - self.first_patient_id) / len(self.patients_data))
                 self.data_model_ax.scatter(x=self.patients_data[patient_id][0],
                                            y=self.patients_data[patient_id][1][:, 0], label=label, marker='o',
                                            color=self.colours[colour],
@@ -120,15 +126,19 @@ class SimulationTab(QtWidgets.QDialog):
 
             # create subplots for each compartment
             self.data_model_ax = self.data_model_figure.subplots(nrows=self.data_dimension, sharex=True)
+
             for dim in range(self.data_dimension):
+
+                # iterate over each patient and add their data to the scatter plot
                 for patient_id in self.patients_data:
                     print(patient_id)
                     label = 'patient ' + str(patient_id)
                     colour = int(len(self.colours) * (patient_id - self.first_patient_id) / len(self.patients_data))
                     self.data_model_ax[dim].scatter(x=self.patients_data[patient_id][0],
-                                               y=self.patients_data[patient_id][1][:, dim], label=label, marker='o',
-                                               color=self.colours[colour],
-                                               edgecolor='black', alpha=0.5)
+                                                    y=self.patients_data[patient_id][1][:, dim], label=label,
+                                                    marker='o',
+                                                    color=self.colours[colour],
+                                                    edgecolor='black', alpha=0.5)
                 self.data_model_ax[dim].set_ylabel(state_labels[dim])
                 self.data_model_ax[dim].legend()
             self.data_model_ax[-1].set_xlabel(time_label)
@@ -340,7 +350,6 @@ class SimulationTab(QtWidgets.QDialog):
 
         return hbox
 
-
     @QtCore.pyqtSlot()
     def on_infer_option_apply_click(self):
         """Reaction to left-clicking the infer option 'apply' button. Updates the inference settings
@@ -353,7 +362,6 @@ class SimulationTab(QtWidgets.QDialog):
         # close option window
         self.infer_option_window.close()
 
-
     @QtCore.pyqtSlot()
     def on_plot_option_apply_click(self):
         """Reaction to left-clicking the infer option 'apply' button. Updates the inference settings
@@ -365,7 +373,6 @@ class SimulationTab(QtWidgets.QDialog):
         # close option window
         self.plot_option_window.close()
 
-
     def _change_yaxis_scaling(self):
 
         scale = self.yaxis_dropdown_menu.currentText()
@@ -374,15 +381,13 @@ class SimulationTab(QtWidgets.QDialog):
         except:
             for elem in range(self.data_dimension):
                 self.data_model_ax[elem].set_yscale(scale)
-        self.canvas.draw() #refresh canvas
-
+        self.canvas.draw()  # refresh canvas
 
     def on_plot_option_cancel_click(self):
         """Reaction to left-clicking the infer option 'cancel' button. Closes the window.
         """
         # close option window
         self.plot_option_window.close()
-
 
     def _set_optimiser(self):
         # TODO: Nelder-Mead does not support boundaries. So should be cross-linked with tunring boundaries off.
@@ -428,7 +433,6 @@ class SimulationTab(QtWidgets.QDialog):
         # close option window
         self.infer_option_window.close()
 
-
     def _create_plot_option_window(self):
         """Creates an option window to set the plotting settings.
         """
@@ -437,7 +441,7 @@ class SimulationTab(QtWidgets.QDialog):
         self.plot_option_window.setWindowTitle('Plotting options')
 
         # define dropdown dimension
-        self.dropdown_menu_width = 190 # to match inference option window
+        self.dropdown_menu_width = 190  # to match inference option window
 
         # create plotting options
         yaxis_options = self._create_yaxis_options()
@@ -452,7 +456,6 @@ class SimulationTab(QtWidgets.QDialog):
 
         # add options to window
         self.plot_option_window.setLayout(vbox)
-
 
     def _create_yaxis_options(self):
         # create label
@@ -474,7 +477,6 @@ class SimulationTab(QtWidgets.QDialog):
 
         return hbox
 
-
     def fill_parameter_slider_group(self):
         """Fills the initialised slider group with parameter sliders (the number of sliders is determined by the
         number of parameters in the model).
@@ -483,10 +485,11 @@ class SimulationTab(QtWidgets.QDialog):
 
         # get parameter names
         state_names = self.main_window.model[self.first_patient_id].state_names
-        model_param_names = self.main_window.model[self.first_patient_id].parameter_names # parameters except initial conditions
+        model_param_names = self.main_window.model[
+            self.first_patient_id].parameter_names  # parameters except initial conditions
         print(model_param_names)
         print(state_names)
-        parameter_names = state_names + model_param_names # parameters including initial conditions
+        parameter_names = state_names + model_param_names  # parameters including initial conditions
 
         # fill up grid with slider objects
         self.slider_container = []  # store in list to be able to update later
@@ -568,7 +571,7 @@ class SimulationTab(QtWidgets.QDialog):
 
         return slider_label
 
-    def _create_min_current_max_value_label(self, slider:QtWidgets.QSlider):
+    def _create_min_current_max_value_label(self, slider: QtWidgets.QSlider):
         """Creates labels for a slider displaying the current position of the slider and the minimum and
         maximum value of the slider.
 
@@ -666,10 +669,10 @@ class SimulationTab(QtWidgets.QDialog):
             self.state_values = self.main_window.model[patient_id].simulate(
                 parameters=self.parameter_values,
                 times=self.times
-                )
+            )
 
             # plot model
-            colour = int(len(self.colours)*(patient_id - self.first_patient_id)/len(self.patients_data))
+            colour = int(len(self.colours) * (patient_id - self.first_patient_id) / len(self.patients_data))
             self.data_model_ax.plot(self.times, self.state_values, linestyle='dashed', color=self.colours[colour])
 
         # refresh canvas
@@ -691,13 +694,14 @@ class SimulationTab(QtWidgets.QDialog):
             self.state_values = self.main_window.model[patient_id].simulate(
                 parameters=self.parameter_values,
                 times=self.times
-                )
+            )
 
             # plot model
-            colour = int(len(self.colours)*(patient_id - self.first_patient_id)/len(self.patients_data))
+            colour = int(len(self.colours) * (patient_id - self.first_patient_id) / len(self.patients_data))
             print(self.state_values.shape)
             for dim in range(self.data_dimension):
-                self.data_model_ax[dim].plot(self.times, self.state_values[:, dim], linestyle='dashed', color=self.colours[colour])
+                self.data_model_ax[dim].plot(self.times, self.state_values[:, dim], linestyle='dashed',
+                                             color=self.colours[colour])
 
         # refresh canvas
         self.canvas.draw()
@@ -856,7 +860,7 @@ class SimulationTab(QtWidgets.QDialog):
             state_values = self.main_window.model[patient_id].simulate(
                 parameters=self.main_window.problem.estimated_parameters,
                 times=times
-                )
+            )
             colour = int(len(self.colours) * (patient_id - self.first_patient_id) / len(self.patients_data))
             label = None
             if patient_id == self.first_patient_id:
