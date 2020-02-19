@@ -261,6 +261,11 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _create_boundary_toggle(self):
+        """Creates a checkbox used to set boundary checks. Defaults to checked (True).
+
+        Returns:
+            hbox {QHBoxLayout} -- Layout containing checkbox.
+        """
 
         label = QtWidgets.QLabel('turn on boundary checking:')
         self.boundarytoggle = QtWidgets.QCheckBox()
@@ -401,14 +406,9 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _set_boundary_check(self):
-        """Sets boundaries_are_on to True if the checkbox is checked when apply is clicked
+        """Sets boundaries_are_on to True if the checkbox is checked when apply is clicked (False if not checked).
         """
-        if self.boundarytoggle.checkState() > 0:
-            self.boundaries_are_on = True
-            print('boundaries turned on')
-        else:
-            self.boundaries_are_on = False
-            print('boundaries turned off')
+        self.boundaries_are_on = self.boundarytoggle.isChecked()
 
 
     @QtCore.pyqtSlot()
@@ -788,17 +788,17 @@ class SimulationTab(QtWidgets.QDialog):
         # tolerance extenstion of boundaries (as values can be set to slider boundaries)
         increment = 1.0E-7
 
-        # get boundaries from sliders
-        min_values = []
-        max_values = []
-
         # if boundaries are turned off, send None to optimiser
         if self.boundaries_are_on is False:
             self.main_window.problem.set_parameter_boundaries(None)
             self.correct_initial_values = True
 
         # if boundaries are turned on, get from sliders
-        else:
+        elif self.boundaries_are_on is True:
+            # get boundaries from sliders
+            min_values = []
+            max_values = []
+
             for param_id, slider in enumerate(self.slider_container):
                 minimum = slider.minimum() - increment # extend boundaries for stability
                 maximum = slider.maximum() + increment
