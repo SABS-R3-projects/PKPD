@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 
@@ -7,7 +8,9 @@ class PandasModel(QtCore.QAbstractTableModel):
     """
     def __init__(self, data:pd.DataFrame, is_id_present:bool, is_dosing_present:bool):
         QtCore.QAbstractTableModel.__init__(self)
-        self._data = data
+        # replace NaN values in data by '.' to make it more familiar to users
+        self._data = data.replace(np.nan, '.')
+
         self._is_id_present = is_id_present
         self._is_dosing_present = is_dosing_present
 
