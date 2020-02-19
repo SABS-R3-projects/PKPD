@@ -28,7 +28,7 @@ class SimulationTab(QtWidgets.QDialog):
         self.parameter_values = None
         self.patients_data = None
         self.patients_dose = None
-        self.state_dimension = 0
+        self.data_dimension = 0
         self.first_patient_id = None
 
         # 30 colours from https://medialab.github.io/iwanthue/
@@ -118,9 +118,10 @@ class SimulationTab(QtWidgets.QDialog):
             self.data_model_figure.clf()
 
             # create subplots for each compartment
-            self.data_model_ax = self.data_model_figure.subplots(nrows=self.state_dimension, sharex=True)
+            self.data_model_ax = self.data_model_figure.subplots(nrows=self.data_dimension, sharex=True)
             for dim in range(self.data_dimension):
                 for patient_id in self.patients_data:
+                    print(patient_id)
                     label = 'patient ' + str(patient_id)
                     colour = int(len(self.colours) * (patient_id - self.first_patient_id) / len(self.patients_data))
                     self.data_model_ax[dim].scatter(x=self.patients_data[patient_id][0],
