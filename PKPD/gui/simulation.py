@@ -40,21 +40,20 @@ class SimulationTab(QtWidgets.QDialog):
         """Adds the data from the in the home tab chosen data file to the previously initialised figure. For multi-
         dimensional data, the figure is split into subplots.
         """
-        # load data
-        data = pd.read_csv(self.main_window.data_file)
-        time_label, state_labels = data.keys()[0], data.keys()[1:]
+        # get data labels
+        patient_id_label, time_label, state_labels, dose_schedule_label = self._get_data_labels()
 
         # check dimensionality of problem for plotting and inference
         self.data_dimension = len(state_labels)
         self.is_single_output_model = self.data_dimension == 1
 
         # sort into time and state data
-        self.time_data = data[time_label].to_numpy()
+        self.time_data = self.main_window.home.data_df[time_label].to_numpy()
         if self.is_single_output_model:
             state_label = state_labels[0]
-            self.state_data = data[state_label].to_numpy()
+            self.state_data = self.main_window.home.data_df[state_label].to_numpy()
         else:
-            self.state_data = data[state_labels].to_numpy()
+            self.state_data = self.main_window.home.data_df[state_labels].to_numpy()
 
         # plot data
         if self.is_single_output_model: # single output
@@ -86,6 +85,48 @@ class SimulationTab(QtWidgets.QDialog):
 
             # refresh canvas
             self.canvas.draw()
+
+
+    def _get_data_labels(self):
+        """Returns the labels associated to the patient IDs, the time data, state data and dosing schedule. For non-existent labels
+        `None` is returned.
+        """
+        # get labels in data frame
+        labels = self.main_window.home.data_df.keys()
+
+        # check whether patient IDs and/or doses are provided
+        are_patient_IDs_provided = self.main_window.home.patient_id_check_box.isChecked()
+        is_dosing_schedule_provided = self.main_window.home.dose_schedule_check_box.isChecked()
+
+        # return labels according to data structure
+        if are_patient_IDs_provided and is_dosing_schedule_provided:
+            patient_ID_label = labels[0]
+            time_label = labels[1]
+            state_labels = labels[2:-1]
+            dose_label = labels[-1]
+
+            return patient_ID_label, time_label, state_labels, dose_label
+        elif are_patient_IDs_provided and not is_dosing_schedule_provided:
+            patient_ID_label = labels[0]
+            time_label = labels[1]
+            state_labels = labels[2:]
+            dose_label = None
+
+            return patient_ID_label, time_label, state_labels, dose_label
+        elif not are_patient_IDs_provided and is_dosing_schedule_provided:
+            patient_ID_label = None
+            time_label = labels[0]
+            state_labels = labels[1:-1]
+            dose_label = labels[-1]
+
+            return patient_ID_label, time_label, state_labels, dose_label
+        else:
+            patient_ID_label = None
+            time_label = labels[0]
+            state_labels = labels[1:]
+            dose_label = None
+
+            return patient_ID_label, time_label, state_labels, dose_label
 
 
     def _init_plot_infer_model_group(self):
@@ -150,7 +191,7 @@ class SimulationTab(QtWidgets.QDialog):
         # initialise option window
         self._create_plot_option_window()
 
-        # arange button horizontally
+        # arrange button horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(plot_button)
         hbox.addWidget(option_button)
@@ -170,7 +211,7 @@ class SimulationTab(QtWidgets.QDialog):
         # create option window
         self._create_infer_option_window()
 
-        # arange button horizontally
+        # arrange button horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(infer_button)
         hbox.addWidget(option_button)
@@ -195,7 +236,7 @@ class SimulationTab(QtWidgets.QDialog):
         # create apply / cancel buttons
         apply_cancel_buttons = self._create_apply_cancel_buttons()
 
-        # arange options vertically
+        # arrange options vertically
         vbox = QtWidgets.QVBoxLayout()
         vbox.addLayout(optimiser_options)
         vbox.addLayout(objective_function_options)
@@ -223,7 +264,7 @@ class SimulationTab(QtWidgets.QDialog):
         for optimiser in valid_optimisers:
             self.optimiser_dropdown_menu.addItem(optimiser)
 
-        # arange label and dropdown menu horizontally
+        # arrange label and dropdown menu horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(label)
         hbox.addWidget(self.optimiser_dropdown_menu)
@@ -249,7 +290,7 @@ class SimulationTab(QtWidgets.QDialog):
         for error_measure in valid_error_measures:
             self.error_measure_dropdown_menu.addItem(error_measure)
 
-        # arange label and dropdown menu horizontally
+        # arrange label and dropdown menu horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(label)
         hbox.addWidget(self.error_measure_dropdown_menu)
@@ -270,7 +311,7 @@ class SimulationTab(QtWidgets.QDialog):
         cancel_button = QtWidgets.QPushButton('cancel')
         cancel_button.clicked.connect(self.on_infer_option_cancel_button_click)
 
-        # arange buttons horizontally
+        # arrange buttons horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addStretch(1)
         hbox.addWidget(apply_button)
