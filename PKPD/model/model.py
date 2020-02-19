@@ -116,7 +116,7 @@ class SingleOutputModel(AbstractModel):
         self.simulation.reset()
         self._set_parameters(parameters)
 
-        # duration is the last time point plus an increment to iclude the last time step.
+        # duration is the last time point plus an increment to include the last time step.
         result = self.simulation.run(duration=times[-1]+1, log=[self.output_name], log_times = times)
 
         return result[self.output_name]
@@ -275,7 +275,7 @@ class MultiOutputModel(AbstractModel):
             self.output_names = default_output_names[:self.output_dimension]
         elif self.state_dimension >= self.output_dimension:
             self.output_names = self.state_names[:self.output_dimension]
-
+        print("output names", self.output_names)
 
     def set_output(self, output_names:list):
         """Set output of the model.

@@ -162,9 +162,11 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 else:
                     self.model = {}
                     for patient_id in self.simulation.patients_data:
+                        print("model creation", patient_id)
                         self.model[patient_id] = m.MultiOutputModel(self.home.model_file,
                                                                      self.simulation.patients_dose[patient_id])
                         self.model[patient_id].set_output_dimension(self.simulation.data_dimension)
+                        print(self.simulation.data_dimension)
                     self.problem = inf.MultiOutputInverseProblem(self.model, self.simulation.patients_data)
 
                 self.simulation.fill_parameter_slider_group()

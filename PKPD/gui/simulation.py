@@ -685,6 +685,8 @@ class SimulationTab(QtWidgets.QDialog):
 
         for patient_id in self.patients_data:
             # solve forward problem for current parameter set
+            print(patient_id)
+            print("model", self.main_window.model[patient_id])
             self.state_values = self.main_window.model[patient_id].simulate(
                 parameters=self.parameter_values,
                 times=self.times
@@ -692,6 +694,7 @@ class SimulationTab(QtWidgets.QDialog):
 
             # plot model
             colour = int(len(self.colours)*(patient_id - self.first_patient_id)/len(self.patients_data))
+            print(self.state_values.shape)
             for dim in range(self.data_dimension):
                 self.data_model_ax[dim].plot(self.times, self.state_values[:, dim], linestyle='dashed', color=self.colours[colour])
 
