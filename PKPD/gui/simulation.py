@@ -50,7 +50,8 @@ class SimulationTab(QtWidgets.QDialog):
 
     def add_data_to_data_model_plot(self):
         """Adds the data from the in the home tab chosen data file to the previously initialised figure. For multi-
-        dimensional data, the figure is split into subplots.
+        dimensional data, the figure is split into subplots. If no patient ID (with column title 'ID') is provided in
+        the data file then it will assign all data to an ID of 1. Also assumes that the final column is dosing data.
         """
         # load data
         data = pd.read_csv(self.main_window.data_file)
