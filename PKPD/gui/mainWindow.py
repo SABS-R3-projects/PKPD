@@ -204,11 +204,12 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
 
     def _are_files_correct(self) -> List[bool]:
-        """Checks whether model and data exist and have the correct format (.mmt and .csv, respectively).
+        """Checks whether data exist and have the correct format (.mmt and .csv, respectively).
 
         Returns:
             {List[bool]} -- Returns flags for the model and data file.
         """
+
         # data sanity check
         self.data_file = self.home.data_text.text()
         data_is_file = os.path.isfile(self.data_file)

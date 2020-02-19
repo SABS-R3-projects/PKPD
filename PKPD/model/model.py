@@ -110,7 +110,7 @@ class SingleOutputModel(AbstractModel):
         self._set_parameters(parameters)
 
         # duration is the last time point plus an increment to iclude the last time step.
-        result = self.simulation.run(duration=times[-1]+1, log=[self.output_name], log_times = times)
+        result = self.simulation.run(duration=times[-1]+1, log=[self.output_name], log_times=times)
 
         return result[self.output_name]
 
