@@ -191,7 +191,7 @@ class SimulationTab(QtWidgets.QDialog):
         # initialise option window
         self.plot_option_window = QtWidgets.QDialog()
 
-        # arange button horizontally
+        # arrange button horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(plot_button)
         hbox.addWidget(option_button)
@@ -211,7 +211,7 @@ class SimulationTab(QtWidgets.QDialog):
         # create option window
         self._create_infer_option_window()
 
-        # arange button horizontally
+        # arrange button horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(infer_button)
         hbox.addWidget(option_button)
@@ -236,7 +236,7 @@ class SimulationTab(QtWidgets.QDialog):
         # create apply / cancel buttons
         apply_cancel_buttons = self._create_apply_cancel_buttons()
 
-        # arange options vertically
+        # arrange options vertically
         vbox = QtWidgets.QVBoxLayout()
         vbox.addLayout(optimiser_options)
         vbox.addLayout(objective_function_options)
@@ -264,7 +264,7 @@ class SimulationTab(QtWidgets.QDialog):
         for optimiser in valid_optimisers:
             self.optimiser_dropdown_menu.addItem(optimiser)
 
-        # arange label and dropdown menu horizontally
+        # arrange label and dropdown menu horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(label)
         hbox.addWidget(self.optimiser_dropdown_menu)
@@ -290,7 +290,7 @@ class SimulationTab(QtWidgets.QDialog):
         for error_measure in valid_error_measures:
             self.error_measure_dropdown_menu.addItem(error_measure)
 
-        # arange label and dropdown menu horizontally
+        # arrange label and dropdown menu horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(label)
         hbox.addWidget(self.error_measure_dropdown_menu)
@@ -311,7 +311,7 @@ class SimulationTab(QtWidgets.QDialog):
         cancel_button = QtWidgets.QPushButton('cancel')
         cancel_button.clicked.connect(self.on_infer_option_cancel_button_click)
 
-        # arange buttons horizontally
+        # arrange buttons horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addStretch(1)
         hbox.addWidget(apply_button)

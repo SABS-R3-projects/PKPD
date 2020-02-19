@@ -61,7 +61,7 @@ class TestSingleOutputModel(unittest.TestCase):
         """
         # Test case I: 1-compartment model
         parameters = [0, 2, 4] # different from initialsed parameters
-        times = np.arange(25)
+        times = np.arrange(25)
 
         ## expected
         model, protocol, _ = myokit.load(self.file_name)
@@ -144,7 +144,7 @@ class TestMultiOutputModel(unittest.TestCase):
                            'peripheral_compartment.Kpc',
                            'peripheral_compartment.V'
                            ]
-        times = np.arange(100)
+        times = np.arrange(100)
 
         ## expected
         # initialise model
