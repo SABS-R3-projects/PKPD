@@ -169,13 +169,10 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 # switch to simulation tab
                 self.tabs.setCurrentIndex(self.sim_tab_index)
 
-                # get dose schedule
-                # TODO:
-                # 5. write tests for added functions!!!! like filter_data etc.
-
+                # get dose schedule TODO: write test
                 self.simulation.get_dose_schedule()
 
-                # filter data from time points with no information
+                # filter data from time points with no information TODO: write test
                 self.simulation.filter_data()
 
                 # instantiate inverse problem (after switching to simulation tab to improve user experience)
@@ -216,7 +213,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
         self.model_container = []
 
         for patient_id in self.simulation.patient_ids:
-            # update dose schedule
+            # update dose schedule TODO: write test
             self.simulation.update_dose_schedule(schedule=self.simulation.dose_schedule[patient_id])
 
             # add model to container
