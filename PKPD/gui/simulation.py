@@ -12,6 +12,9 @@ from PKPD.inference import inference as inf
 from PKPD.model import model as m
 
 class CollapsibleBox(QtWidgets.QWidget):
+    """
+    Class to provide custom collapsible menu boxes in PyQt5
+    """
     def __init__(self, title="", parent=None):
         super(CollapsibleBox, self).__init__(parent)
 
@@ -242,7 +245,7 @@ class SimulationTab(QtWidgets.QDialog):
         slider_group = QtWidgets.QGroupBox()
 
         # initialise grid to arrange sliders vertically
-        self.parameter_sliders = QtWidgets.QVBoxLayout()#QtWidgets.QGridLayout()
+        self.parameter_sliders = QtWidgets.QGridLayout() #QtWidgets.QVBoxLayout()#
 
         # add grid layout to slider group
         slider_group.setLayout(self.parameter_sliders)
@@ -635,6 +638,7 @@ class SimulationTab(QtWidgets.QDialog):
         """
         number_items_in_group = self.parameter_sliders.count()
         for item_id in range(number_items_in_group):
+            print(item_id)
             # setting an items parent to None deletes it, according to stackoverflow
             self.parameter_sliders.itemAtPosition(item_id, 0).widget().setParent(None)
 
