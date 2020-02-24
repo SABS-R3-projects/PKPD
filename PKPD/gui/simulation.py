@@ -27,7 +27,7 @@ class SimulationTab(QtWidgets.QDialog):
         self.enable_line_removal = False
         self.is_single_output_model = True
         self.parameter_values = None
-        self.patient_ids = None
+        self.patient_ids = [0]  # default: just a single patient
         self.dose_schedule = None
         self.boundaries_are_on = True
 
@@ -58,7 +58,9 @@ class SimulationTab(QtWidgets.QDialog):
             self.patient_ids_mask = self.main_window.home.data_df[patient_id_label].to_numpy()
             self.patient_ids = np.unique(self.patient_ids_mask)
         else:
-            self.patient_ids = None
+            number_rows = self.main_window.home.data_df.shape[0]
+            self.patient_ids_mask = np.zeros(number_rows)
+            self.patient_ids = [0]
 
         # get dose schedule, if available
         if dose_schedule_label is not None:
@@ -81,37 +83,21 @@ class SimulationTab(QtWidgets.QDialog):
 
             # create plot
             self.data_model_ax = self.data_model_figure.subplots()
+            for patient_id in self.patient_ids:
+                # create mask for patient specific data
+                mask = self.patient_ids_mask == patient_id
 
-            # if no patient IDs are provided, plot data all at once
-            if self.patient_ids is None:
                 # create scatter plot
-                self.data_model_ax.scatter(x=self.time_data, y=self.state_data, label='data', marker='o', color='darkgreen',
-                                        edgecolor='black', alpha=0.5)
+                self.data_model_ax.scatter(x=self.time_data[mask], y=self.state_data[mask], marker='o', edgecolor='black',
+                                            alpha=0.5)
 
                 # add x, y labels
                 self.data_model_ax.set_xlabel(time_label)
                 self.data_model_ax.set_ylabel(state_label)
 
-                # add legend
-                self.data_model_ax.legend()
-
-            # if patient IDs are provided, color patient data by ID
-            else:
-                for patient_id in self.patient_ids:
-                    # create mask for patient specific data
-                    mask = self.patient_ids_mask == patient_id
-
-                    # create scatter plot
-                    self.data_model_ax.scatter(x=self.time_data[mask], y=self.state_data[mask], marker='o', edgecolor='black',
-                                               alpha=0.5)
-
-                    # add x, y labels
-                    self.data_model_ax.set_xlabel(time_label)
-                    self.data_model_ax.set_ylabel(state_label)
-
-                # add data label to legend (hack)
-                self.data_model_ax.scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
-                self.data_model_ax.legend()
+            # add data label to legend (hack)
+            self.data_model_ax.scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
+            self.data_model_ax.legend()
 
         else: # multi output
             # clear figure
@@ -120,48 +106,27 @@ class SimulationTab(QtWidgets.QDialog):
             # create subplots for each compartment
             self.data_model_ax = self.data_model_figure.subplots(nrows=self.data_dimension, sharex=True)
 
-            # if no patient IDs are provided, plot data all at once
-            if self.patient_ids is None:
+            # create subplots for each measured compartment
+            for dim in range(self.data_dimension):
 
-                # create subplots for each measured compartment
-                for dim in range(self.data_dimension):
-                    # create scatter plot for compartment
-                    self.data_model_ax[dim].scatter(x=self.time_data, y=self.state_data[:, dim], label='data', marker='o',
-                                                    color='darkgreen', edgecolor='black', alpha=0.5)
+                # color data by patient ID
+                for patient_id in self.patient_ids:
+                    # create mask for patient specific data
+                    mask = self.patient_ids_mask == patient_id
+
+                    # create scatter plot
+                    self.data_model_ax[dim].scatter(x=self.time_data[mask], y=self.state_data[mask, dim], marker='o',
+                                                    edgecolor='black', alpha=0.5)
 
                     # add ylabel for compartment
                     self.data_model_ax[dim].set_ylabel(state_labels[dim])
 
-                    # add legend to compartment subplot
-                    self.data_model_ax[dim].legend()
+                # add legend to compartment subplot (hack)
+                self.data_model_ax[dim].scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
+                self.data_model_ax[dim].legend()
 
-                # add xlabel to the bottom of the vertically stacked subplots
-                self.data_model_ax[-1].set_xlabel(time_label)
-
-            # if patient IDs are provided, color patient data by ID
-            else:
-
-                # create subplots for each measured compartment
-                for dim in range(self.data_dimension):
-
-                    # color data by patient ID
-                    for patient_id in self.patient_ids:
-                        # create mask for patient specific data
-                        mask = self.patient_ids_mask == patient_id
-
-                        # create scatter plot
-                        self.data_model_ax[dim].scatter(x=self.time_data[mask], y=self.state_data[mask, dim], marker='o',
-                                                        edgecolor='black', alpha=0.5)
-
-                        # add ylabel for compartment
-                        self.data_model_ax[dim].set_ylabel(state_labels[dim])
-
-                    # add legend to compartment subplot (hack)
-                    self.data_model_ax[dim].scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
-                    self.data_model_ax[dim].legend()
-
-                # add xlabel to the bottom of the vertically stacked subplots
-                self.data_model_ax[-1].set_xlabel(time_label)
+            # add xlabel to the bottom of the vertically stacked subplots
+            self.data_model_ax[-1].set_xlabel(time_label)
 
         # refresh canvas
         self.canvas.draw()
@@ -212,14 +177,14 @@ class SimulationTab(QtWidgets.QDialog):
     def get_dose_schedule(self):
         """Get dose schedule from data, if provided.
         """
-        # if no dose schedule is provided, set dose schedule to None
+        # if no dose schedule is provided, set dose schedule to None for each patient
         if self.raw_dose_schedule is None:
-            self.dose_schedule = None
+            self.dose_schedule = ['place holder to shift python index to patient id'] + [None] * len(self.patient_ids)
 
         # if dose schedule is provided, extract protocols for patients
         else:
             # initialise dose container
-            self.dose_schedule = []
+            self.dose_schedule = ['place holder to shift python index to patient id']
             for patient_id in self.patient_ids:
                 # create patient mask
                 patient_mask = self.patient_ids_mask == patient_id
@@ -279,20 +244,20 @@ class SimulationTab(QtWidgets.QDialog):
         """
         # if dose schedule is None, no dosing is applied
         if schedule is None:
-            self.main_window.model.simulation.set_schedule(schedule)
+            self.main_window.model.simulation.set_protocol(schedule)
 
         # if dose schedule exist, create protocol and add dosing events to it
         else:
             # get time and dose data
             time_data, dose_data = schedule
 
-            # if duration of injection is not provided, set to 0.01 (arbitrary)
+            # if duration of injection is not provided, set to 6 (arbitrary)
             if duration is None:
                 # get number of doses
                 number_of_doses = len(dose_data)
 
-                # set duration for all of them to 0.01
-                duration = [0.01] * number_of_doses
+                # set duration for all of them to 6
+                duration = [6] * number_of_doses
 
             # create protocol object
             protocol = myokit.Protocol()

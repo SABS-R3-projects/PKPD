@@ -171,14 +171,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
                 # get dose schedule
                 # TODO:
-                # 1. impelement this function based on non-NaN entries in dose and patient ID
-                # 2. change below problem setup, by creating model list and updating their protocol
-                #       - this may be best done by implementing helper function for protocol update (
-                #         could be used in the GUI to manually adjust protocol)
-                #       - changes in model!! Check simulation documentation.
-                #       - update dose amount as multiplier, not level
-                # 3. check whether inference works
-                # 4. extend to multi-output problem
                 # 5. write tests for added functions!!!! like filter_data etc.
 
                 self.simulation.get_dose_schedule()
@@ -187,33 +179,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 self.simulation.filter_data()
 
                 # instantiate inverse problem (after switching to simulation tab to improve user experience)
-                if self.simulation.is_single_output_model:
-                    # instantiate single output problem
-                    self._instantiate_single_output_problem()
-
-                # if multi-output problem
-                else:
-                    # if no patient IDs exist, initiate a single inverse problem
-                    if self.simulation.patient_ids is None:
-                        # create inverse problem
-                        self.problem = inf.MultiOutputInverseProblem(model=self.model,
-                                                                     times=self.simulation.time_data,
-                                                                     values=self.simulation.state_data
-                                                                     )
-
-                    # if patient data exists, initiate patient-specific inverse problems
-                    else:
-                        self.problem = []
-                        for patient_id in self.simulation.patient_ids:
-                            # create mask for patient-specific data
-                            mask = self.simulation.patient_ids_mask == patient_id
-
-                            # create inverse problems
-                            self.problem.append(inf.MultiOutputInverseProblem(model=self.model,
-                                                                              times=self.simulation.time_data[mask],
-                                                                              values=self.simulation.state_data[mask]
-                                                                              )
-                            )
+                self._instantiate_inverse_problem()
 
             except ValueError:
                 # generate error message
@@ -243,70 +209,34 @@ class MainWindow(abstractGui.AbstractMainWindow):
             QtWidgets.QMessageBox.question(self, 'Files not found!', error_message, QtWidgets.QMessageBox.Yes)
 
 
-    def _instantiate_single_output_problem(self):
-        # if no patient IDs exist, initiate a single inverse problem
-        if self.simulation.patient_ids is None:
-            # get dose schedule
-            schedule = self.simulation.dose_schedule[0]
+    def _instantiate_inverse_problem(self):
+        """Instantiates inverse problem for parameter optimisation.
+        """
+        # create model container for patients
+        self.model_container = []
 
+        for patient_id in self.simulation.patient_ids:
             # update dose schedule
-            self.simulation.update_dose_schedule(schedule=schedule)
+            self.simulation.update_dose_schedule(schedule=self.simulation.dose_schedule[patient_id])
 
-            # create inverse problem
-            self.problem = inf.SingleOutputInverseProblem(models=[self.model],
-                                                          times=[self.simulation.time_data],
-                                                          values=[self.simulation.state_data]
-                                                          )
+            # add model to container
+            self.model_container.append(self.model)
 
-        # if patient data exists, initiate patient-specific inverse problems
+        # instantiate inverse problem
+        if self.simulation.is_single_output_model:
+            # instantiate single output problem
+            self.problem = inf.SingleOutputInverseProblem(models=self.model_container,
+                                                          times=self.simulation.time_data,
+                                                          values=self.simulation.state_data
+            )
+
         else:
-            self.problem = []
-            for patient_id in self.simulation.patient_ids:
-                # update dose schedule
-                self.simulation.update_dose_schedule(schedule=self.simulation.dose_schedule[patient_id])
+            # instantiate multi output problem
+            self.problem = inf.MultiOutputInverseProblem(model=self.model_container,
+                                                         times=self.simulation.time_data,
+                                                         values=self.simulation.state_data
+            )
 
-                # create mask for patient-specific data
-                mask = self.simulation.patient_ids_mask == patient_id
-
-                # create inverse problems
-                self.problem.append(inf.SingleOutputInverseProblem(models=self.model,
-                                                                   times=self.simulation.time_data[mask],
-                                                                   values=self.simulation.state_data[mask]
-                                                                   )
-                )
-
-
-    def _instantiate_multi_output_problem(self):
-        # if no patient IDs exist, initiate a single inverse problem
-        if self.simulation.patient_ids is None:
-            # get dose schedule
-            schedule = self.simulation.dose_schedule[0]
-
-            # update dose schedule
-            self.simulation.update_dose_schedule(schedule=schedule)
-
-            # create inverse problem
-            self.problem = inf.MultiOutputInverseProblem(model=self.model,
-                                                            times=self.simulation.time_data,
-                                                            values=self.simulation.state_data
-                                                            )
-
-        # if patient data exists, initiate patient-specific inverse problems
-        else:
-            self.problem = []
-            for patient_id in self.simulation.patient_ids:
-                # update dose schedule
-                self.simulation.update_dose_schedule(schedule=self.simulation.dose_schedule[patient_id])
-
-                # create mask for patient-specific data
-                mask = self.simulation.patient_ids_mask == patient_id
-
-                # create inverse problems
-                self.problem.append(inf.MultiOutputInverseProblem(model=self.model,
-                                                                    times=self.simulation.time_data[mask],
-                                                                    values=self.simulation.state_data[mask]
-                                                                    )
-                )
 
 
 if __name__ == '__main__':
