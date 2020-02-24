@@ -694,8 +694,6 @@ class SimulationTab(QtWidgets.QDialog):
         # get parameter names
         state_names = self.main_window.model.state_names
         model_param_names = self.main_window.model.parameter_names # parameters except initial conditions
-        print(model_param_names)
-        print(state_names)
         parameter_names = state_names + model_param_names # parameters including initial conditions
 
         # fill up grid with slider objects
