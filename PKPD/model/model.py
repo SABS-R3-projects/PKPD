@@ -30,6 +30,7 @@ class SingleOutputModel(AbstractModel):
 
         # instantiate the simulation
         self.simulation = myokit.Simulation(model, protocol)
+        self.model = model
 
 
     def _get_default_output_name(self, model:myokit.Model):
@@ -109,7 +110,7 @@ class SingleOutputModel(AbstractModel):
         self._set_parameters(parameters)
 
         # duration is the last time point plus an increment to iclude the last time step.
-        result = self.simulation.run(duration=times[-1]+1, log=[self.output_name], log_times = times)
+        result = self.simulation.run(duration=times[-1]+1, log=[self.output_name], log_times=times)
 
         return result[self.output_name]
 
@@ -149,7 +150,7 @@ class MultiOutputModel(AbstractModel):
 
         # instantiate the simulation
         self.simulation = myokit.Simulation(model, protocol)
-
+        self.model = model
 
     def _get_parameter_names(self, model:myokit.Model):
         """Gets parameter names of the ODE model, i.e. initial conditions are excluded.
@@ -271,3 +272,25 @@ class MultiOutputModel(AbstractModel):
         """
         self.output_dimension = len(output_names)
         self.output_names = output_names
+
+def set_unit_format():
+    """
+    Set nicer display format for some commonly used units
+    """
+
+    # Common Unit Dictionary
+    common_units = {
+        'mL/h': myokit.units.L * 1e-3 / myokit.units.h,
+        'mL': myokit.units.L * 1e-3,
+        'ng': myokit.units.g * 1e-9,
+        'ng/mL': myokit.units.g * 1e-9 / (myokit.units.L * 1e-3),
+        'h': myokit.units.h,
+        'ng/h': myokit.units.g * 1e-9 / myokit.units.h,
+        '1/h' : 1/myokit.units.h
+    }
+
+    # Set Preferred Representation in Myokit
+    for name, unit in common_units.items():
+        myokit.Unit.register_preferred_representation(name, unit)
+
+set_unit_format()

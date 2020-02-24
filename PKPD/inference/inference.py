@@ -125,8 +125,12 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         Arguments:
             boundaries {List} -- List of two lists. [min values, max values]
         """
-        min_values, max_values = boundaries[0], boundaries[1]
-        self.parameter_boundaries = pints.RectangularBoundaries(min_values, max_values)
+        print('boundaries are ' + str(boundaries))
+        if boundaries is None:
+            self.parameter_boundaries = None
+        else:
+            min_values, max_values = boundaries[0], boundaries[1]
+            self.parameter_boundaries = pints.RectangularBoundaries(min_values, max_values)
 
 
 class MultiOutputInverseProblem(AbstractInverseProblem):

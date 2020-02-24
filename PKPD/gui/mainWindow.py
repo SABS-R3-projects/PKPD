@@ -1,5 +1,6 @@
 import os
 import sys
+import myokit
 from typing import List
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -32,7 +33,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
         self._format_images()
 
         # fill the empty window with content
-        self._arange_window_content()
+        self._arrange_window_content()
 
 
     def _set_window_size(self):
@@ -85,7 +86,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
         self.rescaled_rc = red_cross.scaledToHeight(self.desktop_height * 0.03)
 
 
-    def _arange_window_content(self):
+    def _arrange_window_content(self):
         """Defines the layout of the main window.
         """
         self.setWindowTitle(self.window_title)
@@ -130,6 +131,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
         """Creates SABS R3 logo in the status bar.
 
         Returns:
+            {QLabel} -- Returns SABS R3 logo.
             {QLabel} -- Returns SABS R3 logo.
         """
         label = QtWidgets.QLabel(self)
@@ -217,6 +219,14 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 # generate error message
                 error_message = 'The .csv file does not seem to be properly formatted. Please check again!'
                 QtWidgets.QMessageBox.question(self, 'Data structure not compatible!', error_message, QtWidgets.QMessageBox.Yes)
+
+            # Check Units in MMT file
+            try:
+                self.model.model.check_units(mode=myokit.UNIT_STRICT)
+            except Exception as e: # Display Warning if Inconsistent
+                warning_message = 'Warning: Units may be inconsistent'
+                QtWidgets.QMessageBox.question(self, warning_message, str(e),
+                                               QtWidgets.QMessageBox.Yes)
         else:
             # update file dialog icons
             if not self.home.is_model_file_valid:

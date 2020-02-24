@@ -105,7 +105,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # create select, cancel, file button group
         button_group = self._create_model_button_group()
 
-        # arange window content vertically
+        # arrange window content vertically
         vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(model_library_group)
         vbox.addLayout(button_group)
@@ -132,7 +132,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # create trasition rate options
         transition_rate_options = self._create_transition_rate_options()
 
-        # arange vertically
+        # arrange vertically
         vbox = QtWidgets.QVBoxLayout()
         vbox.addLayout(compartment_options)
         vbox.addLayout(dose_options)
@@ -161,7 +161,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         for number in valid_numbers:
             self.compartment_dropdown_menu.addItem(number)
 
-        # arange label and dropdown menu horizontally
+        # arrange label and dropdown menu horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(label)
         hbox.addWidget(self.compartment_dropdown_menu)
@@ -187,7 +187,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         for dose_type in valid_types:
             self.dose_type_dropdown_menu.addItem(dose_type)
 
-        # arange label and dropdown menu horizontally
+        # arrange label and dropdown menu horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(label)
         hbox.addWidget(self.dose_type_dropdown_menu)
@@ -213,7 +213,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         for transition_rate in valid_rates:
             self.transition_rate_dropdown_menu.addItem(transition_rate)
 
-        # arange label and dropdown menu horizontally
+        # arrange label and dropdown menu horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(label)
         hbox.addWidget(self.transition_rate_dropdown_menu)
@@ -241,7 +241,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         file_button = QtWidgets.QPushButton('select from file')
         file_button.clicked.connect(self.on_model_file_click)
 
-        # arange buttons horizontally
+        # arrange buttons horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(select_button)
         hbox.addWidget(cancel_button)
@@ -331,7 +331,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # create file check mark
         self.data_check_mark = self._create_file_check_mark()
 
-        # arange button and text horizontally
+        # arrange button and text horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(button)
         hbox.addWidget(self.data_path_text_field)
@@ -364,7 +364,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         height = 0.3 * self.main_window.height
         scroll.setFixedHeight(height)
 
-        # arange display window horizontally
+        # arrange display window horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(scroll)
 
@@ -395,7 +395,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # disable checking, as long as no data has been selected
         self.dose_schedule_check_box.setEnabled(False)
 
-        # arange check boxes horizontally
+        # arrange check boxes horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(self.patient_id_check_box)
         hbox.addWidget(self.dose_schedule_check_box)
