@@ -59,8 +59,8 @@ class SimulationTab(QtWidgets.QDialog):
             self.patient_ids = np.unique(self.patient_ids_mask)
         else:
             number_rows = self.main_window.home.data_df.shape[0]
-            self.patient_ids_mask = np.zeros(number_rows)
-            self.patient_ids = [0]
+            self.patient_ids_mask = np.ones(number_rows, dtype=int)
+            self.patient_ids = [1]
 
         # get dose schedule, if available
         if dose_schedule_label is not None:
