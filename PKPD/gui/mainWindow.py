@@ -73,9 +73,9 @@ class MainWindow(abstractGui.AbstractMainWindow):
     def _format_images(self):
         """Scales images and logos according to the desktop size.
         """
-        # SABS R3 logo in status bar
-        sabs_logo = QtGui.QPixmap('images/SABSR3.png')
-        self.rescaled_sabs = sabs_logo.scaledToHeight(self.desktop_height * 0.02)
+        # Our logo in status bar
+        pkpd_logo = QtGui.QPixmap('images/LOGO_Full.png')
+        self.rescaled_logo = pkpd_logo.scaledToHeight(self.desktop_height * 0.02)
 
         # symbols for success/failure of file selection
         question_mark = QtGui.QPixmap('images/QUESTION.png')
@@ -120,22 +120,21 @@ class MainWindow(abstractGui.AbstractMainWindow):
             {QStatusBar} -- A StatusbarWidget with the version number and the producers.
         """
         status_bar = QtWidgets.QStatusBar()
-        status_bar.addWidget(self._create_SABS_logo())
+        status_bar.addWidget(self._create_PKPD_logo())
         status_bar.addWidget(self.producers)
         status_bar.addWidget(self.version_number)
 
         return status_bar
 
 
-    def _create_SABS_logo(self):
-        """Creates SABS R3 logo in the status bar.
+    def _create_PKPD_logo(self):
+        """Creates our logo in the status bar.
 
         Returns:
-            {QLabel} -- Returns SABS R3 logo.
-            {QLabel} -- Returns SABS R3 logo.
+            {QLabel} -- Returns our logo.
         """
         label = QtWidgets.QLabel(self)
-        label.setPixmap(self.rescaled_sabs)
+        label.setPixmap(self.rescaled_logo)
 
         return label
 
