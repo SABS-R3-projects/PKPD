@@ -638,12 +638,16 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _clear_slider_group(self):
+        # TODO Why does this only work once?
         """Clears the slider group from pre-existing sliders.
         """
         number_items_in_group = self.parameter_sliders.count()
+        print(self.parameter_sliders.count())
         for item_id in range(number_items_in_group):
             print(item_id)
             # setting an items parent to None deletes it, according to stackoverflow
+            print(type(self.parameter_sliders))
+            print(type(self.parameter_sliders.itemAtPosition(item_id,0)))
             self.parameter_sliders.itemAtPosition(item_id, 0).widget().setParent(None)
 
 
