@@ -11,6 +11,85 @@ from PKPD.gui.utils import slider as sl
 from PKPD.inference import inference as inf
 from PKPD.model import model as m
 
+class CollapsibleBox(QtWidgets.QWidget):
+    def __init__(self, title="", parent=None):
+        super(CollapsibleBox, self).__init__(parent)
+
+        self.toggle_button = QtWidgets.QToolButton(
+            text=title, checkable=True, checked=False
+        )
+        self.toggle_button.setStyleSheet("QToolButton { border: none; }")
+        self.toggle_button.setToolButtonStyle(
+            QtCore.Qt.ToolButtonTextBesideIcon
+        )
+        self.toggle_button.setArrowType(QtCore.Qt.RightArrow)
+        self.toggle_button.pressed.connect(self.on_pressed)
+
+        self.toggle_animation = QtCore.QParallelAnimationGroup(self)
+
+        self.content_area = QtWidgets.QScrollArea(
+            maximumHeight=0, minimumHeight=0
+        )
+        self.content_area.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+        )
+        self.content_area.setFrameShape(QtWidgets.QFrame.NoFrame)
+
+        lay = QtWidgets.QVBoxLayout(self)
+        lay.setSpacing(0)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.addWidget(self.toggle_button)
+        lay.addWidget(self.content_area)
+
+        self.toggle_animation.addAnimation(
+            QtCore.QPropertyAnimation(self, b"minimumHeight")
+        )
+        self.toggle_animation.addAnimation(
+            QtCore.QPropertyAnimation(self, b"maximumHeight")
+        )
+        self.toggle_animation.addAnimation(
+            QtCore.QPropertyAnimation(self.content_area, b"maximumHeight")
+        )
+
+        self.manual_state = False
+
+    @QtCore.pyqtSlot()
+    def on_pressed(self):
+        checked = self.manual_state
+        #print('Initial State: ', checked)
+        self.toggle_button.setArrowType(
+            QtCore.Qt.DownArrow if not checked else QtCore.Qt.RightArrow
+        )
+        #print('After Setting Arrow Type', self.toggle_button.isChecked())
+        self.toggle_animation.setDirection(QtCore.QAbstractAnimation.Forward if not checked else QtCore.QAbstractAnimation.Backward)
+        self.toggle_animation.start()
+        #print('After Animation: ', self.toggle_button.isChecked())
+
+        #self.toggle_button.toggle()
+        self.manual_state = not checked
+
+    def setContentLayout(self, layout):
+        duration = 10
+        self.content_area.setLayout(layout)
+        collapsed_height = (
+            self.sizeHint().height() - self.content_area.maximumHeight()
+        )
+        content_height = layout.sizeHint().height()
+        for i in range(self.toggle_animation.animationCount()):
+            animation = self.toggle_animation.animationAt(i)
+            animation.setDuration(duration)
+            animation.setStartValue(collapsed_height)
+            animation.setEndValue(collapsed_height + content_height)
+
+        content_animation = self.toggle_animation.animationAt(
+            self.toggle_animation.animationCount() - 1
+        )
+        content_animation.setDuration(duration)
+        content_animation.setStartValue(0)
+        content_animation.setEndValue(content_height)
+
+
+
 
 class SimulationTab(QtWidgets.QDialog):
     """Simulation tab class that is responsible for plotting the data and the model, as well as providing
@@ -163,7 +242,7 @@ class SimulationTab(QtWidgets.QDialog):
         slider_group = QtWidgets.QGroupBox()
 
         # initialise grid to arrange sliders vertically
-        self.parameter_sliders = QtWidgets.QGridLayout()
+        self.parameter_sliders = QtWidgets.QVBoxLayout()#QtWidgets.QGridLayout()
 
         # add grid layout to slider group
         slider_group.setLayout(self.parameter_sliders)
@@ -176,6 +255,7 @@ class SimulationTab(QtWidgets.QDialog):
         # fix vertical space that sliders can take up
         height = 0.7 * self.main_window.height
         scroll.setFixedHeight(height)
+        #layout.setAlignment(info, Qt.AlignTop)
 
         return scroll
 
@@ -518,13 +598,32 @@ class SimulationTab(QtWidgets.QDialog):
         print(model_param_names)
         print(state_names)
         parameter_names = state_names + model_param_names # parameters including initial conditions
+        #param
 
         # fill up grid with slider objects
         self.slider_container = [] # store in list to be able to update later
         self.slider_min_max_label_container = [] # store in list to be able to update later
         self.parameter_text_field_container = [] # store in list to be able to update later
-        for param_id, param_name in enumerate(parameter_names):
-            self.parameter_sliders.addWidget(self._create_slider(param_name), param_id, 0)
+
+
+        # Get unique list of components as a set
+        collapse_boxes = set([p.split('.')[0] for p in parameter_names])
+
+        # Create box for each component:
+        for name in collapse_boxes:
+            box = CollapsibleBox("{}".format(name))
+            self.parameter_sliders.addWidget(box) #add to parameter slider section
+            lay = QtWidgets.QGridLayout()
+            # Add correct parameters to each box component
+            # But keeping original ID labelling so as not to affect inference etc.
+            for param_id, param_name in enumerate(parameter_names):
+                if param_name.split('.')[0] == name:
+                    lay.addWidget(self._create_slider(param_name), param_id, 0)
+            box.setContentLayout(lay)
+            #self.parameter_sliders.addStretch()
+            self.parameter_sliders.setAlignment(QtCore.Qt.AlignTop)
+
+
 
         # initialise container to store parameter values (for efficiency)
         number_parameters = len(self.parameter_text_field_container)
