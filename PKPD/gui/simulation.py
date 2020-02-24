@@ -601,18 +601,22 @@ class SimulationTab(QtWidgets.QDialog):
         print(model_param_names)
         print(state_names)
         parameter_names = state_names + model_param_names # parameters including initial conditions
-        #param
 
         # fill up grid with slider objects
-        self.slider_container = [] # store in list to be able to update later
-        self.slider_min_max_label_container = [] # store in list to be able to update later
-        self.parameter_text_field_container = [] # store in list to be able to update later
+        # length of parameters so can fill up in correct order later
+        self.slider_container = [None]*len(parameter_names)  # store in list to be able to update later
+        self.slider_min_max_label_container = [None]*len(parameter_names) # store in list to be able to update later
+        self.parameter_text_field_container = [None]*len(parameter_names) # store in list to be able to update later
 
 
         # Get unique list of components as a set
         collapse_boxes = set([p.split('.')[0] for p in parameter_names])
 
+        # Create list for sorting into correct order
+        sorting_list = []
+
         # Create box for each component:
+        # TODO Group parameters earlier to make this more efficient
         for name in collapse_boxes:
             box = CollapsibleBox("{}".format(name))
             self.parameter_sliders.addWidget(box) #add to parameter slider section
@@ -621,7 +625,7 @@ class SimulationTab(QtWidgets.QDialog):
             # But keeping original ID labelling so as not to affect inference etc.
             for param_id, param_name in enumerate(parameter_names):
                 if param_name.split('.')[0] == name:
-                    lay.addWidget(self._create_slider(param_name), param_id, 0)
+                    lay.addWidget(self._create_slider(param_name, param_id), param_id, 0)
             box.setContentLayout(lay)
             #self.parameter_sliders.addStretch()
             self.parameter_sliders.setAlignment(QtCore.Qt.AlignTop)
@@ -643,11 +647,12 @@ class SimulationTab(QtWidgets.QDialog):
             self.parameter_sliders.itemAtPosition(item_id, 0).widget().setParent(None)
 
 
-    def _create_slider(self, parameter_name: str):
+    def _create_slider(self, parameter_name: str, parameter_id : int):
         """Creates slider group. Includes parameter label, value slider, value text field and labels for slider boundaries.
 
         Arguments:
             parameter_name {str} -- Parameter name for which the slider is created.
+            parameter_id {int} -- Order in which slider appears in list to match parameter values
         
         Returns:
             slider_box {QGroupBox} -- Returns a widget containing labels, a value slider and a value text field for the parameter.
@@ -663,10 +668,10 @@ class SimulationTab(QtWidgets.QDialog):
         slider.setTickPosition(sl.DoubleSlider.TicksBothSides)
 
         # keep track of sliders
-        self.slider_container.append(slider)
+        self.slider_container[parameter_id] = slider
 
         # create labels
-        min_current_max_value = self._create_min_current_max_value_label(slider)
+        min_current_max_value = self._create_min_current_max_value_label(slider, parameter_id)
         slider.valueChanged[int].connect(self._update_parameter_values)
 
         # arrange slider and labels
@@ -704,12 +709,13 @@ class SimulationTab(QtWidgets.QDialog):
 
         return slider_label
 
-    def _create_min_current_max_value_label(self, slider:QtWidgets.QSlider):
+    def _create_min_current_max_value_label(self, slider:QtWidgets.QSlider, parameter_id: int):
         """Creates labels for a slider displaying the current position of the slider and the minimum and
         maximum value of the slider.
 
         Arguments:
             slider {QtWidgets.QSlider} -- Parameter slider.
+            parameter_id {int} -- Order in which slider appears in list to match parameter values
         
         Returns:
             hbox {QHBoxLayout} -- Returns a layout arranging the slider labels.
@@ -720,8 +726,8 @@ class SimulationTab(QtWidgets.QDialog):
         max_value = QtWidgets.QLabel('%.1f' % slider.maximum())
 
         # keep track of parameter values and min/max labels
-        self.parameter_text_field_container.append(text_field)
-        self.slider_min_max_label_container.append([min_value, max_value])
+        self.parameter_text_field_container[parameter_id] = text_field
+        self.slider_min_max_label_container[parameter_id] = [min_value, max_value]
 
         # arrange widgets horizontally
         hbox = QtWidgets.QHBoxLayout()
