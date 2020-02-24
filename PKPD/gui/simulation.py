@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 import myokit
 import pandas as pd
@@ -215,8 +217,29 @@ class SimulationTab(QtWidgets.QDialog):
 
         # if dose schedule is provided, extract protocols for patients
         else:
-            sadml
+            # initialise dose container
+            self.dose_schedule = []
+            for patient_id in self.patient_ids:
+                # create patient mask
+                patient_mask = self.patient_ids_mask == patient_id
 
+                # get dose data
+                raw_time_data = self.time_data[patient_mask]
+                raw_dose_data = self.raw_dose_schedule[patient_mask]
+
+                # crate NaN mask
+                nan_mask =~ np.isnan(raw_dose_data)
+
+                # filter nans
+                time_data, dose_data = raw_time_data[nan_mask], raw_dose_data[nan_mask]
+
+                # save extracted schedule in container
+                if not dose_data:
+                    # if dose data is empty, fill cotainer with None
+                    self.dose_schedule.append(None)
+                else:
+                    # if dose data not empty, fill container with data
+                    self.dose_schedule.append([time_data, dose_data])
 
 
     def filter_data(self):
@@ -248,6 +271,41 @@ class SimulationTab(QtWidgets.QDialog):
             # update patient IDs mask and patient IDs
             self.patient_ids_mask = self.patient_ids_mask[mask]
             self.patient_ids = np.unique(self.patient_ids_mask)
+
+
+    def update_dose_schedule(self, schedule, duration=None):
+        """Update dose schedule of model.
+        """
+        # if dose schedule is None, no dosing is applied
+        if schedule is None:
+            self.main_window.model.simulation.set_schedule(schedule)
+
+        # if dose schedule exist, create protocol and add dosing events to it
+        else:
+            # get time and dose data
+            time_data, dose_data = schedule
+
+            # if duration of injection is not provided, set to 0.01 (arbitrary)
+            if duration is None:
+                # get number of doses
+                number_of_doses = len(dose_data)
+
+                # set duration for all of them to 0.01
+                duration = [0.01] * number_of_doses
+
+            # create protocol object
+            protocol = myokit.Protocol()
+
+            # add dose events to protocol
+            for dose_id, dose_amount in enumerate(dose_data):
+                # compute dosing level
+                level = dose_amount / duration[dose_id]
+
+                # schedule dosing event
+                protocol.schedule(level=level, start=time_data[dose_id], duration=duration[dose_id])
+
+            # update dose schedule
+            self.main_window.model.simulation.set_protocol(protocol)
 
 
     def _init_plot_infer_model_group(self):

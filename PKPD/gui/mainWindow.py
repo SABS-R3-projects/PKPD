@@ -186,27 +186,8 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
                 # instantiate inverse problem (after switching to simulation tab to improve user experience)
                 if self.simulation.is_single_output_model:
-                    # if no patient IDs exist, initiate a single inverse problem
-                    if self.simulation.patient_ids is None:
-                        # create inverse problem
-                        self.problem = inf.SingleOutputInverseProblem(models=[self.model],
-                                                                      times=[self.simulation.time_data],
-                                                                      values=[self.simulation.state_data]
-                                                                      )
-
-                    # if patient data exists, initiate patient-specific inverse problems
-                    else:
-                        self.problem = []
-                        for patient_id in self.simulation.patient_ids:
-                            # create mask for patient-specific data
-                            mask = self.simulation.patient_ids_mask == patient_id
-
-                            # create inverse problems
-                            self.problem.append(inf.SingleOutputInverseProblem(model=self.model,
-                                                                               times=self.simulation.time_data[mask],
-                                                                               values=self.simulation.state_data[mask]
-                                                                               )
-                            )
+                    # instantiate single output problem
+                    self._instantiate_single_output_problem()
 
                 # if multi-output problem
                 else:
@@ -252,19 +233,70 @@ class MainWindow(abstractGui.AbstractMainWindow):
             QtWidgets.QMessageBox.question(self, 'Files not found!', error_message, QtWidgets.QMessageBox.Yes)
 
 
-    def _are_files_correct(self) -> List[bool]:
-        """Checks whether model and data exist and have the correct format (.mmt and .csv, respectively).
+    def _instantiate_single_output_problem(self):
+        # if no patient IDs exist, initiate a single inverse problem
+        if self.simulation.patient_ids is None:
+            # get dose schedule
+            schedule = self.simulation.dose_schedule[0]
 
-        Returns:
-            {List[bool]} -- Returns flags for the model and data file.
-        """
-        # data sanity check
-        self.data_file = self.home.data_text.text()
-        data_is_file = os.path.isfile(self.data_file)
-        data_correct_format = self.data_file.split('.')[-1] == 'csv'
-        correct_data = data_is_file and data_correct_format
+            # update dose schedule
+            self.simulation.update_dose_schedule(schedule=schedule)
 
-        return correct_data
+            # create inverse problem
+            self.problem = inf.SingleOutputInverseProblem(models=[self.model],
+                                                          times=[self.simulation.time_data],
+                                                          values=[self.simulation.state_data]
+                                                          )
+
+        # if patient data exists, initiate patient-specific inverse problems
+        else:
+            self.problem = []
+            for patient_id in self.simulation.patient_ids:
+                # update dose schedule
+                self.simulation.update_dose_schedule(schedule=self.simulation.dose_schedule[patient_id])
+
+                # create mask for patient-specific data
+                mask = self.simulation.patient_ids_mask == patient_id
+
+                # create inverse problems
+                self.problem.append(inf.SingleOutputInverseProblem(models=self.model,
+                                                                   times=self.simulation.time_data[mask],
+                                                                   values=self.simulation.state_data[mask]
+                                                                   )
+                )
+
+
+    def _instantiate_multi_output_problem(self):
+        # if no patient IDs exist, initiate a single inverse problem
+        if self.simulation.patient_ids is None:
+            # get dose schedule
+            schedule = self.simulation.dose_schedule[0]
+
+            # update dose schedule
+            self.simulation.update_dose_schedule(schedule=schedule)
+
+            # create inverse problem
+            self.problem = inf.MultiOutputInverseProblem(model=self.model,
+                                                            times=self.simulation.time_data,
+                                                            values=self.simulation.state_data
+                                                            )
+
+        # if patient data exists, initiate patient-specific inverse problems
+        else:
+            self.problem = []
+            for patient_id in self.simulation.patient_ids:
+                # update dose schedule
+                self.simulation.update_dose_schedule(schedule=self.simulation.dose_schedule[patient_id])
+
+                # create mask for patient-specific data
+                mask = self.simulation.patient_ids_mask == patient_id
+
+                # create inverse problems
+                self.problem.append(inf.MultiOutputInverseProblem(model=self.model,
+                                                                    times=self.simulation.time_data[mask],
+                                                                    values=self.simulation.state_data[mask]
+                                                                    )
+                )
 
 
 if __name__ == '__main__':
