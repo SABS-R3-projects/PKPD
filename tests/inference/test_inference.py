@@ -27,16 +27,16 @@ class TestSingleOutputProblem(unittest.TestCase):
     def test_find_optimal_parameter(self):
         """Test whether the find_optimal_parameter method works as expected.
         """
-        problem = inference.SingleOutputInverseProblem(model=self.one_comp_model,
-                                                       times=self.times,
-                                                       values=self.data_one_comp_model
+        problem = inference.SingleOutputInverseProblem(models=[self.one_comp_model],
+                                                       times=[self.times],
+                                                       values=[self.data_one_comp_model]
                                                        )
 
         # start somewhere in parameter space (close to the solution for ease)
         initial_parameters = np.array([1, 3, 5])
 
         # solve inverse problem
-        problem.find_optimal_parameter(initial_parameter=initial_parameters)
+        problem.find_optimal_parameter(initial_parameter=initial_parameters, number_of_iterations=1)
         estimated_paramters = problem.estimated_parameters
 
         # assert aggreement of estimates with true paramters
@@ -45,28 +45,28 @@ class TestSingleOutputProblem(unittest.TestCase):
             assert true_value == pytest.approx(estimated_value, rel=0.05)
 
 
-    def test_set_objective_function(self):
-        """Test whether the set_objective_function method works as expected.
+    def test_set_error_function(self):
+        """Test whether the set_error_function method works as expected.
         """
-        problem = inference.SingleOutputInverseProblem(model=self.one_comp_model,
-                                                       times=self.times,
-                                                       values=self.data_one_comp_model
-                                                       )
+        problem = inference.SingleOutputInverseProblem(models=[self.one_comp_model],
+                                                       times=[self.times],
+                                                       values=[self.data_one_comp_model]
+        )
 
         # iterate through valid error measures
-        valid_obj_func = [pints.MeanSquaredError, pints.RootMeanSquaredError, pints.SumOfSquaresError]
-        for obj_func in valid_obj_func:
-            problem.set_objective_function(objective_function=obj_func)
+        valid_err_func = [pints.MeanSquaredError, pints.RootMeanSquaredError, pints.SumOfSquaresError]
+        for err_func in valid_err_func:
+            problem.set_error_function(error_function=err_func)
 
             # assert that error measure is set as expected
-            assert type(obj_func(problem.problem)) == type(problem.objective_function)
+            assert type(err_func(problem.problem_container[0])) == type(problem.error_function_container[0])
 
 
     def test_set_optimiser(self):
         """Test whether the set_optimiser method works as expected. The estimated values
         are not of interest but rather whether the optimiser are properly embedded.
         """
-        problem = inference.SingleOutputInverseProblem(model=self.one_comp_model,
+        problem = inference.SingleOutputInverseProblem(models=[self.one_comp_model],
                                                        times=self.times,
                                                        values=self.data_one_comp_model
                                                        )

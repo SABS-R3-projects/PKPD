@@ -24,15 +24,15 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         Return:
             None
         """
-        # initialise problem
+        # initialise problem container
         self.problem_container = []
         for model_id, model in enumerate(models):
             self.problem_container.append(pints.SingleOutputProblem(model, times[model_id], values[model_id]))
 
-        # initialise error function
+        # initialise error function container
         self.error_function_container = []
         for problem in self.problem_container:
-            self.error_function = pints.SumOfSquaresError(problem)
+            self.error_function_container.append(pints.SumOfSquaresError(problem))
 
         # initialise optimiser
         self.optimiser = pints.CMAES
@@ -65,8 +65,11 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
             # TODO: evaluate how to choose uncertainty best, to obtain most stable results
             self.initial_parameter_uncertainty = initial_parameter + 0.1 # arbitrary
 
+        # create sum of errors measure
+        error_measure = pints.SumOfErrors(self.error_function_container)
+
         # initialise optimisation
-        optimisation = pints.OptimisationController(function=self.error_function,
+        optimisation = pints.OptimisationController(function=error_measure,
                                                     x0=initial_parameter,
                                                     sigma0=self.initial_parameter_uncertainty,
                                                     boundaries=self.parameter_boundaries,
@@ -102,6 +105,7 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
 
         # update error function
         for problem_id, problem in enumerate(self.problem_container):
+            print('problem id:', problem_id)
             self.error_function_container[problem_id] = error_function(problem)
 
 
