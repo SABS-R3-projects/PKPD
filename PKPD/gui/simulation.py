@@ -986,7 +986,6 @@ class SimulationTab(QtWidgets.QDialog):
                 minimum = slider.minimum() - increment # extend boundaries for stability
                 maximum = slider.maximum() + increment
                 initial_value = initial_parameters[param_id]
-                print(minimum, initial_value, maximum)
 
                 # check whether initial value lies within boundaries
                 if (initial_value < minimum) or (initial_value > maximum):
