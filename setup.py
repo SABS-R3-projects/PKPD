@@ -1,7 +1,4 @@
-import os
-import distutils
 from setuptools import setup, find_packages, Command
-from setuptools.command.build_py import build_py
 
 # Load text for description and license
 with open('README.md') as f:
@@ -38,8 +35,9 @@ setup(
         'matplotlib>=1.5',
         'myokit>=1.29',
         'tabulate',
+        'pints @ git+git://github.com/pints-team/pints.git#egg=pints'
     ],
     dependency_links=[
-     "git+git://github.com/pints-team/pints.git#egg=pints",
+     "git+git://github.com/pints-team/pints.git#egg=pints-0.2.2",
     ]
 )
