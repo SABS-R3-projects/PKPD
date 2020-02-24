@@ -35,6 +35,7 @@ setup(
         'matplotlib>=1.5',
         'myokit>=1.29',
         'tabulate',
+        'pandas',
         'pints @ git+git://github.com/pints-team/pints.git#egg=pints'
     ],
     dependency_links=[
