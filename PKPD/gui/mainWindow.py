@@ -145,6 +145,21 @@ class MainWindow(abstractGui.AbstractMainWindow):
         """
         if self.home.is_model_file_valid and self.home.is_data_file_valid:
             try:
+                # piece dataframe into ID, time, states and dose data
+                self.simulation.extract_data_from_dataframe()
+
+                # get dose schedule TODO: write test
+                self.simulation.get_dose_schedule()
+
+                # filter data from time points with no information TODO: write test
+                self.simulation.filter_data()
+
+                # TODO: move data extraction from ploting
+                # add plot of dosing schedule
+                # add dose schedule option button
+                # list doses of patient, if available
+                # allow for adding of doses
+
                 # plot data in simulation tab
                 self.simulation.add_data_to_data_model_plot()
 
@@ -168,12 +183,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
                 # switch to simulation tab
                 self.tabs.setCurrentIndex(self.sim_tab_index)
-
-                # get dose schedule TODO: write test
-                self.simulation.get_dose_schedule()
-
-                # filter data from time points with no information TODO: write test
-                self.simulation.filter_data()
 
                 # instantiate inverse problem (after switching to simulation tab to improve user experience)
                 self._instantiate_inverse_problem()
