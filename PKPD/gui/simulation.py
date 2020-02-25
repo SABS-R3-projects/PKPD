@@ -42,15 +42,14 @@ class SimulationTab(QtWidgets.QDialog):
         self.setLayout(layout)
 
 
-    def add_data_to_data_model_plot(self):
-        """Adds the data from the in the home tab chosen data file to the previously initialised figure. For multi-
-        dimensional data, the figure is split into subplots.
+    def extract_data_from_dataframe(self):
+        """Splits dataframe into ID, time, states and dose numpy arrays.
         """
         # get data labels
-        patient_id_label, time_label, state_labels, dose_schedule_label = self._get_data_labels()
+        patient_id_label, self.time_label, self.state_labels, dose_schedule_label = self._get_data_labels()
 
         # check dimensionality of problem for plotting and inference
-        self.data_dimension = len(state_labels)
+        self.data_dimension = len(self.state_labels)
         self.is_single_output_model = self.data_dimension == 1
 
         # get patient IDs, if available
@@ -69,67 +68,12 @@ class SimulationTab(QtWidgets.QDialog):
             self.raw_dose_schedule = None
 
         # sort into time and state data
-        self.time_data = self.main_window.home.data_df[time_label].to_numpy()
+        self.time_data = self.main_window.home.data_df[self.time_label].to_numpy()
         if self.is_single_output_model:
-            state_label = state_labels[0]
+            state_label = self.state_labels[0]
             self.state_data = self.main_window.home.data_df[state_label].to_numpy()
         else:
-            self.state_data = self.main_window.home.data_df[state_labels].to_numpy()
-
-        # plot data
-        if self.is_single_output_model: # single output
-            # clear figure
-            self.data_model_figure.clf()
-
-            # create plot
-            self.data_model_ax = self.data_model_figure.subplots()
-            for patient_id in self.patient_ids:
-                # create mask for patient specific data
-                mask = self.patient_ids_mask == patient_id
-
-                # create scatter plot
-                self.data_model_ax.scatter(x=self.time_data[mask], y=self.state_data[mask], marker='o', edgecolor='black',
-                                            alpha=0.5)
-
-                # add x, y labels
-                self.data_model_ax.set_xlabel(time_label)
-                self.data_model_ax.set_ylabel(state_label)
-
-            # add data label to legend (hack)
-            self.data_model_ax.scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
-            self.data_model_ax.legend()
-
-        else: # multi output
-            # clear figure
-            self.data_model_figure.clf()
-
-            # create subplots for each compartment
-            self.data_model_ax = self.data_model_figure.subplots(nrows=self.data_dimension, sharex=True)
-
-            # create subplots for each measured compartment
-            for dim in range(self.data_dimension):
-
-                # color data by patient ID
-                for patient_id in self.patient_ids:
-                    # create mask for patient specific data
-                    mask = self.patient_ids_mask == patient_id
-
-                    # create scatter plot
-                    self.data_model_ax[dim].scatter(x=self.time_data[mask], y=self.state_data[mask, dim], marker='o',
-                                                    edgecolor='black', alpha=0.5)
-
-                    # add ylabel for compartment
-                    self.data_model_ax[dim].set_ylabel(state_labels[dim])
-
-                # add legend to compartment subplot (hack)
-                self.data_model_ax[dim].scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
-                self.data_model_ax[dim].legend()
-
-            # add xlabel to the bottom of the vertically stacked subplots
-            self.data_model_ax[-1].set_xlabel(time_label)
-
-        # refresh canvas
-        self.data_model_figure_view.draw()
+            self.state_data = self.main_window.home.data_df[self.state_labels].to_numpy()
 
 
     def _get_data_labels(self):
@@ -271,6 +215,68 @@ class SimulationTab(QtWidgets.QDialog):
 
             # update dose schedule
             self.main_window.model.simulation.set_protocol(protocol)
+
+
+    def add_data_to_data_model_plot(self):
+        """Adds the data from the in the home tab chosen data file to the previously initialised figure. For multi-
+        dimensional data, the figure is split into subplots.
+        """
+        if self.is_single_output_model: # single output
+            # clear figure
+            self.data_model_figure.clf()
+
+            # get state label
+            state_label = self.state_labels[0]
+
+            # create plot
+            self.data_model_ax = self.data_model_figure.subplots()
+            for patient_id in self.patient_ids:
+                # create mask for patient specific data
+                mask = self.patient_ids_mask == patient_id
+
+                # create scatter plot
+                self.data_model_ax.scatter(x=self.time_data[mask], y=self.state_data[mask], marker='o', edgecolor='black',
+                                            alpha=0.5)
+
+                # add x, y labels
+                self.data_model_ax.set_xlabel(self.time_label)
+                self.data_model_ax.set_ylabel(state_label)
+
+            # add data label to legend (hack)
+            self.data_model_ax.scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
+            self.data_model_ax.legend()
+
+        else: # multi output
+            # clear figure
+            self.data_model_figure.clf()
+
+            # create subplots for each compartment
+            self.data_model_ax = self.data_model_figure.subplots(nrows=self.data_dimension, sharex=True)
+
+            # create subplots for each measured compartment
+            for dim in range(self.data_dimension):
+
+                # color data by patient ID
+                for patient_id in self.patient_ids:
+                    # create mask for patient specific data
+                    mask = self.patient_ids_mask == patient_id
+
+                    # create scatter plot
+                    self.data_model_ax[dim].scatter(x=self.time_data[mask], y=self.state_data[mask, dim], marker='o',
+                                                    edgecolor='black', alpha=0.5)
+
+                    # add ylabel for compartment
+                    self.data_model_ax[dim].set_ylabel(self.state_labels[dim])
+
+                # add legend to compartment subplot (hack)
+                self.data_model_ax[dim].scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
+                self.data_model_ax[dim].legend()
+
+            # add xlabel to the bottom of the vertically stacked subplots
+            self.data_model_ax[-1].set_xlabel(self.time_label)
+
+        # refresh canvas
+        self.data_model_figure_view.draw()
 
 
     def _init_interactive_group(self):

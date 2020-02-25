@@ -145,6 +145,9 @@ class MainWindow(abstractGui.AbstractMainWindow):
         """
         if self.home.is_model_file_valid and self.home.is_data_file_valid:
             try:
+                # piece dataframe into ID, time, states and dose data
+                self.simulation.extract_data_from_dataframe()
+
                 # get dose schedule TODO: write test
                 self.simulation.get_dose_schedule()
 
