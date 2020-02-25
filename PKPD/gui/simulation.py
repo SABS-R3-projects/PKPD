@@ -684,21 +684,7 @@ class SimulationTab(QtWidgets.QDialog):
         vbox.addStretch(1)
 
         # create inferred parameters
-        inferred_param = QtWidgets.QTableWidget()
-        inferred_param.setRowCount(1)
-        inferred_param.setColumnCount(1)
-        header = QtWidgets.QTableWidgetItem('Inferred \n Parameter')
-        inferred_param.setHorizontalHeaderItem(0, header)
-        inferred_param.verticalHeader().setVisible(False)
-        inferred_param.setItem(0, 0, QtWidgets.QTableWidgetItem(''))
-
-        # set the height and width of the inferred params
-        header_height = inferred_param.horizontalHeader().height()
-        cell_height = inferred_param.rowHeight(0)
-        inferred_param.setMaximumHeight(header_height + cell_height)
-        header_width = inferred_param.horizontalHeader().width()
-        # cell_width = inferred_param.columnWidth(0)
-        inferred_param.setMinimumWidth(header_width)
+        inferred_param = self._create_parameter_table(parameter_id)
 
         hbox = QtWidgets.QHBoxLayout()
         hbox.addLayout(vbox)
@@ -878,31 +864,29 @@ class SimulationTab(QtWidgets.QDialog):
         self.infer_option_window.open()
 
 
-    def fill_parameter_table(self):
-        """Fills the parameter table with # parameters columns. Each column carries the name of the respective parameter and an
-        empty cell for the inferred value.
+    def _create_parameter_table(self, parameter_id: int):
+        """Creates a small table to hold the inferred values for a parameter. Initially empty.
         """
-        # get fit parameter names
-        state_names = self.main_window.model.state_names
-        model_param_names = self.main_window.model.parameter_names
-        parameter_names = state_names + model_param_names
-        number_parameters = len(parameter_names)
+        # create inferred parameters
+        inferred_param = QtWidgets.QTableWidget()
+        inferred_param.setRowCount(1)
+        inferred_param.setColumnCount(1)
+        header = QtWidgets.QTableWidgetItem('Inferred \n Parameter')
+        inferred_param.setHorizontalHeaderItem(0, header)
+        inferred_param.verticalHeader().setVisible(False)
+        inferred_param.setItem(0, 0, QtWidgets.QTableWidgetItem(''))
 
-        # fill up table with parameter columns (name and empty cell)
-        self.inferred_parameter_table.setRowCount(1)
-        self.inferred_parameter_table.setColumnCount(number_parameters)
-        for param_id, param_name in enumerate(parameter_names):
-            self.inferred_parameter_table.setHorizontalHeaderItem(param_id, QtWidgets.QTableWidgetItem(param_name))
-            self.inferred_parameter_table.setItem(0, param_id, QtWidgets.QTableWidgetItem(''))
+        self.inferred_boxes[parameter_id] = inferred_param
 
-        # set height and width of table to fit the content
-        header_height = self.inferred_parameter_table.horizontalHeader().height()
-        cell_height = self.inferred_parameter_table.rowHeight(0)
-        self.inferred_parameter_table.setMaximumHeight(header_height + cell_height)
-        header_width = self.inferred_parameter_table.verticalHeader().width()
-        cell_width = self.inferred_parameter_table.columnWidth(0)
-        self.inferred_parameter_table.setMaximumWidth(header_width + number_parameters * cell_width)
+        # set the height and width of the inferred params
+        header_height = inferred_param.horizontalHeader().height()
+        cell_height = inferred_param.rowHeight(0)
+        inferred_param.setMaximumHeight(2*header_height + cell_height)
+        header_width = inferred_param.horizontalHeader().width()
+        cell_width = inferred_param.columnWidth(0)
+        inferred_param.setMinimumWidth(max(cell_width, header_width))
 
+        return inferred_param
 
     @QtCore.pyqtSlot()
     def on_infer_model_click(self):
@@ -1067,4 +1051,4 @@ class SimulationTab(QtWidgets.QDialog):
             rounded_value = round(number=param_value, ndigits=3)
 
             # update cell in table
-            self.inferred_parameter_table.item(0, param_id).setText('%.3f' % rounded_value)
+            self.inferred_boxes[param_id].item(0, 0).setText('%.3f' % rounded_value)
