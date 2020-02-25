@@ -92,11 +92,11 @@ class TestMultiOutputProblem(unittest.TestCase):
     protocol = myokit.Protocol()
 
     # schedule dosing event
-    protocol.schedule(level=1.0, start=8.0, duration=1.0)
+    protocol.schedule(level=1.0, start=4.0, duration=1.0)
+    protocol.schedule(level=1.0, start=10.0, duration=1.0)
 
     # set dose schedule
     two_comp_model.simulation.set_protocol(protocol)
-
 
     # set dimensionality of data
     two_comp_model.set_output_dimension(2)
