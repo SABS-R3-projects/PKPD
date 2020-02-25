@@ -628,7 +628,7 @@ class SimulationTab(QtWidgets.QDialog):
                     lay.addWidget(self._create_slider(param_name, param_id), param_id, 0)
             box.setContentLayout(lay)
             #self.parameter_sliders.addStretch()
-            self.parameter_sliders.setAlignment(QtCore.Qt.AlignTop)
+            self.parameter_sliders.setAlignment(QtCore.Qt.AlignTop)  # display nicely
 
 
 
@@ -640,15 +640,21 @@ class SimulationTab(QtWidgets.QDialog):
     def _clear_slider_group(self):
         # TODO Why does this only work once?
         """Clears the slider group from pre-existing sliders.
-        """
         number_items_in_group = self.parameter_sliders.count()
         print(self.parameter_sliders.count())
         for item_id in range(number_items_in_group):
             print(item_id)
             # setting an items parent to None deletes it, according to stackoverflow
             print(type(self.parameter_sliders))
+            print(self.parameter_sliders)
             print(type(self.parameter_sliders.itemAtPosition(item_id,0)))
             self.parameter_sliders.itemAtPosition(item_id, 0).widget().setParent(None)
+            """
+        for _ in range(self.parameter_sliders.count()):
+            print(self.parameter_sliders.count())
+            child = self.parameter_sliders.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
 
 
     def _create_slider(self, parameter_name: str, parameter_id : int):
