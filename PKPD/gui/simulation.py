@@ -27,7 +27,7 @@ class SimulationTab(QtWidgets.QDialog):
         self.enable_line_removal = False
         self.is_single_output_model = True
         self.parameter_values = None
-        self.patient_ids = [0]  # default: just a single patient
+        self.patient_ids = [1]  # default: just a single patient
         self.dose_schedule = None
         self.boundaries_are_on = True
 
