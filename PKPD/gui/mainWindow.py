@@ -32,8 +32,14 @@ class MainWindow(abstractGui.AbstractMainWindow):
         # format icons/images
         self._format_images()
 
-        # fill the empty window with content
-        self._arrange_window_content()
+        # show our animation
+        self._show_animated_logo()
+        print(self.centralWidget().movie())
+        # self.anitimer = QtCore.QTimer()
+        # self.anitimer.setInterval(2000)
+        # self.anitimer.setSingleShot(True)
+        # self.anitimer.timeout.connect(self._arrange_window_content)
+        # fill the window with content
 
 
     def _set_window_size(self):
@@ -132,13 +138,23 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
         Returns:
             {QLabel} -- Returns SABS R3 logo.
-            {QLabel} -- Returns SABS R3 logo.
         """
         label = QtWidgets.QLabel(self)
         label.setPixmap(self.rescaled_sabs)
 
         return label
 
+    def _create_PKPD_animation(self):
+        """Shows the PKPD animation.
+
+        Returns:
+            {QLabel} -- Returns the PKPD Logo Animation.
+        """
+        label = QtWidgets.QLabel(self)
+        animation = QtGui.QMovie('images/LOGO_Animated.gif')
+        label.setMovie(animation)
+
+        return label
 
     def next_tab(self):
         """Switches to the simulation tab, when triggered by clicking the 'next' QPushButton on the home tab.
@@ -220,6 +236,17 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
         return correct_data
 
+    def _show_animated_logo(self):
+        self.setWindowTitle(self.window_title)
+        self.setCentralWidget(self._create_PKPD_animation())
+        self.centralWidget().movie().start()
+        self.anitimer = QtCore.QTimer()
+        self.anitimer.setInterval(2000)
+        self.anitimer.setSingleShot(True)
+        self.anitimer.timeout.connect(self.centralWidget().movie().stop)
+        # self.setStatusBar(self._create_status_bar())
+
+
 
 if __name__ == '__main__':
     # Create window instance
@@ -228,4 +255,11 @@ if __name__ == '__main__':
 
     # show window
     window.show()
+
+    # # show our animation
+    # window._show_animated_logo()
+    #
+    # # fill the window with content
+    # window._arrange_window_content()
+
     sys.exit(app.exec_())
