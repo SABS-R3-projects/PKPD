@@ -608,17 +608,14 @@ class SimulationTab(QtWidgets.QDialog):
         self.slider_min_max_label_container = [None]*len(parameter_names) # store in list to be able to update later
         self.parameter_text_field_container = [None]*len(parameter_names) # store in list to be able to update later
 
-
-        # Get unique list of components as a set
-        collapse_boxes = set([p.split('.')[0] for p in parameter_names])
-
-        # Create list for sorting into correct order
-        sorting_list = []
+        # Get unique list of components and sort alphabetically for consistent display
+        collapse_boxes = list(set([p.split('.')[0] for p in parameter_names]))
+        collapse_boxes.sort()
 
         # Create box for each component:
         # TODO Group parameters earlier to make this more efficient
         for name in collapse_boxes:
-            box = CollapsibleBox("{}".format(name))
+            box = CollapsibleBox("{}".format(name.replace('_', ' ').capitalize()))
             self.parameter_sliders.addWidget(box) #add to parameter slider section
             lay = QtWidgets.QGridLayout()
             # Add correct parameters to each box component
@@ -638,20 +635,12 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _clear_slider_group(self):
-        # TODO Why does this only work once?
-        """Clears the slider group from pre-existing sliders.
-        number_items_in_group = self.parameter_sliders.count()
-        print(self.parameter_sliders.count())
-        for item_id in range(number_items_in_group):
-            print(item_id)
-            # setting an items parent to None deletes it, according to stackoverflow
-            print(type(self.parameter_sliders))
-            print(self.parameter_sliders)
-            print(type(self.parameter_sliders.itemAtPosition(item_id,0)))
-            self.parameter_sliders.itemAtPosition(item_id, 0).widget().setParent(None)
-            """
+        """
+        Clears the slider group from pre-existing sliders.
+        """
+        # Solution from Stackoverflow
+        # - using takeAt & deleteLater vs. itemAt & setParent(None) which didn't work in this case
         for _ in range(self.parameter_sliders.count()):
-            print(self.parameter_sliders.count())
             child = self.parameter_sliders.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
