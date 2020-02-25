@@ -695,6 +695,9 @@ class SimulationTab(QtWidgets.QDialog):
         unit = var.unit()
         parameter_label = var.label()
 
+        # Default display name - parameter name with compartment removed
+        display_name = parameter_name.split('.')[-1]
+
         # If there's a label or units, add them to the naming string.
         if parameter_label is not None:
             if unit is not None:
@@ -703,9 +706,9 @@ class SimulationTab(QtWidgets.QDialog):
                 slider_label = str(parameter_label)
         else:
             if unit is not None:
-                slider_label = str(parameter_name + ' ' + str(unit))
+                slider_label = str(display_name + ' ' + str(unit))
             else:
-                slider_label = str(parameter_name)
+                slider_label = str(display_name)
 
         return slider_label
 
@@ -731,6 +734,15 @@ class SimulationTab(QtWidgets.QDialog):
         decimal_places = 1  # to match slider precision
         min_value.setValidator(QDoubleValidator(lower_bound, upper_bound, decimal_places))
         max_value.setValidator(QDoubleValidator(lower_bound, upper_bound, decimal_places))
+
+        # Align all centrally for consistency
+        text_field.setAlignment(QtCore.Qt.AlignCenter)
+        min_value.setAlignment(QtCore.Qt.AlignCenter)
+        max_value.setAlignment(QtCore.Qt.AlignCenter)
+
+        # Set Display Style - colour chosen to match default background
+        min_value.setStyleSheet("QLineEdit{background-color: #ECE8E4; color: black; border: None}")
+        max_value.setStyleSheet("QLineEdit{background-color: #ECE8E4; color: black; border: None}")
 
         min_value.editingFinished.connect(self._update_slider_boundaries)
         max_value.editingFinished.connect(self._update_slider_boundaries)
