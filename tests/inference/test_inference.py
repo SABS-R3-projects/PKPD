@@ -1,5 +1,6 @@
 import unittest
 
+import myokit
 import pints
 import pytest
 import numpy as np
@@ -86,6 +87,16 @@ class TestMultiOutputProblem(unittest.TestCase):
     # generating data
     file_name = 'PKPD/modelRepository/2_bolus_linear.mmt'
     two_comp_model = m.MultiOutputModel(file_name)
+
+    # create protocol object
+    protocol = myokit.Protocol()
+
+    # schedule dosing event
+    protocol.schedule(level=1.0, start=8.0, duration=1.0)
+
+    # set dose schedule
+    two_comp_model.simulation.set_protocol(protocol)
+
 
     # set dimensionality of data
     two_comp_model.set_output_dimension(2)
