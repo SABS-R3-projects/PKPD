@@ -33,12 +33,12 @@ class SimulationTab(QtWidgets.QDialog):
 
         # initialising the figure
         self.data_model_figure = Figure()
-        self.figure = FigureCanvas(self.data_model_figure)
+        self.data_model_figure_view = FigureCanvas(self.data_model_figure)
 
         # set the layout
         layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(self.figure)
-        layout.addLayout(self._init_plot_infer_model_group())
+        layout.addWidget(self.data_model_figure_view)
+        layout.addLayout(self._init_interactive_group())
         self.setLayout(layout)
 
 
@@ -129,7 +129,7 @@ class SimulationTab(QtWidgets.QDialog):
             self.data_model_ax[-1].set_xlabel(time_label)
 
         # refresh canvas
-        self.figure.draw()
+        self.data_model_figure_view.draw()
 
 
     def _get_data_labels(self):
@@ -273,13 +273,14 @@ class SimulationTab(QtWidgets.QDialog):
             self.main_window.model.simulation.set_protocol(protocol)
 
 
-    def _init_plot_infer_model_group(self):
-        """Initialises the functional sliders and buttons of the simulation tab.
+    def _init_interactive_group(self):
+        """Initialises the dose schedule interface, functional sliders and buttons of the simulation tab.
 
         Returns:
             vbox {QVBoxLayout} -- Returns the layout arranging the sliders, buttons and the inferred parameter table.
         """
-        # initialise sliders, 'plot model' button,'infer model' button and inferred parameters table
+        # initialise dose interface, sliders, 'plot model' button,'infer model' button and inferred parameters table
+        dose_schedule_group = self._initialise_dose_schedule_group()
         slider_group = self._initialise_slider_group()
         plot_buttons = self._initialise_plot_buttons()
         infer_buttons = self._initialise_infer_buttons()
@@ -293,6 +294,10 @@ class SimulationTab(QtWidgets.QDialog):
         vbox.addWidget(self.inferred_parameter_table)
 
         return vbox
+
+
+    def _initialise_dose_schedule_group(self):
+        pass
 
 
     def _initialise_slider_group(self):
@@ -540,7 +545,7 @@ class SimulationTab(QtWidgets.QDialog):
         except:
             for elem in range(self.data_dimension):
                 self.data_model_ax[elem].set_yscale(scale)
-        self.figure.draw() #refresh canvas
+        self.data_model_figure_view.draw() #refresh canvas
 
 
     def on_plot_option_cancel_click(self):
@@ -846,7 +851,7 @@ class SimulationTab(QtWidgets.QDialog):
         self.data_model_ax.plot(self.times, self.state_values, linestyle='dashed', color='grey')
 
         # refresh canvas
-        self.figure.draw()
+        self.data_model_figure_view.draw()
 
 
     def _plot_multi_output_model(self):
@@ -867,7 +872,7 @@ class SimulationTab(QtWidgets.QDialog):
             self.data_model_ax[dim].plot(self.times, self.state_values[:, dim], linestyle='dashed', color='grey')
 
         # refresh canvas
-        self.figure.draw()
+        self.data_model_figure_view.draw()
 
 
     @QtCore.pyqtSlot()
@@ -1043,7 +1048,7 @@ class SimulationTab(QtWidgets.QDialog):
                 self.data_model_ax[dim].legend()
 
         # refresh canvas
-        self.figure.draw()
+        self.data_model_figure_view.draw()
 
 
     def _update_sliders_to_inferred_params(self):
