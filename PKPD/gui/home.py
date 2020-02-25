@@ -1,9 +1,11 @@
 import os
 
 import numpy as np
+import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from PKPD.gui import abstractGui, mainWindow
+from PKPD.gui.utils.tableViewModel import PandasModel
 
 class HomeTab(abstractGui.AbstractHomeTab):
     """HomeTab class responsible for model and data management.
@@ -18,6 +20,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         self.is_data_file_valid = False
         self.library_directory = 'PKPD/modelRepository/'
         self.model_file = None
+        self.data_df = None
 
         # arrange content
         grid = QtWidgets.QGridLayout()
@@ -102,7 +105,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # create select, cancel, file button group
         button_group = self._create_model_button_group()
 
-        # arange window content vertically
+        # arrange window content vertically
         vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(model_library_group)
         vbox.addLayout(button_group)
@@ -129,7 +132,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # create trasition rate options
         transition_rate_options = self._create_transition_rate_options()
 
-        # arange vertically
+        # arrange vertically
         vbox = QtWidgets.QVBoxLayout()
         vbox.addLayout(compartment_options)
         vbox.addLayout(dose_options)
@@ -158,7 +161,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         for number in valid_numbers:
             self.compartment_dropdown_menu.addItem(number)
 
-        # arange label and dropdown menu horizontally
+        # arrange label and dropdown menu horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(label)
         hbox.addWidget(self.compartment_dropdown_menu)
@@ -184,7 +187,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         for dose_type in valid_types:
             self.dose_type_dropdown_menu.addItem(dose_type)
 
-        # arange label and dropdown menu horizontally
+        # arrange label and dropdown menu horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(label)
         hbox.addWidget(self.dose_type_dropdown_menu)
@@ -210,7 +213,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         for transition_rate in valid_rates:
             self.transition_rate_dropdown_menu.addItem(transition_rate)
 
-        # arange label and dropdown menu horizontally
+        # arrange label and dropdown menu horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(label)
         hbox.addWidget(self.transition_rate_dropdown_menu)
@@ -238,7 +241,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         file_button = QtWidgets.QPushButton('select from file')
         file_button.clicked.connect(self.on_model_file_click)
 
-        # arange buttons horizontally
+        # arrange buttons horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(select_button)
         hbox.addWidget(cancel_button)
@@ -268,18 +271,12 @@ class HomeTab(abstractGui.AbstractHomeTab):
         scroll.setWidgetResizable(True)
 
         # fix vertical space that display can take up
-        height = 0.35 * self.main_window.height
+        height = 0.3 * self.main_window.height
         scroll.setFixedHeight(height)
-
-        # fix horizontal space that display can take up
-        width = 0.9 * self.main_window.width
-        scroll.setFixedWidth(width)
 
         # arrange display window horizontally
         hbox = QtWidgets.QHBoxLayout()
-        hbox.addStretch(2)
         hbox.addWidget(scroll)
-        hbox.addStretch(1)
 
         return hbox
 
@@ -291,25 +288,120 @@ class HomeTab(abstractGui.AbstractHomeTab):
         Returns:
             {QGroupBox} -- Returns data group object.
         """
+        # Create group label
         group = QtWidgets.QGroupBox('Data:')
-        # generate file dialog
-        button = QtWidgets.QPushButton('select data file')
-        button.clicked.connect(self.on_data_click)
-        self.data_text = QtWidgets.QLineEdit('no file selected')
-        self.data_check_mark = self._create_file_check_mark()
-        # arrange button and text horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(button)
-        hbox.addWidget(self.data_text)
-        hbox.addWidget(self.data_check_mark)
+
+        # create data selection group
+        data_selection_group = self._create_data_selection_group()
+
+        # create display of csv file
+        data_display = self._create_data_display()
+
+        # create data format check box group
+        check_box_group = self._create_check_box_group()
+
         # arrange button/text and label vertically
         vbox = QtWidgets.QVBoxLayout()
-        vbox.addLayout(hbox)
-        vbox.addStretch(1)
+        vbox.addLayout(data_selection_group)
+        vbox.addLayout(data_display)
+        vbox.addLayout(check_box_group)
 
         group.setLayout(vbox)
 
         return group
+
+
+    def _create_data_selection_group(self):
+        """Creates the data selection group consisting of a 'select data' button, that opens a file dialog, a
+        text field displaying the path to the data file and an image response to the validity of the chosen file.
+
+        Returns:
+            {QGroupBox} -- Returns a data selection group object.
+        """
+        # create data selection button
+        button = QtWidgets.QPushButton('select data file')
+        button.clicked.connect(self.on_data_click)
+
+        # display path to model file
+        self.data_path_text_field = QtWidgets.QLineEdit('no file selected')
+
+        # make text field non-editable
+        self.data_path_text_field.setReadOnly(True)
+
+        # create file check mark
+        self.data_check_mark = self._create_file_check_mark()
+
+        # arrange button and text horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(button)
+        hbox.addWidget(self.data_path_text_field)
+        hbox.addWidget(self.data_check_mark)
+
+        return hbox
+
+
+    def _create_data_display(self):
+        """Creates display for the data .csv file.
+
+        Returns:
+            {QHBoxLayout} -- Returns data display object.
+        """
+        # create text field to display data
+        self.data_display = QtWidgets.QTableView()
+
+        # adjust color of text field
+        self.data_display.setStyleSheet("background-color: rgb(128,128,128);")
+
+        # # make text field non-editable
+        # self.data_display.setReadOnly(True)
+
+        # make display scrollable, such that window is never exceeded
+        scroll = QtWidgets.QScrollArea()
+        scroll.setWidget(self.data_display)
+        scroll.setWidgetResizable(True)
+
+        # fix vertical space that display can take up
+        height = 0.3 * self.main_window.height
+        scroll.setFixedHeight(height)
+
+        # arrange display window horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(scroll)
+
+        return hbox
+
+
+    def _create_check_box_group(self):
+        """Creates check boxes for the presence of patient IDs and doses in the data set.
+
+        Returns:
+            {QHBoxLayout} -- Returns check box group object.
+        """
+        # create check box for presence of patient ID data
+        self.patient_id_check_box = QtWidgets.QCheckBox('Patient ID provided')
+
+        # connect un-/checking box to reaction
+        self.patient_id_check_box.stateChanged.connect(self.on_check_box_click)
+
+        # disable checking, as long as no data has been selected
+        self.patient_id_check_box.setEnabled(False)
+
+        # create check box for presence of doses in data
+        self.dose_schedule_check_box = QtWidgets.QCheckBox('Dosing provided')
+
+        # connect un-/checking box to reaction
+        self.dose_schedule_check_box.stateChanged.connect(self.on_check_box_click)
+
+        # disable checking, as long as no data has been selected
+        self.dose_schedule_check_box.setEnabled(False)
+
+        # arrange check boxes horizontally
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(self.patient_id_check_box)
+        hbox.addWidget(self.dose_schedule_check_box)
+        hbox.addStretch(1)
+
+        return hbox
 
 
     def _create_next_button(self):
@@ -320,6 +412,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         """
         button = QtWidgets.QPushButton('next')
         button.clicked.connect(self.on_next_click)
+
         # arrange button and text horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addStretch(1)
@@ -431,7 +524,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
             QtWidgets.QMessageBox.question(self, 'Model file invalid!', error_message, QtWidgets.QMessageBox.Yes)
 
 
-    def _is_model_file_valid(self, file_path:str):
+    def _is_model_file_valid(self, file_path:str) -> bool:
         """Checks the validity of the chosen model file.
 
         Arguments:
@@ -454,16 +547,208 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
     @QtCore.pyqtSlot()
     def on_data_click(self):
-        """Opens a file dialog upon pressing the 'select data file' and updates after selection the displayed path
-        directory and the check mark. Only .csv files can be selected.
+        """Opens a file dialog and updates after selection the displayed path directory, as well as the display window and the check mark.
+        Only .csv files can be selected.
         """
         options = QtWidgets.QFileDialog.Options()
-        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","Data Files (*.csv)", options=options)
-        if fileName:
-            # update QLineEdit in the GUI to selected file
-            self.data_text.setText(fileName)
-            # update check mark
-            self.data_check_mark.setPixmap(self.main_window.rescaled_cm)
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","Data Files (*.csv)", options=options)
+
+        # check format of file
+        self.is_data_file_valid = self._is_data_file_valid(file_path)
+
+        if self.is_data_file_valid:
+            # load data and remove empty trailing columns
+            self._load_data(file_path)
+
+            # reset check boxes
+            self.patient_id_check_box.setChecked(False)
+            self.patient_id_check_box.setEnabled(False)
+            self.dose_schedule_check_box.setChecked(False)
+            self.dose_schedule_check_box.setEnabled(False)
+
+            # check whether dataframe has at least a time columns and a state column
+            is_dimensionality_compatible = self.data_df.shape[1] >= 2
+
+            if is_dimensionality_compatible:
+                # update QLineEdit in the GUI to selected file
+                self.data_path_text_field.setText(file_path)
+
+                # update check mark
+                self.data_check_mark.setPixmap(self.main_window.rescaled_cm)
+
+                # check presence of patient IDs/doses and update check boxes
+                self._update_check_boxes()
+
+                # update data display
+                self.data_display.setModel(PandasModel(self.data_df, self.patient_id_check_box.isChecked(), self.dose_schedule_check_box.isChecked()))
+
+                # make content fill the reserved space of the table view
+                self.data_display.resizeColumnsToContents()
+            else:
+                # generate error message
+                error_message = 'The selected dataset is not high dimensional enough! At least one time and one state column is expected.'
+                QtWidgets.QMessageBox.question(self, 'Dataset too low dimensional!', error_message, QtWidgets.QMessageBox.Yes)
+        else:
+            # generate error message
+            error_message = 'The selected data file is invalid! Please, try again.'
+            QtWidgets.QMessageBox.question(self, 'Data file invalid!', error_message, QtWidgets.QMessageBox.Yes)
+
+
+    def _is_data_file_valid(self, file_path:str) -> bool:
+        """Checks the validity of the chosen model file.
+
+        Arguments:
+            file_path {str} -- path to model file.
+
+        Returns:
+            {bool} -- True if valid, False if invalid.
+        """
+        # check existence
+        is_file_existent = os.path.isfile(file_path)
+
+        # check format
+        is_format_correct = file_path.split('.')[-1] == 'csv'
+
+        # are both citeria satisifed
+        is_path_valid = is_file_existent and is_format_correct
+
+        return is_path_valid
+
+
+    def _load_data(self, file_path):
+        """Load csv file as pandas dataframe and remove trailing empty columns.
+        """
+        # load data
+        self.data_df = pd.read_csv(file_path, na_values=['.'])
+
+        # get the last non-empty column
+        is_last_column_empty = True
+        while is_last_column_empty:
+            # get last column in dataframe
+            last_column = self.data_df.iloc[:, -1]
+
+            # check whether column is empty
+            is_last_column_empty = last_column.dropna().empty
+
+            # drop empty column
+            if is_last_column_empty:
+                # get data keys
+                keys = self.data_df.keys()
+
+                # remove last column
+                self.data_df.drop(columns=[keys[-1]], inplace=True)
+
+
+    def _update_check_boxes(self):
+        """Updates the data check boxes based on the data's properties.
+        """
+        # get number of columns in dataset
+        number_of_columns = self.data_df.shape[1]
+
+        # check for patient IDs, if dataset has enough columns
+        if number_of_columns > 2:
+            # enable check box
+            self.patient_id_check_box.setEnabled(True)
+
+            # check for presence of patient IDs in first column
+            self._check_data_for_patient_IDs()
+
+        # check for dose schedule, if dataset has enough columns (conditional on presence of patient IDs)
+        if number_of_columns == 3 and not self.patient_id_check_box.isChecked():
+            # enable dose check box
+            self.dose_schedule_check_box.setEnabled(True)
+
+            # check for presence of doses in last column
+            self._check_data_for_doses()
+
+            # if dose schedule is present, disable patient ID check box
+            if self.dose_schedule_check_box.isChecked():
+                self.patient_id_check_box.setEnabled(False)
+
+        elif number_of_columns > 3:
+            # enable check box
+            self.dose_schedule_check_box.setEnabled(True)
+
+            # check for presence of doses in last column
+            self._check_data_for_doses()
+
+
+    def _check_data_for_patient_IDs(self):
+        """Checks whether patient IDs are provided in dataframe. Patient IDs are assumed to be present, if first column only consists of integer values.
+        """
+        # expected data type for patient IDs
+        expected_data_type = 'int64'
+
+        # get first column of data frame
+        first_column = self.data_df.iloc[:, 0]
+
+        # set check box to be ticked, if data types coincide
+        is_data_type_equal = expected_data_type == first_column.dtypes
+        self.patient_id_check_box.setChecked(is_data_type_equal)
+
+
+    def _check_data_for_doses(self):
+        """Checks whether dosing schedule is provided in dataframe and removes trailing empty columns.
+        """
+        # get the last column
+        last_column = self.data_df.iloc[:, -1]
+
+        # check whether last column has format expected from dosing schedule
+        is_data_format_as_expected = self._dose_format_check(last_column)
+
+        # update check box
+        self.dose_schedule_check_box.setChecked(is_data_format_as_expected)
+
+
+    def _dose_format_check(self, last_column:pd.Series()):
+        """Hereustic method to check whether format coincides with the one expected from a dosing schedule (checks whether meaningful entries are evenly spaced).
+
+        Arguments:
+            last_column {pd.Series} -- Last non-empty column of dataframe.
+        """
+        # create mask for meaningful entries
+        mask_meaningful_entries = last_column.notnull()
+
+        # get meaningful entries' indices
+        indices = np.array(last_column.index[mask_meaningful_entries])
+
+        # if first two meaningful entries follow each other, the column is assumed to contain data
+        if indices[1] == 1:
+            return False
+
+        # check whether their spacing is regular
+        is_equally_spaced = np.all(indices[1] == np.diff(indices))
+
+        return is_equally_spaced
+
+
+    @QtCore.pyqtSlot()
+    def on_check_box_click(self):
+        """Reaction to checking either the patient ID or the dose schedule check box. Data display is updated based on the
+        provided information about the existence of patient IDs and dose.
+        """
+        # check whether patient ID and/or dosing schedule is provided
+        are_patient_ids_provided = self.patient_id_check_box.isChecked()
+        is_dosing_schedule_provided = self.dose_schedule_check_box.isChecked()
+
+        # get number dataframe's number of columns
+        number_of_columns = self.data_df.shape[1]
+
+        # if # columns = 3, patient IDs and dose schedule cannot be present simultaneously
+        if number_of_columns == 3 and (are_patient_ids_provided or is_dosing_schedule_provided):
+            # disable the unchecked box, while the other is checked
+            self.patient_id_check_box.setEnabled(are_patient_ids_provided)
+            self.dose_schedule_check_box.setEnabled(is_dosing_schedule_provided)
+        elif number_of_columns == 3:
+            # enable both check boxes, if neither is checked
+            self.patient_id_check_box.setEnabled(True)
+            self.dose_schedule_check_box.setEnabled(True)
+
+        # update data display
+        self.data_display.setModel(PandasModel(self.data_df, are_patient_ids_provided, is_dosing_schedule_provided))
+
+        # make content fill the reserved space of the table view
+        self.data_display.resizeColumnsToContents()
 
 
     @QtCore.pyqtSlot()

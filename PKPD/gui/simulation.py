@@ -24,6 +24,7 @@ class SimulationTab(QtWidgets.QDialog):
         self.enable_line_removal = False
         self.is_single_output_model = True
         self.parameter_values = None
+        self.boundaries_are_on = True
 
         # initialising the figure
         self.data_model_figure = Figure()
@@ -40,21 +41,20 @@ class SimulationTab(QtWidgets.QDialog):
         """Adds the data from the in the home tab chosen data file to the previously initialised figure. For multi-
         dimensional data, the figure is split into subplots.
         """
-        # load data
-        data = pd.read_csv(self.main_window.data_file)
-        time_label, state_labels = data.keys()[0], data.keys()[1:]
+        # get data labels
+        patient_id_label, time_label, state_labels, dose_schedule_label = self._get_data_labels()
 
         # check dimensionality of problem for plotting and inference
         self.data_dimension = len(state_labels)
         self.is_single_output_model = self.data_dimension == 1
 
         # sort into time and state data
-        self.time_data = data[time_label].to_numpy()
+        self.time_data = self.main_window.home.data_df[time_label].to_numpy()
         if self.is_single_output_model:
             state_label = state_labels[0]
-            self.state_data = data[state_label].to_numpy()
+            self.state_data = self.main_window.home.data_df[state_label].to_numpy()
         else:
-            self.state_data = data[state_labels].to_numpy()
+            self.state_data = self.main_window.home.data_df[state_labels].to_numpy()
 
         # plot data
         if self.is_single_output_model: # single output
@@ -86,6 +86,48 @@ class SimulationTab(QtWidgets.QDialog):
 
             # refresh canvas
             self.canvas.draw()
+
+
+    def _get_data_labels(self):
+        """Returns the labels associated to the patient IDs, the time data, state data and dosing schedule. For non-existent labels
+        `None` is returned.
+        """
+        # get labels in data frame
+        labels = self.main_window.home.data_df.keys()
+
+        # check whether patient IDs and/or doses are provided
+        are_patient_IDs_provided = self.main_window.home.patient_id_check_box.isChecked()
+        is_dosing_schedule_provided = self.main_window.home.dose_schedule_check_box.isChecked()
+
+        # return labels according to data structure
+        if are_patient_IDs_provided and is_dosing_schedule_provided:
+            patient_ID_label = labels[0]
+            time_label = labels[1]
+            state_labels = labels[2:-1]
+            dose_label = labels[-1]
+
+            return patient_ID_label, time_label, state_labels, dose_label
+        elif are_patient_IDs_provided and not is_dosing_schedule_provided:
+            patient_ID_label = labels[0]
+            time_label = labels[1]
+            state_labels = labels[2:]
+            dose_label = None
+
+            return patient_ID_label, time_label, state_labels, dose_label
+        elif not are_patient_IDs_provided and is_dosing_schedule_provided:
+            patient_ID_label = None
+            time_label = labels[0]
+            state_labels = labels[1:-1]
+            dose_label = labels[-1]
+
+            return patient_ID_label, time_label, state_labels, dose_label
+        else:
+            patient_ID_label = None
+            time_label = labels[0]
+            state_labels = labels[1:]
+            dose_label = None
+
+            return patient_ID_label, time_label, state_labels, dose_label
 
 
     def _init_plot_infer_model_group(self):
@@ -150,7 +192,7 @@ class SimulationTab(QtWidgets.QDialog):
         # initialise option window
         self._create_plot_option_window()
 
-        # arange button horizontally
+        # arrange button horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(plot_button)
         hbox.addWidget(option_button)
@@ -170,7 +212,7 @@ class SimulationTab(QtWidgets.QDialog):
         # create option window
         self._create_infer_option_window()
 
-        # arange button horizontally
+        # arrange button horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(infer_button)
         hbox.addWidget(option_button)
@@ -191,14 +233,16 @@ class SimulationTab(QtWidgets.QDialog):
         # create inference options
         optimiser_options = self._create_optimiser_options()
         objective_function_options = self._create_objective_function_options()
+        boundary_toggle = self._create_boundary_toggle()
 
         # create apply / cancel buttons
         apply_cancel_buttons = self._create_apply_cancel_buttons()
 
-        # arange options vertically
+        # arrange options vertically
         vbox = QtWidgets.QVBoxLayout()
         vbox.addLayout(optimiser_options)
         vbox.addLayout(objective_function_options)
+        vbox.addLayout(boundary_toggle)
         vbox.addLayout(apply_cancel_buttons)
 
         # add options to window
@@ -223,7 +267,7 @@ class SimulationTab(QtWidgets.QDialog):
         for optimiser in valid_optimisers:
             self.optimiser_dropdown_menu.addItem(optimiser)
 
-        # arange label and dropdown menu horizontally
+        # arrange label and dropdown menu horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(label)
         hbox.addWidget(self.optimiser_dropdown_menu)
@@ -249,10 +293,28 @@ class SimulationTab(QtWidgets.QDialog):
         for error_measure in valid_error_measures:
             self.error_measure_dropdown_menu.addItem(error_measure)
 
-        # arange label and dropdown menu horizontally
+        # arrange label and dropdown menu horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(label)
         hbox.addWidget(self.error_measure_dropdown_menu)
+
+        return hbox
+
+
+    def _create_boundary_toggle(self):
+        """Creates a checkbox used to set boundary checks. Defaults to checked (True).
+
+        Returns:
+            hbox {QHBoxLayout} -- Layout containing checkbox.
+        """
+
+        label = QtWidgets.QLabel('turn on boundary checking:')
+        self.boundarytoggle = QtWidgets.QCheckBox()
+
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addWidget(label)
+        hbox.addWidget(self.boundarytoggle)
+        self.boundarytoggle.setChecked(True)
 
         return hbox
 
@@ -270,7 +332,7 @@ class SimulationTab(QtWidgets.QDialog):
         cancel_button = QtWidgets.QPushButton('cancel')
         cancel_button.clicked.connect(self.on_infer_option_cancel_button_click)
 
-        # arange buttons horizontally
+        # arrange buttons horizontally
         hbox = QtWidgets.QHBoxLayout()
         hbox.addStretch(1)
         hbox.addWidget(apply_button)
@@ -309,6 +371,7 @@ class SimulationTab(QtWidgets.QDialog):
         # update infer options
         self._set_optimiser()
         self._set_error_measure()
+        self._set_boundary_check()
 
         # close option window
         self.infer_option_window.close()
@@ -381,6 +444,12 @@ class SimulationTab(QtWidgets.QDialog):
 
         # update error measure
         self.main_window.problem.set_objective_function(measure)
+
+
+    def _set_boundary_check(self):
+        """Sets boundaries_are_on to True if the checkbox is checked when apply is clicked (False if not checked).
+        """
+        self.boundaries_are_on = self.boundarytoggle.isChecked()
 
 
     @QtCore.pyqtSlot()
@@ -760,35 +829,43 @@ class SimulationTab(QtWidgets.QDialog):
         # tolerance extenstion of boundaries (as values can be set to slider boundaries)
         increment = 1.0E-7
 
-        # get boundaries from sliders
-        min_values = []
-        max_values = []
-        for param_id, slider in enumerate(self.slider_container):
-            minimum = slider.minimum() - increment # extend boundaries for stability
-            maximum = slider.maximum() + increment
-            initial_value = initial_parameters[param_id]
-            print(minimum, initial_value, maximum)
+        # if boundaries are turned off, send None to optimiser
+        if self.boundaries_are_on is False:
+            self.main_window.problem.set_parameter_boundaries(None)
+            self.correct_initial_values = True
 
-            # check whether initial value lies within boundaries
-            if (initial_value < minimum) or (initial_value > maximum):
-                # flag that there is problem with the initial values
-                self.correct_initial_values = False
+        # if boundaries are turned on, get from sliders
+        elif self.boundaries_are_on is True:
+            # get boundaries from sliders
+            min_values = []
+            max_values = []
 
-                # generate error message
-                error_message = 'Initial parameters do not lie within boundaries. Please check again!'
-                QtWidgets.QMessageBox.question(self, 'Parameters outside boundaries!', error_message, QtWidgets.QMessageBox.Yes)
-                break
-            else:
-                # flag that initial values are correct
-                self.correct_initial_values = True
+            for param_id, slider in enumerate(self.slider_container):
+                minimum = slider.minimum() - increment # extend boundaries for stability
+                maximum = slider.maximum() + increment
+                initial_value = initial_parameters[param_id]
+                print(minimum, initial_value, maximum)
 
-                # collect boundaries
-                min_values.append(minimum)
-                max_values.append(maximum)
+                # check whether initial value lies within boundaries
+                if (initial_value < minimum) or (initial_value > maximum):
+                    # flag that there is problem with the initial values
+                    self.correct_initial_values = False
 
-        # set boundaries for inference
-        if self.correct_initial_values:
-            self.main_window.problem.set_parameter_boundaries([min_values, max_values])
+                    # generate error message
+                    error_message = 'Initial parameters do not lie within boundaries. Please check again!'
+                    QtWidgets.QMessageBox.question(self, 'Parameters outside boundaries!', error_message, QtWidgets.QMessageBox.Yes)
+                    break
+                else:
+                    # flag that initial values are correct
+                    self.correct_initial_values = True
+
+                    # collect boundaries
+                    min_values.append(minimum)
+                    max_values.append(maximum)
+
+            # set boundaries for inference
+            if self.correct_initial_values:
+                self.main_window.problem.set_parameter_boundaries([min_values, max_values])
 
 
     def _plot_infered_model(self):
