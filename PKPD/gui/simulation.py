@@ -230,7 +230,6 @@ class SimulationTab(QtWidgets.QDialog):
         vbox.addWidget(slider_group)
         vbox.addLayout(plot_buttons)
         vbox.addLayout(infer_buttons)
-        vbox.addWidget(self.inferred_parameter_table)
 
         return vbox
 
