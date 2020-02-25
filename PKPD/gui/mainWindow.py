@@ -161,6 +161,12 @@ class MainWindow(abstractGui.AbstractMainWindow):
                     # set model output dimension to data dimension
                     self.model.set_output_dimension(self.simulation.data_dimension)
 
+                # get dose schedule TODO: write test
+                self.simulation.get_dose_schedule()
+
+                # filter data from time points with no information TODO: write test
+                self.simulation.filter_data()
+
                 # fill sliders, plot options and parameter table with parameters in model
                 self.simulation.fill_parameter_slider_group()
                 self.simulation.fill_plot_option_window()
@@ -168,12 +174,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
                 # switch to simulation tab
                 self.tabs.setCurrentIndex(self.sim_tab_index)
-
-                # get dose schedule TODO: write test
-                self.simulation.get_dose_schedule()
-
-                # filter data from time points with no information TODO: write test
-                self.simulation.filter_data()
 
                 # instantiate inverse problem (after switching to simulation tab to improve user experience)
                 self._instantiate_inverse_problem()
