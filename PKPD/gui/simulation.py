@@ -6,6 +6,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtGui import QDoubleValidator
 
 from PKPD.gui.utils import slider as sl
 from PKPD.inference import inference as inf
@@ -720,9 +721,17 @@ class SimulationTab(QtWidgets.QDialog):
             hbox {QHBoxLayout} -- Returns a layout arranging the slider labels.
         """
         # create min/max labels and text field for current value
-        min_value = QtWidgets.QLabel('%.1f' % slider.minimum())
+        min_value = QtWidgets.QLineEdit('%.1f' % slider.minimum())
         text_field = QtWidgets.QLineEdit('%.1f' % slider.value())
-        max_value = QtWidgets.QLabel('%.1f' % slider.maximum())
+        max_value = QtWidgets.QLineEdit('%.1f' % slider.maximum())
+
+        # Set Validator so can only enter number of correct format
+        # TODO Could tidy this up a bit, and work out upper bounds
+        min_value.setValidator(QDoubleValidator(0,1e8,2))
+        max_value.setValidator(QDoubleValidator(0, 1e8, 2)) # upper bound is arbitrary
+
+        min_value.returnPressed.connect(self._update_slider_boundaries)
+        max_value.returnPressed.connect(self._update_slider_boundaries)
 
         # keep track of parameter values and min/max labels
         self.parameter_text_field_container[parameter_id] = text_field
@@ -753,6 +762,24 @@ class SimulationTab(QtWidgets.QDialog):
             self._plot_single_output_model()
         elif self.enable_live_plotting and not self.is_single_output_model:
             self._plot_multi_output_model()
+
+    def _update_slider_boundaries(self):
+        """"
+        Updates slider boundaries to correspond to inputted boundaries in text box
+        """
+        # TODO Better solution avoiding iteration?
+        # Iterate over sliders
+        for slider_id, slider in enumerate(self.slider_container):
+            # Get Current Min/Max values from slider textbox
+            # Round to 1dp to correspond to slider precision
+            new_min = round(number=float(self.slider_min_max_label_container[slider_id][0].text()), ndigits=1)
+            new_max = round(number=float(self.slider_min_max_label_container[slider_id][1].text()), ndigits=1)
+            # Set textbox display to rounded values
+            self.slider_min_max_label_container[slider_id][0].setText(str(new_min))
+            self.slider_min_max_label_container[slider_id][1].setText(str(new_max))
+            # Update slider boundaries to these values
+            slider.setMinimum(round(number=new_min, ndigits=1))
+            slider.setMaximum(round(number=new_max, ndigits=1))
 
 
     def fill_plot_option_window(self):
