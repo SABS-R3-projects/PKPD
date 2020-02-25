@@ -11,6 +11,7 @@ from PKPD.gui.utils import slider as sl
 from PKPD.inference import inference as inf
 from PKPD.model import model as m
 
+
 class CollapsibleBox(QtWidgets.QWidget):
     """
     Class to provide custom collapsible menu boxes in PyQt5
@@ -608,6 +609,9 @@ class SimulationTab(QtWidgets.QDialog):
         self.slider_min_max_label_container = [None]*len(parameter_names) # store in list to be able to update later
         self.parameter_text_field_container = [None]*len(parameter_names) # store in list to be able to update later
 
+        # fill up grid with inferred parameter boxes
+        self.inferred_boxes = [None] * len(parameter_names)
+
         # Get unique list of components and sort alphabetically for consistent display
         collapse_boxes = list(set([p.split('.')[0] for p in parameter_names]))
         collapse_boxes.sort()
@@ -678,7 +682,28 @@ class SimulationTab(QtWidgets.QDialog):
         vbox.addWidget(slider)
         vbox.addLayout(min_current_max_value)
         vbox.addStretch(1)
-        slider_box.setLayout(vbox)
+
+        # create inferred parameters
+        inferred_param = QtWidgets.QTableWidget()
+        inferred_param.setRowCount(1)
+        inferred_param.setColumnCount(1)
+        header = QtWidgets.QTableWidgetItem('Inferred \n Parameter')
+        inferred_param.setHorizontalHeaderItem(0, header)
+        inferred_param.verticalHeader().setVisible(False)
+        inferred_param.setItem(0, 0, QtWidgets.QTableWidgetItem(''))
+
+        # set the height and width of the inferred params
+        header_height = inferred_param.horizontalHeader().height()
+        cell_height = inferred_param.rowHeight(0)
+        inferred_param.setMaximumHeight(header_height + cell_height)
+        header_width = inferred_param.horizontalHeader().width()
+        # cell_width = inferred_param.columnWidth(0)
+        inferred_param.setMinimumWidth(header_width)
+
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addLayout(vbox)
+        hbox.addWidget(inferred_param)
+        slider_box.setLayout(hbox)
 
         return slider_box
 
