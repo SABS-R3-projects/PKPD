@@ -725,13 +725,15 @@ class SimulationTab(QtWidgets.QDialog):
         text_field = QtWidgets.QLineEdit('%.1f' % slider.value())
         max_value = QtWidgets.QLineEdit('%.1f' % slider.maximum())
 
-        # Set Validator so can only enter number of correct format
-        # TODO Could tidy this up a bit, and work out upper bounds
-        min_value.setValidator(QDoubleValidator(0,1e8,2))
-        max_value.setValidator(QDoubleValidator(0, 1e8, 2)) # upper bound is arbitrary
+        # Set Validator so can only input non negative entry
+        lower_bound = 0.0
+        upper_bound = np.inf
+        decimal_places = 1  # to match slider precision
+        min_value.setValidator(QDoubleValidator(lower_bound, upper_bound, decimal_places))
+        max_value.setValidator(QDoubleValidator(lower_bound, upper_bound, decimal_places))
 
-        min_value.returnPressed.connect(self._update_slider_boundaries)
-        max_value.returnPressed.connect(self._update_slider_boundaries)
+        min_value.editingFinished.connect(self._update_slider_boundaries)
+        max_value.editingFinished.connect(self._update_slider_boundaries)
 
         # keep track of parameter values and min/max labels
         self.parameter_text_field_container[parameter_id] = text_field
