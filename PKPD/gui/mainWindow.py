@@ -34,13 +34,15 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
         # show our animation
         self._show_animated_logo()
-        print(self.centralWidget().movie())
-        # self.anitimer = QtCore.QTimer()
-        # self.anitimer.setInterval(2000)
-        # self.anitimer.setSingleShot(True)
-        # self.anitimer.timeout.connect(self._arrange_window_content)
-        # fill the window with content
 
+        # Timer to stop the animation
+        self.anitimer = QtCore.QTimer()
+        self.anitimer.setInterval(1950)
+        self.anitimer.setSingleShot(True)
+        self.anitimer.start()
+
+        # fill the window with content when timer runs out.
+        self.anitimer.timeout.connect(self._arrange_window_content)
 
     def _set_window_size(self):
         """Keeps an aspect ratio width / height of 5/4 and scales the width such that 0.75 of the screen width is covered. If this
@@ -95,6 +97,9 @@ class MainWindow(abstractGui.AbstractMainWindow):
     def _arrange_window_content(self):
         """Defines the layout of the main window.
         """
+        if self.centralWidget().movie() is not None:
+            self.centralWidget().movie().stop()
+
         self.setWindowTitle(self.window_title)
         self.tabs = self._create_tabs()
         self.setCentralWidget(self.tabs)
@@ -238,13 +243,10 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
     def _show_animated_logo(self):
         self.setWindowTitle(self.window_title)
-        self.setCentralWidget(self._create_PKPD_animation())
-        self.centralWidget().movie().start()
-        self.anitimer = QtCore.QTimer()
-        self.anitimer.setInterval(2000)
-        self.anitimer.setSingleShot(True)
-        self.anitimer.timeout.connect(self.centralWidget().movie().stop)
-        # self.setStatusBar(self._create_status_bar())
+        animation = self._create_PKPD_animation()
+        animation.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        self.setCentralWidget(animation)
+        animation.movie().start()
 
 
 
