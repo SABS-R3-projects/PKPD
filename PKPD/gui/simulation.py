@@ -33,11 +33,11 @@ class SimulationTab(QtWidgets.QDialog):
 
         # initialising the figure
         self.data_model_figure = Figure()
-        self.canvas = FigureCanvas(self.data_model_figure)
+        self.figure = FigureCanvas(self.data_model_figure)
 
         # set the layout
         layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(self.canvas)
+        layout.addWidget(self.figure)
         layout.addLayout(self._init_plot_infer_model_group())
         self.setLayout(layout)
 
@@ -129,7 +129,7 @@ class SimulationTab(QtWidgets.QDialog):
             self.data_model_ax[-1].set_xlabel(time_label)
 
         # refresh canvas
-        self.canvas.draw()
+        self.figure.draw()
 
 
     def _get_data_labels(self):
@@ -540,7 +540,7 @@ class SimulationTab(QtWidgets.QDialog):
         except:
             for elem in range(self.data_dimension):
                 self.data_model_ax[elem].set_yscale(scale)
-        self.canvas.draw() #refresh canvas
+        self.figure.draw() #refresh canvas
 
 
     def on_plot_option_cancel_click(self):
@@ -846,7 +846,7 @@ class SimulationTab(QtWidgets.QDialog):
         self.data_model_ax.plot(self.times, self.state_values, linestyle='dashed', color='grey')
 
         # refresh canvas
-        self.canvas.draw()
+        self.figure.draw()
 
 
     def _plot_multi_output_model(self):
@@ -867,7 +867,7 @@ class SimulationTab(QtWidgets.QDialog):
             self.data_model_ax[dim].plot(self.times, self.state_values[:, dim], linestyle='dashed', color='grey')
 
         # refresh canvas
-        self.canvas.draw()
+        self.figure.draw()
 
 
     @QtCore.pyqtSlot()
@@ -1043,7 +1043,7 @@ class SimulationTab(QtWidgets.QDialog):
                 self.data_model_ax[dim].legend()
 
         # refresh canvas
-        self.canvas.draw()
+        self.figure.draw()
 
 
     def _update_sliders_to_inferred_params(self):
