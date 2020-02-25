@@ -212,7 +212,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
         # create model container for patients
         self.model_container = []
 
-        print(self.simulation.patient_ids)
         for patient_id in self.simulation.patient_ids:
             # update dose schedule TODO: write test
             self.simulation.update_dose_schedule(schedule=self.simulation.dose_schedule[patient_id])
