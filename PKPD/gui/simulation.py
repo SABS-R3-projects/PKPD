@@ -204,8 +204,12 @@ class SimulationTab(QtWidgets.QDialog):
                     # if dose data is empty, fill cotainer with None
                     self.dose_schedule.append(None)
                 else:
+                    # set duration of doses (arbitrary) TODO: come up with better solution
+                    number_of_doses = len(dose_data)
+                    duration_data = np.ones(number_of_doses)
+
                     # if dose data not empty, fill container with data
-                    self.dose_schedule.append([time_data, dose_data])
+                    self.dose_schedule.append([time_data, dose_data, duration_data])
 
 
     def filter_data(self):
@@ -239,25 +243,20 @@ class SimulationTab(QtWidgets.QDialog):
             self.patient_ids = np.unique(self.patient_ids_mask)
 
 
-    def update_dose_schedule(self, schedule, duration=None):
-        """Update dose schedule of model.
+    def update_dose_schedule(self, schedule:List) -> None:
+        """Update dose schedule.
+
+        Arguments:
+            schedule {List} -- Schedule of all dose events [dose amount, time, duration] of a patient.
         """
-        # if dose schedule is None, no dosing is applied
+        # if dose schedule is None, keep protocol from .mmt file
         if schedule is None:
-            self.main_window.model.simulation.set_protocol(schedule)
+            pass
 
         # if dose schedule exist, create protocol and add dosing events to it
         else:
             # get time and dose data
-            time_data, dose_data = schedule
-
-            # if duration of injection is not provided, set to 6 (arbitrary)
-            if duration is None:
-                # get number of doses
-                number_of_doses = len(dose_data)
-
-                # set duration for all of them to 6
-                duration = [6] * number_of_doses
+            time_data, dose_data, duration_data = schedule
 
             # create protocol object
             protocol = myokit.Protocol()
@@ -265,10 +264,10 @@ class SimulationTab(QtWidgets.QDialog):
             # add dose events to protocol
             for dose_id, dose_amount in enumerate(dose_data):
                 # compute dosing level
-                level = dose_amount / duration[dose_id]
+                level = dose_amount / duration_data[dose_id]
 
                 # schedule dosing event
-                protocol.schedule(level=level, start=time_data[dose_id], duration=duration[dose_id])
+                protocol.schedule(level=level, start=time_data[dose_id], duration=duration_data[dose_id])
 
             # update dose schedule
             self.main_window.model.simulation.set_protocol(protocol)

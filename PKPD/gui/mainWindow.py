@@ -229,7 +229,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
         else:
             # instantiate multi output problem
-            self.problem = inf.MultiOutputInverseProblem(model=self.model_container,
+            self.problem = inf.MultiOutputInverseProblem(models=self.model_container,
                                                          times=self.simulation.time_data,
                                                          values=self.simulation.state_data
             )
