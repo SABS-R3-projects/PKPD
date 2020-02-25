@@ -145,6 +145,18 @@ class MainWindow(abstractGui.AbstractMainWindow):
         """
         if self.home.is_model_file_valid and self.home.is_data_file_valid:
             try:
+                # get dose schedule TODO: write test
+                self.simulation.get_dose_schedule()
+
+                # filter data from time points with no information TODO: write test
+                self.simulation.filter_data()
+
+                # TODO: move data extraction from ploting
+                # add plot of dosing schedule
+                # add dose schedule option button
+                # list doses of patient, if available
+                # allow for adding of doses
+
                 # plot data in simulation tab
                 self.simulation.add_data_to_data_model_plot()
 
@@ -160,12 +172,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
                     # set model output dimension to data dimension
                     self.model.set_output_dimension(self.simulation.data_dimension)
-
-                # get dose schedule TODO: write test
-                self.simulation.get_dose_schedule()
-
-                # filter data from time points with no information TODO: write test
-                self.simulation.filter_data()
 
                 # fill sliders, plot options and parameter table with parameters in model
                 self.simulation.fill_parameter_slider_group()
