@@ -789,11 +789,22 @@ class SimulationTab(QtWidgets.QDialog):
             new_min = round(number=float(self.slider_min_max_label_container[slider_id][0].text()), ndigits=1)
             new_max = round(number=float(self.slider_min_max_label_container[slider_id][1].text()), ndigits=1)
             # Set textbox display to rounded values
-            self.slider_min_max_label_container[slider_id][0].setText(str(new_min))
-            self.slider_min_max_label_container[slider_id][1].setText(str(new_max))
-            # Update slider boundaries to these values
-            slider.setMinimum(round(number=new_min, ndigits=1))
-            slider.setMaximum(round(number=new_max, ndigits=1))
+            if new_min < new_max:  # sanity check to avoid problems with inference
+                self.slider_min_max_label_container[slider_id][0].setText(str(new_min))
+                self.slider_min_max_label_container[slider_id][1].setText(str(new_max))
+                # Update slider boundaries to these values (and colour)
+                slider.setMinimum(round(number=new_min, ndigits=1))
+                slider.setMaximum(round(number=new_max, ndigits=1))
+                self.slider_min_max_label_container[slider_id][0].setStyleSheet(
+                    "QLineEdit{background-color: #ECE8E4; color: black; border: None}")
+                self.slider_min_max_label_container[slider_id][1].setStyleSheet(
+                    "QLineEdit{background-color: #ECE8E4; color: black; border: None}")
+            else:
+                # Colour text red to show slider has not been updated since min > max
+                self.slider_min_max_label_container[slider_id][0].setStyleSheet(
+                    "QLineEdit{background-color: #ECE8E4; color: red; border: None}")
+                self.slider_min_max_label_container[slider_id][1].setStyleSheet(
+                    "QLineEdit{background-color: #ECE8E4; color: red; border: None}")
 
 
     def fill_plot_option_window(self):

@@ -206,7 +206,6 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
 
         self.optimiser = optimiser
 
-
     def set_parameter_boundaries(self, boundaries:List):
         """Sets the parameter boundaries for inference.
 
