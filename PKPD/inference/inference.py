@@ -153,10 +153,6 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         Return:
             None
         """
-        print(times)
-        print(values)
-        print(times[0].shape)
-        print(values[0].shape)
         # initialise problem container
         self.problem_container = []
         for model_id, model in enumerate(models):
