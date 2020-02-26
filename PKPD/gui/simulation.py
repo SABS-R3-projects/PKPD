@@ -408,7 +408,7 @@ class SimulationTab(QtWidgets.QDialog):
         slider_group = QtWidgets.QGroupBox()
 
         # initialise grid to arrange sliders vertically
-        self.parameter_sliders = QtWidgets.QGridLayout() #QtWidgets.QVBoxLayout()#
+        self.parameter_sliders = QtWidgets.QGridLayout()
 
         # add grid layout to slider group
         slider_group.setLayout(self.parameter_sliders)
@@ -802,12 +802,12 @@ class SimulationTab(QtWidgets.QDialog):
         """
         Clears the slider group from pre-existing sliders.
         """
-        # Solution from Stackoverflow
+        # Solution from Stackoverflow:
+        # https://stackoverflow.com/questions/4528347/clear-all-widgets-in-a-layout-in-pyqt
         # - using takeAt & deleteLater vs. itemAt & setParent(None) which didn't work in this case
         for _ in range(self.parameter_sliders.count()):
             child = self.parameter_sliders.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
+            child.widget().deleteLater()
 
 
     def _create_slider(self, parameter_name: str, parameter_id : int):
@@ -965,15 +965,6 @@ class SimulationTab(QtWidgets.QDialog):
             # Display new slider boundaries in text box
             self.slider_min_max_label_container[slider_id][0].setText(str(slider.minimum()))
             self.slider_min_max_label_container[slider_id][1].setText(str(slider.maximum()))
-
-            """
-            else:
-                # Colour text red to show slider has not been updated since min > max
-                self.slider_min_max_label_container[slider_id][0].setStyleSheet(
-                    "QLineEdit{background-color: #ECE8E4; color: red; border: None}")
-                self.slider_min_max_label_container[slider_id][1].setStyleSheet(
-                    "QLineEdit{background-color: #ECE8E4; color: red; border: None}")
-            """
 
 
     def fill_plot_option_window(self):
