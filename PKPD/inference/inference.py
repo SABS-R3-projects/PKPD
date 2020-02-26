@@ -37,7 +37,7 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         # initialise optimiser
         self.optimiser = pints.CMAES
 
-        # initialise fluctiations around starting point of optimisation
+        # initialise fluctuations around starting point of optimisation
         self.initial_parameter_uncertainty = None
 
         # initialise parameter constraints

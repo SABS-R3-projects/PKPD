@@ -12,11 +12,11 @@ from PKPD.inference import inference
 class TestSingleOutputProblem(unittest.TestCase):
     """Testing the methods of the SingleOutputInverseProblem class.
     """
-    ## Test case: Linear One Compartment Model with Bolus dosing
+    # Test case: Linear One Compartment Model with Bolus dosing
     # generating data
     file_name = 'PKPD/modelRepository/1_bolus_linear.mmt'
     one_comp_model = m.SingleOutputModel(file_name)
-    true_parameters_one_comp_model = [0, 1, 4] # # [initial drug, CL, V]
+    true_parameters_one_comp_model = [0, 1, 4]  # [initial drug, CL, V]
 
     # create protocol object
     protocol = myokit.Protocol()
@@ -43,11 +43,11 @@ class TestSingleOutputProblem(unittest.TestCase):
 
         # solve inverse problem
         problem.find_optimal_parameter(initial_parameter=initial_parameters, number_of_iterations=1)
-        estimated_paramters = problem.estimated_parameters
+        estimated_parameters = problem.estimated_parameters
 
         # assert agreement of estimates with true parameters
         for parameter_id, true_value in enumerate(self.true_parameters_one_comp_model):
-            estimated_value = estimated_paramters[parameter_id]
+            estimated_value = estimated_parameters[parameter_id]
             assert true_value == pytest.approx(estimated_value, rel=0.5)
 
     def test_set_error_function(self):
@@ -86,7 +86,7 @@ class TestSingleOutputProblem(unittest.TestCase):
 class TestMultiOutputProblem(unittest.TestCase):
     """Testing the methods of MultiOutputInverseProblem class.
     """
-    ## Test case: Linear Two Compartment Model with Subcutaneous Dosing
+    # Test case: Linear Two Compartment Model with Subcutaneous Dosing
     # generating data
     file_name = 'PKPD/modelRepository/2_bolus_linear.mmt'
     two_comp_model = m.MultiOutputModel(file_name)

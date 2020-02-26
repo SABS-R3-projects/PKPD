@@ -17,13 +17,13 @@ class TestSingleOutputModel(unittest.TestCase):
         """Tests whether the Model class initialises as expected.
         """
         # Test case I: 1-compartment model
-        ## expected:
+        # expected:
         state_names = ['central_compartment.drug']
         output_name = 'central_compartment.drug_concentration'
         parameter_names = ['central_compartment.CL', 'central_compartment.V']
         number_parameters_to_fit = 3
 
-        ## assert initilised values coincide
+        # assert initialised values coincide
         assert state_names == self.one_comp_model.state_names
         assert output_name == self.one_comp_model.output_name
         for parameter_id, parameter in enumerate(self.one_comp_model.parameter_names):
@@ -34,20 +34,20 @@ class TestSingleOutputModel(unittest.TestCase):
         """Tests whether the n_parameter method returns the correct number of fit parameters.
         """
         # Test case I: 1-compartment model
-        ## expected
+        # expected
         n_parameters = 3
 
-        ## assert correct number of parameters is returned.
+        # assert correct number of parameters is returned.
         assert n_parameters == self.one_comp_model.n_parameters()
 
     def test_n_outputs(self):
         """Tests whether the n_outputs method returns the correct number of outputs.
         """
         # Test case I: 1-compartment model
-        ## expected
+        # expected
         n_outputs = 1
 
-        ## assert correct number of outputs.
+        # assert correct number of outputs.
         assert n_outputs == self.one_comp_model.n_outputs()
 
     def test_simulate(self):
@@ -55,10 +55,10 @@ class TestSingleOutputModel(unittest.TestCase):
         the _set_parameters method works properly.
         """
         # Test case I: 1-compartment model
-        parameters = [0, 2, 4] # different from initialsed parameters
+        parameters = [0, 2, 4]  # different from initialised parameters
         times = np.arange(25)
 
-        ## expected
+        # expected
         model, protocol, _ = myokit.load(self.file_name)
         model.set_state([parameters[0]])
         model.set_value('central_compartment.CL', parameters[1])
@@ -67,7 +67,7 @@ class TestSingleOutputModel(unittest.TestCase):
         myokit_result = simulation.run(duration=times[-1]+1, log=['central_compartment.drug_concentration'], log_times = times)
         expected_result = myokit_result.get('central_compartment.drug_concentration')
 
-        ## assert that Model.simulate returns the same result.
+        # assert that Model.simulate returns the same result.
         model_result = self.one_comp_model.simulate(parameters, times)
 
         assert np.array_equal(expected_result, model_result)
@@ -88,7 +88,7 @@ class TestMultiOutputModel(unittest.TestCase):
         """Tests whether the Model class initialises as expected.
         """
         # Test case I: 1-compartment model
-        ## expected:
+        # expected:
         state_names = ['central_compartment.drug', 'peripheral_compartment.drug']
         parameter_names = ['central_compartment.CL',
                            'central_compartment.Kcp',
@@ -97,7 +97,7 @@ class TestMultiOutputModel(unittest.TestCase):
                            'peripheral_compartment.V'
                            ]
 
-        ## assert initilised values coincide
+        # assert initialised values coincide
         assert state_names == self.two_comp_model.state_names
         assert parameter_names == self.two_comp_model.parameter_names
 
@@ -105,20 +105,20 @@ class TestMultiOutputModel(unittest.TestCase):
         """Tests whether the n_parameter method returns the correct number of fit parameters.
         """
         # Test case I: 1-compartment model
-        ## expected
+        # expected
         n_parameters = 7
 
-        ## assert correct number of parameters is returned.
+        # assert correct number of parameters is returned.
         assert n_parameters == self.two_comp_model.n_parameters()
 
     def test_n_outputs(self):
         """Tests whether the n_outputs method returns the correct number of outputs.
         """
         # Test case I: 1-compartment model
-        ## expected
+        # expected
         n_outputs = 2
 
-        ## assert correct number of outputs.
+        # assert correct number of outputs.
         assert n_outputs == self.two_comp_model.n_outputs()
 
     def test_simulate(self):
@@ -137,7 +137,7 @@ class TestMultiOutputModel(unittest.TestCase):
                            ]
         times = np.arange(100)
 
-        ## expected
+        # expected
         # initialise model
         model, protocol, _ = myokit.load(self.file_name)
 
@@ -156,7 +156,7 @@ class TestMultiOutputModel(unittest.TestCase):
             expected_result.append(myokit_result.get(name))
         np_expected_result = np.array(expected_result)
 
-        ## assert that Model.simulate returns the same result.
+        # assert that Model.simulate returns the same result.
         model_result = self.two_comp_model.simulate(parameters, times).transpose()
 
         assert np.allclose(np_expected_result, model_result)

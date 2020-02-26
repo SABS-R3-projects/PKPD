@@ -150,7 +150,7 @@ class SimulationTab(QtWidgets.QDialog):
 
                 # save extracted schedule in container
                 if not dose_data:
-                    # if dose data is empty, fill cotainer with None
+                    # if dose data is empty, fill container with None
                     self.dose_schedule.append(None)
                 else:
                     # set duration of doses (arbitrary) TODO: come up with better solution
@@ -251,7 +251,7 @@ class SimulationTab(QtWidgets.QDialog):
             self.data_model_ax.scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
             self.data_model_ax.legend()
 
-        else: # multi output
+        else:  # multi output
             # clear figure
             self.data_model_figure.clf()
 
@@ -283,7 +283,6 @@ class SimulationTab(QtWidgets.QDialog):
         # refresh canvas
         self.data_model_figure_view.draw()
 
-
     def _init_interactive_group(self):
         """Initialises the dose schedule interface, functional sliders and buttons of the simulation tab.
 
@@ -308,7 +307,6 @@ class SimulationTab(QtWidgets.QDialog):
 
     def _initialise_dose_schedule_group(self):
         pass
-
 
     def _initialise_slider_group(self):
         """Initialises the value sliders for the model parameters.
@@ -544,7 +542,7 @@ class SimulationTab(QtWidgets.QDialog):
         except:
             for elem in range(self.data_dimension):
                 self.data_model_ax[elem].set_yscale(scale)
-        self.data_model_figure_view.draw() #refresh canvas
+        self.data_model_figure_view.draw()  # refresh canvas
 
     def on_plot_option_cancel_click(self):
         """Reaction to left-clicking the infer option 'cancel' button. Closes the window.
@@ -653,13 +651,13 @@ class SimulationTab(QtWidgets.QDialog):
 
         # get parameter names
         state_names = self.main_window.model.state_names
-        model_param_names = self.main_window.model.parameter_names # parameters except initial conditions
-        parameter_names = state_names + model_param_names # parameters including initial conditions
+        model_param_names = self.main_window.model.parameter_names  # parameters except initial conditions
+        parameter_names = state_names + model_param_names  # parameters including initial conditions
 
         # fill up grid with slider objects
-        self.slider_container = [] # store in list to be able to update later
-        self.slider_min_max_label_container = [] # store in list to be able to update later
-        self.parameter_text_field_container = [] # store in list to be able to update later
+        self.slider_container = []  # store in list to be able to update later
+        self.slider_min_max_label_container = []  # store in list to be able to update later
+        self.parameter_text_field_container = []  # store in list to be able to update later
         for param_id, param_name in enumerate(parameter_names):
             self.parameter_sliders.addWidget(self._create_slider(param_name), param_id, 0)
 
@@ -689,9 +687,9 @@ class SimulationTab(QtWidgets.QDialog):
 
         # create horizontal slider
         slider = sl.DoubleSlider()
-        slider.setMinimum(0.1) # arbitrary choice
-        slider.setValue(1) # default arbitrary, but it seems reasonable to avoid zero
-        slider.setMaximum(30) # arbitrary choice
+        slider.setMinimum(0.1)  # arbitrary choice
+        slider.setValue(1)  # default arbitrary, but it seems reasonable to avoid zero
+        slider.setMaximum(30)  # arbitrary choice
         slider.setTickPosition(sl.DoubleSlider.TicksBothSides)
 
         # keep track of sliders
@@ -912,7 +910,7 @@ class SimulationTab(QtWidgets.QDialog):
         initial_parameters = np.empty(len(self.parameter_values))
         for parameter_id, parameter_text_field in enumerate(self.parameter_text_field_container):
             value = float(parameter_text_field.text())
-            initial_parameters[parameter_id] = value # Note: order of text fields matches order of params in inverse problem class
+            initial_parameters[parameter_id] = value  # Note: order of text fields matches order of params in inverse problem class
 
         # set parameter boundaries
         self._set_parameter_boundaries(initial_parameters)
@@ -924,7 +922,7 @@ class SimulationTab(QtWidgets.QDialog):
                 self.main_window.problem.find_optimal_parameter(initial_parameter=initial_parameters)
                 self.estimated_parameters = self.main_window.problem.estimated_parameters
 
-                # plot infered model
+                # plot inferred model
                 self._plot_inferred_model()
 
                 # update slider position to infered parameters
@@ -965,7 +963,7 @@ class SimulationTab(QtWidgets.QDialog):
             max_values = []
 
             for param_id, slider in enumerate(self.slider_container):
-                minimum = slider.minimum() - increment # extend boundaries for stability
+                minimum = slider.minimum() - increment  # extend boundaries for stability
                 maximum = slider.maximum() + increment
                 initial_value = initial_parameters[param_id]
 
@@ -1012,7 +1010,7 @@ class SimulationTab(QtWidgets.QDialog):
             # plot model
             self.data_model_ax.plot(times, state_values, color='black', label='model')
             self.data_model_ax.legend()
-        else: # multi-output problem
+        else:  # multi-output problem
             # remove all lines from figure
             for dim in range(self.data_dimension):
                 lines = self.data_model_ax[dim].lines

@@ -36,21 +36,21 @@ class MainWindow(abstractGui.AbstractMainWindow):
         self._show_animated_logo()
 
         # Timer to stop the animation
-        self.anitimer = QtCore.QTimer()
-        self.anitimer.setInterval(1950)
-        self.anitimer.setSingleShot(True)
-        self.anitimer.start()
+        self.ani_timer = QtCore.QTimer()
+        self.ani_timer.setInterval(1950)
+        self.ani_timer.setSingleShot(True)
+        self.ani_timer.start()
 
         # fill the window with content when timer runs out.
-        self.anitimer.timeout.connect(self._arrange_window_content)
+        self.ani_timer.timeout.connect(self._arrange_window_content)
 
     def _set_window_size(self):
         """Keeps an aspect ratio width / height of 5/4 and scales the width such that 0.75 of the screen width is covered. If this
         leads to a window height exceeding the screen height, the aspect ratio is kept and the window height is set to the screen
         height.
         """
-        width_coverage = 0.75 # subjective aesthetic choice
-        aspect_ratio = 5 / 4 # subjective aesthetic choice
+        width_coverage = 0.75  # subjective aesthetic choice
+        aspect_ratio = 5 / 4  # subjective aesthetic choice
 
         # sanity check
         if (self.desktop_width < 1) or (self.desktop_height < 1):
@@ -170,7 +170,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 # filter data from time points with no information TODO: write test
                 self.simulation.filter_data()
 
-                # TODO: move data extraction from ploting
+                # TODO: move data extraction from plotting
                 # add plot of dosing schedule
                 # add dose schedule option button
                 # list doses of patient, if available
@@ -186,7 +186,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 # instantiate model
                 if self.simulation.is_single_output_model: # single output
                     self.model = m.SingleOutputModel(self.home.model_file)
-                else: # multi output
+                else:  # multi output
                     self.model = m.MultiOutputModel(self.home.model_file)
 
                     # set model output dimension to data dimension

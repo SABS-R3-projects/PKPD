@@ -216,7 +216,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
     def _create_model_button_group(self):
         """Creates model button group consisting of a 'select model', 'cancel' and 'select from file' button.
-        'select model' selects the chosen model from the libray, 'cancel' closes the window and 'select from file'
+        'select model' selects the chosen model from the library, 'cancel' closes the window and 'select from file'
         opens a file dialog.
 
         Returns:
@@ -588,7 +588,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # check format
         is_format_correct = file_path.split('.')[-1] == 'csv'
 
-        # are both citeria satisifed
+        # are both criteria satisfied
         is_path_valid = is_file_existent and is_format_correct
 
         return is_path_valid

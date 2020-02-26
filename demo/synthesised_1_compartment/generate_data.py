@@ -9,7 +9,7 @@ from PKPD.inference import inference
 # generating data
 file_name = 'demo/synthesised_1_compartment/1comp_bolus_linear.mmt'
 one_comp_model = m.SingleOutputModel(file_name)
-true_parameters = [0, 2, 4] # [initial drug, CL, V]
+true_parameters = [0, 2, 4]  # [initial drug, CL, V]
 
 times = np.linspace(0.0, 24.0, 100)
 model_result = one_comp_model.simulate(true_parameters, times)
