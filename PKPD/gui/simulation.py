@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 import myokit
 import pandas as pd
@@ -5,6 +7,7 @@ import pints
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+from matplotlib import patches
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QDoubleValidator
 
@@ -108,68 +111,61 @@ class SimulationTab(QtWidgets.QDialog):
         self.enable_line_removal = False
         self.is_single_output_model = True
         self.parameter_values = None
+        self.patient_ids = [1]  # default: just a single patient
+        self.dose_schedule = None
         self.boundaries_are_on = True
 
         # initialising the figure
         self.data_model_figure = Figure()
-        self.canvas = FigureCanvas(self.data_model_figure)
+        self.data_model_figure_view = FigureCanvas(self.data_model_figure)
 
         # set the layout
         layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(self.canvas)
-        layout.addLayout(self._init_plot_infer_model_group())
+        layout.addWidget(self.data_model_figure_view)
+        layout.addLayout(self._init_interactive_group())
         self.setLayout(layout)
 
 
-    def add_data_to_data_model_plot(self):
-        """Adds the data from the in the home tab chosen data file to the previously initialised figure. For multi-
-        dimensional data, the figure is split into subplots.
+    def extract_data_from_dataframe(self):
+        """Splits dataframe into ID, time, states and dose numpy arrays.
         """
         # get data labels
-        patient_id_label, time_label, state_labels, dose_schedule_label = self._get_data_labels()
+        patient_id_label, self.time_label, self.state_labels, dose_schedule_label = self._get_data_labels()
 
         # check dimensionality of problem for plotting and inference
-        self.data_dimension = len(state_labels)
+        self.data_dimension = len(self.state_labels)
         self.is_single_output_model = self.data_dimension == 1
 
+        # get patient IDs, if available
+        if patient_id_label is not None:
+            # get patient ID for each data point
+            self.patient_ids_mask = self.main_window.home.data_df[patient_id_label].to_numpy()
+
+            # reduce to unique IDs
+            self.patient_ids = np.unique(self.patient_ids_mask)
+
+        # if no patient IDs are available, assume that all data is from one patient and assign ID 1
+        else:
+            # create patient mask for compatibility with the rest of the code
+            number_rows = self.main_window.home.data_df.shape[0]
+            self.patient_ids_mask = np.ones(number_rows, dtype=int)
+
+            # reduce to unique IDs
+            self.patient_ids = [1]
+
+        # get dose schedule, if available
+        if dose_schedule_label is not None:
+            self.raw_dose_schedule = self.main_window.home.data_df[dose_schedule_label].to_numpy()
+        else:
+            self.raw_dose_schedule = None
+
         # sort into time and state data
-        self.time_data = self.main_window.home.data_df[time_label].to_numpy()
+        self.time_data = self.main_window.home.data_df[self.time_label].to_numpy()
         if self.is_single_output_model:
-            state_label = state_labels[0]
+            state_label = self.state_labels[0]
             self.state_data = self.main_window.home.data_df[state_label].to_numpy()
         else:
-            self.state_data = self.main_window.home.data_df[state_labels].to_numpy()
-
-        # plot data
-        if self.is_single_output_model: # single output
-            # clear figure
-            self.data_model_figure.clf()
-
-            # create plot
-            self.data_model_ax = self.data_model_figure.subplots()
-            self.data_model_ax.scatter(x=self.time_data, y=self.state_data, label='data', marker='o', color='darkgreen',
-                                       edgecolor='black', alpha=0.5)
-            self.data_model_ax.set_xlabel(time_label)
-            self.data_model_ax.set_ylabel(state_label)
-            self.data_model_ax.legend()
-
-            # refresh canvas
-            self.canvas.draw()
-        else: # multi output
-            # clear figure
-            self.data_model_figure.clf()
-
-            # create subplots for each compartment
-            self.data_model_ax = self.data_model_figure.subplots(nrows=self.data_dimension, sharex=True)
-            for dim in range(self.data_dimension):
-                self.data_model_ax[dim].scatter(x=self.time_data, y=self.state_data[:, dim], label='data', marker='o',
-                                                color='darkgreen', edgecolor='black', alpha=0.5)
-                self.data_model_ax[dim].set_ylabel(state_labels[dim])
-                self.data_model_ax[dim].legend()
-            self.data_model_ax[-1].set_xlabel(time_label)
-
-            # refresh canvas
-            self.canvas.draw()
+            self.state_data = self.main_window.home.data_df[self.state_labels].to_numpy()
 
 
     def _get_data_labels(self):
@@ -214,13 +210,175 @@ class SimulationTab(QtWidgets.QDialog):
             return patient_ID_label, time_label, state_labels, dose_label
 
 
-    def _init_plot_infer_model_group(self):
-        """Initialises the functional sliders and buttons of the simulation tab.
+    def get_dose_schedule(self):
+        """Get dose schedule from data, if provided.
+        """
+        # if no dose schedule is provided, set dose schedule to None for each patient
+        if self.raw_dose_schedule is None:
+            self.dose_schedule = [None] * len(self.patient_ids)
+
+        # if dose schedule is provided, extract protocols for patients
+        else:
+            # initialise dose container
+            self.dose_schedule = []
+            for patient_id in self.patient_ids:
+                # create patient mask
+                patient_mask = self.patient_ids_mask == patient_id
+
+                # get dose data
+                raw_time_data = self.time_data[patient_mask]
+                raw_dose_data = self.raw_dose_schedule[patient_mask]
+
+                # crate NaN mask
+                nan_mask =~ np.isnan(raw_dose_data)
+
+                # filter nans
+                time_data, dose_data = raw_time_data[nan_mask], raw_dose_data[nan_mask]
+
+                # save extracted schedule in container
+                if not dose_data:
+                    # if dose data is empty, fill cotainer with None
+                    self.dose_schedule.append(None)
+                else:
+                    # set duration of doses (arbitrary) TODO: come up with better solution
+                    number_of_doses = len(dose_data)
+                    duration_data = np.ones(number_of_doses)
+
+                    # if dose data not empty, fill container with data
+                    self.dose_schedule.append([time_data, dose_data, duration_data])
+
+
+    def filter_data(self):
+        """Filter time and state data from rows for which the state only contains NaNs.
+        """
+        # if single output problem, remove all entries where state is NaN
+        if self.is_single_output_model:
+            # create NaN mask
+            mask =~ np.isnan(self.state_data)
+
+            # time and state data for non-NaN values
+            self.time_data = self.time_data[mask]
+            self.state_data = self.state_data[mask]
+
+            # update patient IDs mask and patient IDs
+            self.patient_ids_mask = self.patient_ids_mask[mask]
+            self.patient_ids = np.unique(self.patient_ids_mask)
+
+        # if multi output problem, remove only those rows where all state entries are NaN
+        else:
+            # create NaN mask
+            mask2d =~ np.isnan(self.state_data)
+            mask = np.all(mask2d, axis=1)
+
+            # mask patient_id_mask, time and state data for non-NaN values
+            self.time_data = self.time_data[mask]
+            self.state_data = self.state_data[mask, :]
+
+            # update patient IDs mask and patient IDs
+            self.patient_ids_mask = self.patient_ids_mask[mask]
+            self.patient_ids = np.unique(self.patient_ids_mask)
+
+
+    def update_dose_schedule(self, schedule:List) -> None:
+        """Update dose schedule.
+
+        Arguments:
+            schedule {List} -- Schedule of all dose events [dose amount, time, duration] of a patient.
+        """
+        # if dose schedule is None, keep protocol from .mmt file
+        if schedule is None:
+            pass
+
+        # if dose schedule exist, create protocol and add dosing events to it
+        else:
+            # get time and dose data
+            time_data, dose_data, duration_data = schedule
+
+            # create protocol object
+            protocol = myokit.Protocol()
+
+            # add dose events to protocol
+            for dose_id, dose_amount in enumerate(dose_data):
+                # compute dosing level
+                level = dose_amount / duration_data[dose_id]
+
+                # schedule dosing event
+                protocol.schedule(level=level, start=time_data[dose_id], duration=duration_data[dose_id])
+
+            # update dose schedule
+            self.main_window.model.simulation.set_protocol(protocol)
+
+
+    def add_data_to_data_model_plot(self):
+        """Adds the data from the in the home tab chosen data file to the previously initialised figure. For multi-
+        dimensional data, the figure is split into subplots.
+        """
+        if self.is_single_output_model: # single output
+            # clear figure
+            self.data_model_figure.clf()
+
+            # get state label
+            state_label = self.state_labels[0]
+
+            # create plot
+            self.data_model_ax = self.data_model_figure.subplots()
+            for patient_id in self.patient_ids:
+                # create mask for patient specific data
+                mask = self.patient_ids_mask == patient_id
+
+                # create scatter plot
+                self.data_model_ax.scatter(x=self.time_data[mask], y=self.state_data[mask], marker='o', edgecolor='black',
+                                            alpha=0.5)
+
+                # add x, y labels
+                self.data_model_ax.set_xlabel(self.time_label)
+                self.data_model_ax.set_ylabel(state_label)
+
+            # add data label to legend (hack)
+            self.data_model_ax.scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
+            self.data_model_ax.legend()
+
+        else: # multi output
+            # clear figure
+            self.data_model_figure.clf()
+
+            # create subplots for each compartment
+            self.data_model_ax = self.data_model_figure.subplots(nrows=self.data_dimension, sharex=True)
+
+            # create subplots for each measured compartment
+            for dim in range(self.data_dimension):
+
+                # color data by patient ID
+                for patient_id in self.patient_ids:
+                    # create mask for patient specific data
+                    mask = self.patient_ids_mask == patient_id
+
+                    # create scatter plot
+                    self.data_model_ax[dim].scatter(x=self.time_data[mask], y=self.state_data[mask, dim], marker='o',
+                                                    edgecolor='black', alpha=0.5)
+
+                    # add ylabel for compartment
+                    self.data_model_ax[dim].set_ylabel(self.state_labels[dim])
+
+                # add legend to compartment subplot (hack)
+                self.data_model_ax[dim].scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
+                self.data_model_ax[dim].legend()
+
+            # add xlabel to the bottom of the vertically stacked subplots
+            self.data_model_ax[-1].set_xlabel(self.time_label)
+
+        # refresh canvas
+        self.data_model_figure_view.draw()
+
+
+    def _init_interactive_group(self):
+        """Initialises the dose schedule interface, functional sliders and buttons of the simulation tab.
 
         Returns:
             vbox {QVBoxLayout} -- Returns the layout arranging the sliders, buttons and the inferred parameter table.
         """
-        # initialise sliders, 'plot model' button,'infer model' button and inferred parameters table
+        # initialise dose interface, sliders, 'plot model' button,'infer model' button and inferred parameters table
+        dose_schedule_group = self._initialise_dose_schedule_group()
         slider_group = self._initialise_slider_group()
         plot_buttons = self._initialise_plot_buttons()
         infer_buttons = self._initialise_infer_buttons()
@@ -233,6 +391,10 @@ class SimulationTab(QtWidgets.QDialog):
         vbox.addLayout(infer_buttons)
 
         return vbox
+
+
+    def _initialise_dose_schedule_group(self):
+        pass
 
 
     def _initialise_slider_group(self):
@@ -481,7 +643,7 @@ class SimulationTab(QtWidgets.QDialog):
         except:
             for elem in range(self.data_dimension):
                 self.data_model_ax[elem].set_yscale(scale)
-        self.canvas.draw() #refresh canvas
+        self.data_model_figure_view.draw() #refresh canvas
 
 
     def on_plot_option_cancel_click(self):
@@ -599,8 +761,6 @@ class SimulationTab(QtWidgets.QDialog):
         # get parameter names
         state_names = self.main_window.model.state_names
         model_param_names = self.main_window.model.parameter_names # parameters except initial conditions
-        print(model_param_names)
-        print(state_names)
         parameter_names = state_names + model_param_names # parameters including initial conditions
 
         # fill up grid with slider objects
@@ -874,7 +1034,7 @@ class SimulationTab(QtWidgets.QDialog):
         self.data_model_ax.plot(self.times, self.state_values, linestyle='dashed', color='grey')
 
         # refresh canvas
-        self.canvas.draw()
+        self.data_model_figure_view.draw()
 
 
     def _plot_multi_output_model(self):
@@ -895,7 +1055,7 @@ class SimulationTab(QtWidgets.QDialog):
             self.data_model_ax[dim].plot(self.times, self.state_values[:, dim], linestyle='dashed', color='grey')
 
         # refresh canvas
-        self.canvas.draw()
+        self.data_model_figure_view.draw()
 
 
     @QtCore.pyqtSlot()
@@ -1021,7 +1181,6 @@ class SimulationTab(QtWidgets.QDialog):
                 minimum = slider.minimum() - increment # extend boundaries for stability
                 maximum = slider.maximum() + increment
                 initial_value = initial_parameters[param_id]
-                print(minimum, initial_value, maximum)
 
                 # check whether initial value lies within boundaries
                 if (initial_value < minimum) or (initial_value > maximum):
@@ -1080,7 +1239,7 @@ class SimulationTab(QtWidgets.QDialog):
                 self.data_model_ax[dim].legend()
 
         # refresh canvas
-        self.canvas.draw()
+        self.data_model_figure_view.draw()
 
 
     def _update_sliders_to_inferred_params(self):

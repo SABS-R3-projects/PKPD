@@ -11,25 +11,39 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
     """Single-output inverse problem based on pints.SingleOutputProblem https://pints.readthedocs.io/. Default objective function
     is pints.SumOfSquaresError and default optimiser is pints.CMAES.
     """
-    def __init__(self, model: m.SingleOutputModel, times: np.ndarray, values: np.ndarray):
+    def __init__(self, models: List[m.SingleOutputModel], times: List[np.ndarray], values: List[np.ndarray]):
         """Initialises a single output inference problem with default objective function pints.SumOfSquaresError
         and default optimiser pints.CMAES. Standard deviation in initial starting point of optimisation as well as
         restricted domain of support for inferred parameters is disabled by default.
 
         Arguments:
-            model {m.SingleOutputModel} -- Model which parameters are to be inferred.
-            times {np.ndarray} -- Times of data points.
-            values {np.ndarray} -- State values of data points.
+            models {List[m.SingleOutputModel]} -- Models, which parameters are to be inferred.
+            times {List[np.ndarray]} -- Times of data points for the different models.
+            values {List[np.ndarray]} -- State values of data points for the different models.
 
         Return:
             None
         """
-        self.problem = pints.SingleOutputProblem(model, times, values)
-        self.objective_function = pints.SumOfSquaresError(self.problem)
+        # initialise problem container
+        self.problem_container = []
+        for model_id, model in enumerate(models):
+            self.problem_container.append(pints.SingleOutputProblem(model, times[model_id], values[model_id]))
+
+        # initialise error function container
+        self.error_function_container = []
+        for problem in self.problem_container:
+            self.error_function_container.append(pints.SumOfSquaresError(problem))
+
+        # initialise optimiser
         self.optimiser = pints.CMAES
+
+        # initialise fluctiations around starting point of optimisation
         self.initial_parameter_uncertainty = None
+
+        # initialise parameter constraints
         self.parameter_boundaries = None
 
+        # initialise outputs
         self.estimated_parameters = None
         self.objective_score = None
 
@@ -51,8 +65,11 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
             # TODO: evaluate how to choose uncertainty best, to obtain most stable results
             self.initial_parameter_uncertainty = initial_parameter + 0.1 # arbitrary
 
+        # create sum of errors measure
+        error_measure = pints.SumOfErrors(self.error_function_container)
+
         # initialise optimisation
-        optimisation = pints.OptimisationController(function=self.objective_function,
+        optimisation = pints.OptimisationController(function=error_measure,
                                                     x0=initial_parameter,
                                                     sigma0=self.initial_parameter_uncertainty,
                                                     boundaries=self.parameter_boundaries,
@@ -71,19 +88,24 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         self.estimated_parameters, self.objective_score = [estimate_container[min_score_id], score_container[min_score_id]]
 
 
-    def set_objective_function(self, objective_function: pints.ErrorMeasure) -> None:
-        """Sets the objective function which is minimised to find the optimal parameter set.
+    def set_error_function(self, error_function: pints.ErrorMeasure) -> None:
+        """Sets the objective function which is minimised to find the optimal parameter set. For multiple problems, all
+        error functions are updated to the selected function.
 
         Arguments:
-            objective_function {pints.ErrorMeasure} -- Valid objective functions are [MeanSquaredError,
+            error_function {pints.ErrorMeasure} -- Valid error functions are [MeanSquaredError,
             RootMeanSquaredError, SumOfSquaresError] in pints.
         """
-        valid_obj_func = [pints.MeanSquaredError, pints.RootMeanSquaredError, pints.SumOfSquaresError]
+        # List of valid error functions
+        valid_err_func = [pints.MeanSquaredError, pints.RootMeanSquaredError, pints.SumOfSquaresError]
 
-        if objective_function not in valid_obj_func:
+        # check of validity of selected error function
+        if error_function not in valid_err_func:
             raise ValueError('Objective function is not supported.')
 
-        self.objective_function = objective_function(self.problem)
+        # update error function
+        for problem_id, problem in enumerate(self.problem_container):
+            self.error_function_container[problem_id] = error_function(problem)
 
 
     def set_optimiser(self, optimiser: pints.Optimiser) -> None:
@@ -118,25 +140,39 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
     """Multi-output inverse problem based on pints.MultiOutputProblem https://pints.readthedocs.io/. Default objective function
     is pints.SumOfSquaresError and default optimiser is pints.CMAES.
     """
-    def __init__(self, model: m.MultiOutputModel, times: np.ndarray, values: np.ndarray):
+    def __init__(self, models: List[m.MultiOutputModel], times: List[np.ndarray], values: List[np.ndarray]):
         """Initialises a multi-output inference problem with default objective function pints.SumOfSquaresError
         and default optimiser pints.CMAES. Standard deviation in initial starting point of optimisation as well as
         restricted domain of support for inferred parameters is disabled by default.
 
         Arguments:
-            model {m.MultiOutputModel} -- Model which parameters are to be inferred.
-            times {np.ndarray} -- Times of data points.
-            values {np.ndarray} -- State values of data points.
+            models {List[m.MultiOutputModel]} -- Models, which parameters are to be inferred.
+            times {List[np.ndarray]} -- Times of data points for the different models.
+            values {List[np.ndarray]} -- State values of data points for the different models.
 
         Return:
             None
         """
-        self.problem = pints.MultiOutputProblem(model, times, values)
-        self.objective_function = pints.SumOfSquaresError(self.problem)
+        # initialise problem container
+        self.problem_container = []
+        for model_id, model in enumerate(models):
+            self.problem_container.append(pints.MultiOutputProblem(model, times[model_id], values[model_id]))
+
+        # initialise error function container
+        self.error_function_container = []
+        for problem in self.problem_container:
+            self.error_function_container.append(pints.SumOfSquaresError(problem))
+
+        # initialise optimiser
         self.optimiser = pints.CMAES
+
+        # initialise fluctiations around starting point of optimisation
         self.initial_parameter_uncertainty = None
+
+        # initialise parameter constraints
         self.parameter_boundaries = None
 
+        # initialise outputs
         self.estimated_parameters = None
         self.objective_score = None
 
@@ -156,8 +192,11 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
             # TODO: evaluate how to choose uncertainty best, to obtain most stable results
             self.initial_parameter_uncertainty = initial_parameter + 0.1 # arbitrary
 
+        # create sum of errors measure
+        error_measure = pints.SumOfErrors(self.error_function_container)
+
         # initialise optimisation
-        optimisation = pints.OptimisationController(function=self.objective_function,
+        optimisation = pints.OptimisationController(function=error_measure,
                                                     x0=initial_parameter,
                                                     sigma0=self.initial_parameter_uncertainty,
                                                     boundaries=self.parameter_boundaries,
@@ -170,27 +209,30 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
             estimates, score = optimisation.run()
             estimate_container.append(estimates)
             score_container.append(score)
-            print(estimates)
-            print(score)
 
         # return parameters with minimal score
         min_score_id = np.argmin(score_container)
         self.estimated_parameters, self.objective_score = [estimate_container[min_score_id], score_container[min_score_id]]
 
 
-    def set_objective_function(self, objective_function: pints.ErrorMeasure) -> None:
-        """Sets the objective function which is minimised to find the optimal parameter set.
+    def set_error_function(self, error_function: pints.ErrorMeasure) -> None:
+        """Sets the objective function which is minimised to find the optimal parameter set. For multiple problems, all
+        error functions are updated to the selected function.
 
         Arguments:
-            objective_function {pints.ErrorMeasure} -- Valid objective functions are [MeanSquaredError,
-            SumOfSquaresError] in pints.
+            error_function {pints.ErrorMeasure} -- Valid error functions are [MeanSquaredError,
+            RootMeanSquaredError, SumOfSquaresError] in pints.
         """
-        valid_obj_func = [pints.MeanSquaredError, pints.SumOfSquaresError]
+        # List of valid error functions
+        valid_err_func = [pints.MeanSquaredError, pints.SumOfSquaresError]
 
-        if objective_function not in valid_obj_func:
+        # check of validity of selected error function
+        if error_function not in valid_err_func:
             raise ValueError('Objective function is not supported.')
 
-        self.objective_function = objective_function(self.problem)
+        # update error function
+        for problem_id, problem in enumerate(self.problem_container):
+            self.error_function_container[problem_id] = error_function(problem)
 
 
     def set_optimiser(self, optimiser: pints.Optimiser) -> None:
