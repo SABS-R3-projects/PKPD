@@ -61,6 +61,9 @@ class CollapsibleBox(QtWidgets.QWidget):
 
         self.manual_state = False
 
+        # Set so open initially
+        self.on_pressed()
+
     @QtCore.pyqtSlot()
     def on_pressed(self):
         checked = self.manual_state
