@@ -988,9 +988,11 @@ class SimulationTab(QtWidgets.QDialog):
                                 ' Please try different inference settings!')
                 QtWidgets.QMessageBox.question(self, 'Numerical error!', error_message, QtWidgets.QMessageBox.Yes)
             except ValueError as e:
+                # Generate error message (eg. if bounds are too narrow)
+                # Show error message as generated in PINTS
                 error_message = 'Check Boundaries are Suitable: \n' + str(e)
+                self.data_model_ax.lines.pop()  # quick fix to remove old plot
                 QtWidgets.QMessageBox.question(self, 'Value error!', error_message, QtWidgets.QMessageBox.Yes)
-                # generate error message
 
 
 
