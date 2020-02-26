@@ -1116,3 +1116,4 @@ class SimulationTab(QtWidgets.QDialog):
 
             # update cell in table
             self.inferred_boxes[param_id].item(0, 0).setText('%.3f' % rounded_value)
+            self.inferred_boxes[param_id].item(0, 0).setTextAlignment(QtCore.Qt.AlignHCenter)
