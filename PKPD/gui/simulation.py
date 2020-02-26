@@ -54,11 +54,19 @@ class SimulationTab(QtWidgets.QDialog):
 
         # get patient IDs, if available
         if patient_id_label is not None:
+            # get patient ID for each data point
             self.patient_ids_mask = self.main_window.home.data_df[patient_id_label].to_numpy()
+
+            # reduce to unique IDs
             self.patient_ids = np.unique(self.patient_ids_mask)
+
+        # if no patient IDs are available, assume that all data is from one patient and assign ID 1
         else:
+            # create patient mask for compatibility with the rest of the code
             number_rows = self.main_window.home.data_df.shape[0]
             self.patient_ids_mask = np.ones(number_rows, dtype=int)
+
+            # reduce to unique IDs
             self.patient_ids = [1]
 
         # get dose schedule, if available
