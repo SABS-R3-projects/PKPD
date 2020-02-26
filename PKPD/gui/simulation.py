@@ -9,10 +9,94 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 from matplotlib import patches
 from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtGui import QDoubleValidator
 
 from PKPD.gui.utils import slider as sl
 from PKPD.inference import inference as inf
 from PKPD.model import model as m
+
+
+class CollapsibleBox(QtWidgets.QWidget):
+    """
+    Class to provide custom collapsible menu boxes in PyQt5
+    """
+    def __init__(self, title="", parent=None):
+        super(CollapsibleBox, self).__init__(parent)
+
+        self.toggle_button = QtWidgets.QToolButton(
+            text=title, checkable=True, checked=False
+        )
+        self.toggle_button.setStyleSheet("QToolButton { border: none; }")
+        self.toggle_button.setToolButtonStyle(
+            QtCore.Qt.ToolButtonTextBesideIcon
+        )
+        self.toggle_button.setArrowType(QtCore.Qt.RightArrow)
+        self.toggle_button.pressed.connect(self.on_pressed)
+
+        self.toggle_animation = QtCore.QParallelAnimationGroup(self)
+
+        self.content_area = QtWidgets.QScrollArea(
+            maximumHeight=0, minimumHeight=0
+        )
+        self.content_area.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+        )
+        self.content_area.setFrameShape(QtWidgets.QFrame.NoFrame)
+
+        lay = QtWidgets.QVBoxLayout(self)
+        lay.setSpacing(0)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.addWidget(self.toggle_button)
+        lay.addWidget(self.content_area)
+
+        self.toggle_animation.addAnimation(
+            QtCore.QPropertyAnimation(self, b"minimumHeight")
+        )
+        self.toggle_animation.addAnimation(
+            QtCore.QPropertyAnimation(self, b"maximumHeight")
+        )
+        self.toggle_animation.addAnimation(
+            QtCore.QPropertyAnimation(self.content_area, b"maximumHeight")
+        )
+
+        self.manual_state = False
+
+    @QtCore.pyqtSlot()
+    def on_pressed(self):
+        checked = self.manual_state
+        #print('Initial State: ', checked)
+        self.toggle_button.setArrowType(
+            QtCore.Qt.DownArrow if not checked else QtCore.Qt.RightArrow
+        )
+        #print('After Setting Arrow Type', self.toggle_button.isChecked())
+        self.toggle_animation.setDirection(QtCore.QAbstractAnimation.Forward if not checked else QtCore.QAbstractAnimation.Backward)
+        self.toggle_animation.start()
+        #print('After Animation: ', self.toggle_button.isChecked())
+
+        #self.toggle_button.toggle()
+        self.manual_state = not checked
+
+    def setContentLayout(self, layout):
+        duration = 10
+        self.content_area.setLayout(layout)
+        collapsed_height = (
+            self.sizeHint().height() - self.content_area.maximumHeight()
+        )
+        content_height = layout.sizeHint().height()
+        for i in range(self.toggle_animation.animationCount()):
+            animation = self.toggle_animation.animationAt(i)
+            animation.setDuration(duration)
+            animation.setStartValue(collapsed_height)
+            animation.setEndValue(collapsed_height + content_height)
+
+        content_animation = self.toggle_animation.animationAt(
+            self.toggle_animation.animationCount() - 1
+        )
+        content_animation.setDuration(duration)
+        content_animation.setStartValue(0)
+        content_animation.setEndValue(content_height)
+
+
 
 
 class SimulationTab(QtWidgets.QDialog):
@@ -305,7 +389,6 @@ class SimulationTab(QtWidgets.QDialog):
         vbox.addWidget(slider_group)
         vbox.addLayout(plot_buttons)
         vbox.addLayout(infer_buttons)
-        vbox.addWidget(self.inferred_parameter_table)
 
         return vbox
 
@@ -335,9 +418,10 @@ class SimulationTab(QtWidgets.QDialog):
         scroll.setWidget(slider_group)
         scroll.setWidgetResizable(True)
 
-        # fix vertical space that sliders can take up
-        height = 0.7 * self.main_window.height
-        scroll.setFixedHeight(height)
+        # fix the width of sliders
+        width = 0.35 * self.main_window.width
+        scroll.setFixedWidth(width)
+        #layout.setAlignment(info, Qt.AlignTop)
 
         return scroll
 
@@ -680,11 +764,34 @@ class SimulationTab(QtWidgets.QDialog):
         parameter_names = state_names + model_param_names # parameters including initial conditions
 
         # fill up grid with slider objects
-        self.slider_container = [] # store in list to be able to update later
-        self.slider_min_max_label_container = [] # store in list to be able to update later
-        self.parameter_text_field_container = [] # store in list to be able to update later
-        for param_id, param_name in enumerate(parameter_names):
-            self.parameter_sliders.addWidget(self._create_slider(param_name), param_id, 0)
+        # length of parameters so can fill up in correct order later
+        self.slider_container = [None]*len(parameter_names)  # store in list to be able to update later
+        self.slider_min_max_label_container = [None]*len(parameter_names) # store in list to be able to update later
+        self.parameter_text_field_container = [None]*len(parameter_names) # store in list to be able to update later
+
+        # fill up grid with inferred parameter boxes
+        self.inferred_boxes = [None] * len(parameter_names)
+
+        # Get unique list of components and sort alphabetically for consistent display
+        collapse_boxes = list(set([p.split('.')[0] for p in parameter_names]))
+        collapse_boxes.sort()
+
+        # Create box for each component:
+        # TODO Group parameters earlier to make this more efficient
+        for name in collapse_boxes:
+            box = CollapsibleBox("{}".format(name.replace('_', ' ').capitalize()))
+            self.parameter_sliders.addWidget(box) #add to parameter slider section
+            lay = QtWidgets.QGridLayout()
+            # Add correct parameters to each box component
+            # But keeping original ID labelling so as not to affect inference etc.
+            for param_id, param_name in enumerate(parameter_names):
+                if param_name.split('.')[0] == name:
+                    lay.addWidget(self._create_slider(param_name, param_id), param_id, 0)
+            box.setContentLayout(lay)
+            #self.parameter_sliders.addStretch()
+            self.parameter_sliders.setAlignment(QtCore.Qt.AlignTop)  # display nicely
+
+
 
         # initialise container to store parameter values (for efficiency)
         number_parameters = len(self.parameter_text_field_container)
@@ -692,19 +799,23 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _clear_slider_group(self):
-        """Clears the slider group from pre-existing sliders.
         """
-        number_items_in_group = self.parameter_sliders.count()
-        for item_id in range(number_items_in_group):
-            # setting an items parent to None deletes it, according to stackoverflow
-            self.parameter_sliders.itemAtPosition(item_id, 0).widget().setParent(None)
+        Clears the slider group from pre-existing sliders.
+        """
+        # Solution from Stackoverflow:
+        # https://stackoverflow.com/questions/4528347/clear-all-widgets-in-a-layout-in-pyqt
+        # - using takeAt & deleteLater vs. itemAt & setParent(None) which didn't work in this case
+        for _ in range(self.parameter_sliders.count()):
+            child = self.parameter_sliders.takeAt(0)
+            child.widget().deleteLater()
 
 
-    def _create_slider(self, parameter_name: str):
+    def _create_slider(self, parameter_name: str, parameter_id : int):
         """Creates slider group. Includes parameter label, value slider, value text field and labels for slider boundaries.
 
         Arguments:
             parameter_name {str} -- Parameter name for which the slider is created.
+            parameter_id {int} -- Order in which slider appears in list to match parameter values
         
         Returns:
             slider_box {QGroupBox} -- Returns a widget containing labels, a value slider and a value text field for the parameter.
@@ -720,10 +831,10 @@ class SimulationTab(QtWidgets.QDialog):
         slider.setTickPosition(sl.DoubleSlider.TicksBothSides)
 
         # keep track of sliders
-        self.slider_container.append(slider)
+        self.slider_container[parameter_id] = slider
 
         # create labels
-        min_current_max_value = self._create_min_current_max_value_label(slider)
+        min_current_max_value = self._create_min_current_max_value_label(slider, parameter_id)
         slider.valueChanged[int].connect(self._update_parameter_values)
 
         # arrange slider and labels
@@ -731,7 +842,14 @@ class SimulationTab(QtWidgets.QDialog):
         vbox.addWidget(slider)
         vbox.addLayout(min_current_max_value)
         vbox.addStretch(1)
-        slider_box.setLayout(vbox)
+
+        # create inferred parameters
+        inferred_param = self._create_parameter_table(parameter_id)
+
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.addLayout(vbox)
+        hbox.addWidget(inferred_param)
+        slider_box.setLayout(hbox)
 
         return slider_box
 
@@ -747,6 +865,9 @@ class SimulationTab(QtWidgets.QDialog):
         unit = var.unit()
         parameter_label = var.label()
 
+        # Default display name - parameter name with compartment removed
+        display_name = parameter_name.split('.')[-1]
+
         # If there's a label or units, add them to the naming string.
         if parameter_label is not None:
             if unit is not None:
@@ -755,30 +876,51 @@ class SimulationTab(QtWidgets.QDialog):
                 slider_label = str(parameter_label)
         else:
             if unit is not None:
-                slider_label = str(parameter_name + ' ' + str(unit))
+                slider_label = str(display_name + ' ' + str(unit))
             else:
-                slider_label = str(parameter_name)
+                slider_label = str(display_name)
 
         return slider_label
 
-    def _create_min_current_max_value_label(self, slider:QtWidgets.QSlider):
+    def _create_min_current_max_value_label(self, slider:QtWidgets.QSlider, parameter_id: int):
         """Creates labels for a slider displaying the current position of the slider and the minimum and
         maximum value of the slider.
 
         Arguments:
             slider {QtWidgets.QSlider} -- Parameter slider.
+            parameter_id {int} -- Order in which slider appears in list to match parameter values
         
         Returns:
             hbox {QHBoxLayout} -- Returns a layout arranging the slider labels.
         """
         # create min/max labels and text field for current value
-        min_value = QtWidgets.QLabel('%.1f' % slider.minimum())
+        min_value = QtWidgets.QLineEdit('%.1f' % slider.minimum())
         text_field = QtWidgets.QLineEdit('%.1f' % slider.value())
-        max_value = QtWidgets.QLabel('%.1f' % slider.maximum())
+        max_value = QtWidgets.QLineEdit('%.1f' % slider.maximum())
+
+        # Set Validator so can only input non negative entry
+        lower_bound = 0.0
+        upper_bound = np.inf
+        decimal_places = 1  # to match slider precision
+        min_value.setValidator(QDoubleValidator(lower_bound, upper_bound, decimal_places))
+        max_value.setValidator(QDoubleValidator(lower_bound, upper_bound, decimal_places))
+
+        # Align all centrally for consistency
+        text_field.setAlignment(QtCore.Qt.AlignCenter)
+        min_value.setAlignment(QtCore.Qt.AlignCenter)
+        max_value.setAlignment(QtCore.Qt.AlignCenter)
+        # ECE8E4
+
+        # Set Display Style - colour chosen to match default background
+        min_value.setStyleSheet("QLineEdit{background-color: rgba(0, 0, 0, 0); color: black; border: None}")
+        max_value.setStyleSheet("QLineEdit{background-color: rgba(0, 0, 0, 0); color: black; border: None}")
+
+        min_value.editingFinished.connect(self._update_slider_boundaries)
+        max_value.editingFinished.connect(self._update_slider_boundaries)
 
         # keep track of parameter values and min/max labels
-        self.parameter_text_field_container.append(text_field)
-        self.slider_min_max_label_container.append([min_value, max_value])
+        self.parameter_text_field_container[parameter_id] = text_field
+        self.slider_min_max_label_container[parameter_id] = [min_value, max_value]
 
         # arrange widgets horizontally
         hbox = QtWidgets.QHBoxLayout()
@@ -805,6 +947,24 @@ class SimulationTab(QtWidgets.QDialog):
             self._plot_single_output_model()
         elif self.enable_live_plotting and not self.is_single_output_model:
             self._plot_multi_output_model()
+
+    def _update_slider_boundaries(self):
+        """"
+        Updates slider boundaries to correspond to inputted boundaries in text box
+        """
+        # TODO Better solution avoiding iteration?
+        # Iterate over sliders
+        for slider_id, slider in enumerate(self.slider_container):
+            # Get Current Min/Max values from slider textbox
+            # Round to 1dp to correspond to slider precision
+            new_min = round(number=float(self.slider_min_max_label_container[slider_id][0].text()), ndigits=1)
+            new_max = round(number=float(self.slider_min_max_label_container[slider_id][1].text()), ndigits=1)
+            # Set new slider boundaries (if possible)
+            slider.setMinimum(round(number=new_min, ndigits=1))
+            slider.setMaximum(round(number=new_max, ndigits=1))
+            # Display new slider boundaries in text box
+            self.slider_min_max_label_container[slider_id][0].setText(str(slider.minimum()))
+            self.slider_min_max_label_container[slider_id][1].setText(str(slider.maximum()))
 
 
     def fill_plot_option_window(self):
@@ -905,31 +1065,32 @@ class SimulationTab(QtWidgets.QDialog):
         self.infer_option_window.open()
 
 
-    def fill_parameter_table(self):
-        """Fills the parameter table with # parameters columns. Each column carries the name of the respective parameter and an
-        empty cell for the inferred value.
+    def _create_parameter_table(self, parameter_id: int):
+        """Creates a small table to hold the inferred values for a parameter. Initially empty.
         """
-        # get fit parameter names
-        state_names = self.main_window.model.state_names
-        model_param_names = self.main_window.model.parameter_names
-        parameter_names = state_names + model_param_names
-        number_parameters = len(parameter_names)
+        # create inferred parameters
+        inferred_param = QtWidgets.QTableWidget()
+        inferred_param.setRowCount(1)
+        inferred_param.setColumnCount(1)
+        header = QtWidgets.QTableWidgetItem('Inferred \n Parameter')
+        inferred_param.setHorizontalHeaderItem(0, header)
+        inferred_param.verticalHeader().setVisible(False)
+        inferred_param.setItem(0, 0, QtWidgets.QTableWidgetItem(''))
 
-        # fill up table with parameter columns (name and empty cell)
-        self.inferred_parameter_table.setRowCount(1)
-        self.inferred_parameter_table.setColumnCount(number_parameters)
-        for param_id, param_name in enumerate(parameter_names):
-            self.inferred_parameter_table.setHorizontalHeaderItem(param_id, QtWidgets.QTableWidgetItem(param_name))
-            self.inferred_parameter_table.setItem(0, param_id, QtWidgets.QTableWidgetItem(''))
+        self.inferred_boxes[parameter_id] = inferred_param
 
-        # set height and width of table to fit the content
-        header_height = self.inferred_parameter_table.horizontalHeader().height()
-        cell_height = self.inferred_parameter_table.rowHeight(0)
-        self.inferred_parameter_table.setMaximumHeight(header_height + cell_height)
-        header_width = self.inferred_parameter_table.verticalHeader().width()
-        cell_width = self.inferred_parameter_table.columnWidth(0)
-        self.inferred_parameter_table.setMaximumWidth(header_width + number_parameters * cell_width)
+        # set the height and width of the inferred params
+        header_height = inferred_param.horizontalHeader().height()
+        cell_height = inferred_param.rowHeight(0)
+        inferred_param.setMaximumHeight(2*header_height + cell_height)
+        header_width = inferred_param.horizontalHeader().width()
+        cell_width = inferred_param.columnWidth(0)
+        #inferred_param.setMaximumWidth(max(cell_width, header_width))
+        #inferred_param.setMinimumWidth(max(cell_width, header_width))
+        #inferred_param.setHorizontalPolicy(QtWidgets.QSizePolicy.Minimum)
+        inferred_param.setFixedWidth(min(cell_width, header_width))
 
+        return inferred_param
 
     @QtCore.pyqtSlot()
     def on_infer_model_click(self):
@@ -977,6 +1138,19 @@ class SimulationTab(QtWidgets.QDialog):
                 error_message = str('A numerical error occurred during the simulation likely due to unsuitable inference settings.' +
                                 ' Please try different inference settings!')
                 QtWidgets.QMessageBox.question(self, 'Numerical error!', error_message, QtWidgets.QMessageBox.Yes)
+            except ValueError as e:
+                # Generate error message (eg. if bounds are too narrow)
+                # Show error message as generated in PINTS
+                error_message = 'Check Boundaries are Suitable: \n' + str(e)
+
+                # Quick Fix to Remove Old Plot:
+                if self.is_single_output_model:  #remove one line
+                    self.data_model_ax.lines.pop()
+                else:
+                    for dim in range(len(self.data_model_ax)):
+                        self.data_model_ax[dim].lines.pop()
+                QtWidgets.QMessageBox.question(self, 'Value error!', error_message, QtWidgets.QMessageBox.Yes)
+
 
 
     def _set_parameter_boundaries(self, initial_parameters:np.ndarray):
@@ -1093,4 +1267,5 @@ class SimulationTab(QtWidgets.QDialog):
             rounded_value = round(number=param_value, ndigits=3)
 
             # update cell in table
-            self.inferred_parameter_table.item(0, param_id).setText('%.3f' % rounded_value)
+            self.inferred_boxes[param_id].item(0, 0).setText('%.3f' % rounded_value)
+            self.inferred_boxes[param_id].item(0, 0).setTextAlignment(QtCore.Qt.AlignHCenter)
