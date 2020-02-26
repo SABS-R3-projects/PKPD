@@ -131,12 +131,12 @@ class SimulationTab(QtWidgets.QDialog):
         """
         # if no dose schedule is provided, set dose schedule to None for each patient
         if self.raw_dose_schedule is None:
-            self.dose_schedule = ['place holder to shift python index to patient id'] + [None] * len(self.patient_ids)
+            self.dose_schedule = [None] * len(self.patient_ids)
 
         # if dose schedule is provided, extract protocols for patients
         else:
             # initialise dose container
-            self.dose_schedule = ['place holder to shift python index to patient id']
+            self.dose_schedule = []
             for patient_id in self.patient_ids:
                 # create patient mask
                 patient_mask = self.patient_ids_mask == patient_id

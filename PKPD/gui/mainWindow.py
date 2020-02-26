@@ -221,9 +221,13 @@ class MainWindow(abstractGui.AbstractMainWindow):
         # create model container for patients
         self.model_container = []
 
-        for patient_id in self.simulation.patient_ids:
+        # number of patients
+        number_of_patients = len(self.simulation.patient_ids)
+
+        # update schedule for each patient model
+        for patient in range(number_of_patients):
             # update dose schedule TODO: write test
-            self.simulation.update_dose_schedule(schedule=self.simulation.dose_schedule[patient_id])
+            self.simulation.update_dose_schedule(schedule=self.simulation.dose_schedule[patient])
 
             # add model to container
             self.model_container.append(self.model)
