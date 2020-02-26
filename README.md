@@ -25,9 +25,7 @@ Congratulations! You successfully installed PKPD.
 
 ## Use
 
-1. Open the terminal and enter the installed directory as in installation
-
-2. Start the program by typing
+Start the program by opening a terminal and typing
 ```
-python ./PKPD/gui/mainWindow.py
+python -m PKPD
 ```
