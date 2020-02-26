@@ -43,7 +43,7 @@ class TestSingleOutputProblem(unittest.TestCase):
         # assert aggreement of estimates with true paramters
         for parameter_id, true_value in enumerate(self.true_parameters_one_comp_model):
             estimated_value = estimated_paramters[parameter_id]
-            assert true_value == pytest.approx(estimated_value, rel=0.05)
+            assert true_value == pytest.approx(estimated_value, rel=0.1)
 
 
     def test_set_error_function(self):
@@ -131,7 +131,7 @@ class TestMultiOutputProblem(unittest.TestCase):
         for parameter_id, true_value in enumerate(self.true_parameters):
             estimated_value = estimated_parameters[parameter_id]
 
-            assert true_value == pytest.approx(estimated_value, rel=0.05)
+            assert true_value == pytest.approx(estimated_value, rel=0.1)
 
 
     def test_set_error_function(self):
