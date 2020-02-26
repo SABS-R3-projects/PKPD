@@ -11,61 +11,101 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
     """Single-output inverse problem based on pints.SingleOutputProblem https://pints.readthedocs.io/. Default objective function
     is pints.SumOfSquaresError and default optimiser is pints.CMAES.
     """
-    def __init__(self, model: m.SingleOutputModel, times: np.ndarray, values: np.ndarray):
+    def __init__(self, models: List[m.SingleOutputModel], times: List[np.ndarray], values: List[np.ndarray]):
         """Initialises a single output inference problem with default objective function pints.SumOfSquaresError
         and default optimiser pints.CMAES. Standard deviation in initial starting point of optimisation as well as
         restricted domain of support for inferred parameters is disabled by default.
 
         Arguments:
-            model {m.SingleOutputModel} -- Model which parameters are to be inferred.
-            times {np.ndarray} -- Times of data points.
-            values {np.ndarray} -- State values of data points.
+            models {List[m.SingleOutputModel]} -- Models, which parameters are to be inferred.
+            times {List[np.ndarray]} -- Times of data points for the different models.
+            values {List[np.ndarray]} -- State values of data points for the different models.
 
         Return:
             None
         """
-        self.problem = pints.SingleOutputProblem(model, times, values)
-        self.objective_function = pints.SumOfSquaresError(self.problem)
+        # initialise problem container
+        self.problem_container = []
+        for model_id, model in enumerate(models):
+            self.problem_container.append(pints.SingleOutputProblem(model, times[model_id], values[model_id]))
+
+        # initialise error function container
+        self.error_function_container = []
+        for problem in self.problem_container:
+            self.error_function_container.append(pints.SumOfSquaresError(problem))
+
+        # initialise optimiser
         self.optimiser = pints.CMAES
+
+        # initialise fluctiations around starting point of optimisation
         self.initial_parameter_uncertainty = None
+
+        # initialise parameter constraints
         self.parameter_boundaries = None
 
+        # initialise outputs
         self.estimated_parameters = None
         self.objective_score = None
 
 
-    def find_optimal_parameter(self, initial_parameter:np.ndarray) -> None:
+    def find_optimal_parameter(self, initial_parameter:np.ndarray, number_of_iterations:int=5) -> None:
         """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the
-        distance of the model to the data with respect to the objective function.
+        distance of the model to the data with respect to the objective function. Optimisation is run number_of_iterations times and
+        result with minimal score is returned.
 
         Arguments:
             initial_parameter {np.ndarray} -- Starting point in parameter space of the optimisation algorithm.
+            number_of_iterations {int} -- Number of times optimisation is run. Default: 5 (arbitrary).
 
         Return:
             None
         """
-        optimisation = pints.OptimisationController(function=self.objective_function,
+        # set default randomness in initial parameter values, if not specified in GUI
+        if self.initial_parameter_uncertainty is None:
+            # TODO: evaluate how to choose uncertainty best, to obtain most stable results
+            self.initial_parameter_uncertainty = initial_parameter + 0.1 # arbitrary
+
+        # create sum of errors measure
+        error_measure = pints.SumOfErrors(self.error_function_container)
+
+        # initialise optimisation
+        optimisation = pints.OptimisationController(function=error_measure,
                                                     x0=initial_parameter,
                                                     sigma0=self.initial_parameter_uncertainty,
                                                     boundaries=self.parameter_boundaries,
                                                     method=self.optimiser)
 
-        self.estimated_parameters, self.objective_score = optimisation.run()
+        # run optimisation 'number_of_iterations' times
+        estimate_container = []
+        score_container = []
+        for _ in range(number_of_iterations):
+            estimates, score = optimisation.run()
+            estimate_container.append(estimates)
+            score_container.append(score)
+
+        # return parameters with minimal score
+        min_score_id = np.argmin(score_container)
+        self.estimated_parameters, self.objective_score = [estimate_container[min_score_id], score_container[min_score_id]]
 
 
-    def set_objective_function(self, objective_function: pints.ErrorMeasure) -> None:
-        """Sets the objective function which is minimised to find the optimal parameter set.
+    def set_error_function(self, error_function: pints.ErrorMeasure) -> None:
+        """Sets the objective function which is minimised to find the optimal parameter set. For multiple problems, all
+        error functions are updated to the selected function.
 
         Arguments:
-            objective_function {pints.ErrorMeasure} -- Valid objective functions are [MeanSquaredError,
+            error_function {pints.ErrorMeasure} -- Valid error functions are [MeanSquaredError,
             RootMeanSquaredError, SumOfSquaresError] in pints.
         """
-        valid_obj_func = [pints.MeanSquaredError, pints.RootMeanSquaredError, pints.SumOfSquaresError]
+        # List of valid error functions
+        valid_err_func = [pints.MeanSquaredError, pints.RootMeanSquaredError, pints.SumOfSquaresError]
 
-        if objective_function not in valid_obj_func:
+        # check of validity of selected error function
+        if error_function not in valid_err_func:
             raise ValueError('Objective function is not supported.')
 
-        self.objective_function = objective_function(self.problem)
+        # update error function
+        for problem_id, problem in enumerate(self.problem_container):
+            self.error_function_container[problem_id] = error_function(problem)
 
 
     def set_optimiser(self, optimiser: pints.Optimiser) -> None:
@@ -74,7 +114,7 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         Arguments:
             optimiser {pints.Optimiser} -- Valid optimisers are [CMAES, NelderMead, PSO, SNES, XNES] in pints.
         """
-        valid_optimisers = [pints.CMAES, pints.NelderMead, pints.SNES, pints.XNES]
+        valid_optimisers = [pints.CMAES, pints.NelderMead, pints.PSO, pints.SNES, pints.XNES]
 
         if optimiser not in valid_optimisers:
             raise ValueError('Method is not supported.')
@@ -88,77 +128,56 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         Arguments:
             boundaries {List} -- List of two lists. [min values, max values]
         """
-        min_values, max_values = boundaries[0], boundaries[1]
-        self.parameter_boundaries = pints.RectangularBoundaries(min_values, max_values)
-
-
-    def get_estimate(self) -> List:
-        """Returns the estimated parameters that minimise the objective function in a dictionary and the corresponding
-        score of the objective function.
-
-        Returns:
-            List -- [parameter dictionary, corresponding score of the objective function]
-        """
-        if self.estimated_parameters is None:
-            raise ValueError('The estimated parameter is None. Try to run the `find_optimal_parameter` routine again?')
-        parameter_dict = self._create_parameter_dict(self.estimated_parameters)
-
-        return [parameter_dict, self.objective_score]
-
-
-    def _create_parameter_dict(self, estimated_parameter:np.ndarray) -> Dict:
-        """Creates a dictionary of the optimal parameters by assigning the corresponding names to them.
-
-        Arguments:
-            estimated_parameter {np.ndarray} -- Parameter values resulting from the optimisation.
-
-        Return:
-            {Dict} -- Estimated parameter values with their name as key.
-        """
-        state_dimension = 1
-        state_name = self.problem._model.state_name
-        parameter_names = self.problem._model.parameter_names
-
-        parameter_dict = {}
-        # Note that the estimated parameters are [inital values, model parameter].
-        for parameter_id, value in enumerate(estimated_parameter):
-            if parameter_id < state_dimension:
-                parameter_dict[state_name] = value
-            else:
-                reset_id = parameter_id-state_dimension
-                parameter_dict[parameter_names[reset_id]] = value
-
-        return parameter_dict
+        print('boundaries are ' + str(boundaries))
+        if boundaries is None:
+            self.parameter_boundaries = None
+        else:
+            min_values, max_values = boundaries[0], boundaries[1]
+            self.parameter_boundaries = pints.RectangularBoundaries(min_values, max_values)
 
 
 class MultiOutputInverseProblem(AbstractInverseProblem):
     """Multi-output inverse problem based on pints.MultiOutputProblem https://pints.readthedocs.io/. Default objective function
     is pints.SumOfSquaresError and default optimiser is pints.CMAES.
     """
-    def __init__(self, model: m.MultiOutputModel, times: np.ndarray, values: np.ndarray):
+    def __init__(self, models: List[m.MultiOutputModel], times: List[np.ndarray], values: List[np.ndarray]):
         """Initialises a multi-output inference problem with default objective function pints.SumOfSquaresError
         and default optimiser pints.CMAES. Standard deviation in initial starting point of optimisation as well as
         restricted domain of support for inferred parameters is disabled by default.
 
         Arguments:
-            model {m.MultiOutputModel} -- Model which parameters are to be inferred.
-            times {np.ndarray} -- Times of data points.
-            values {np.ndarray} -- State values of data points.
+            models {List[m.MultiOutputModel]} -- Models, which parameters are to be inferred.
+            times {List[np.ndarray]} -- Times of data points for the different models.
+            values {List[np.ndarray]} -- State values of data points for the different models.
 
         Return:
             None
         """
-        self.problem = pints.MultiOutputProblem(model, times, values)
-        self.objective_function = pints.SumOfSquaresError(self.problem)
+        # initialise problem container
+        self.problem_container = []
+        for model_id, model in enumerate(models):
+            self.problem_container.append(pints.MultiOutputProblem(model, times[model_id], values[model_id]))
+
+        # initialise error function container
+        self.error_function_container = []
+        for problem in self.problem_container:
+            self.error_function_container.append(pints.SumOfSquaresError(problem))
+
+        # initialise optimiser
         self.optimiser = pints.CMAES
+
+        # initialise fluctiations around starting point of optimisation
         self.initial_parameter_uncertainty = None
+
+        # initialise parameter constraints
         self.parameter_boundaries = None
 
+        # initialise outputs
         self.estimated_parameters = None
         self.objective_score = None
 
 
-    def find_optimal_parameter(self, initial_parameter:np.ndarray) -> None:
+    def find_optimal_parameter(self, initial_parameter:np.ndarray, number_of_iterations:int=5) -> None:
         """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the
         distance of the model to the data with respect to the objective function.
 
@@ -168,28 +187,52 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         Return:
             None
         """
-        optimisation = pints.OptimisationController(function=self.objective_function,
+        # set default randomness in initial parameter values, if not specified in GUI
+        if self.initial_parameter_uncertainty is None:
+            # TODO: evaluate how to choose uncertainty best, to obtain most stable results
+            self.initial_parameter_uncertainty = initial_parameter + 0.1 # arbitrary
+
+        # create sum of errors measure
+        error_measure = pints.SumOfErrors(self.error_function_container)
+
+        # initialise optimisation
+        optimisation = pints.OptimisationController(function=error_measure,
                                                     x0=initial_parameter,
                                                     sigma0=self.initial_parameter_uncertainty,
                                                     boundaries=self.parameter_boundaries,
                                                     method=self.optimiser)
 
-        self.estimated_parameters, self.objective_score = optimisation.run()
+        # run optimisation 'number_of_iterations' times
+        estimate_container = []
+        score_container = []
+        for _ in range(number_of_iterations):
+            estimates, score = optimisation.run()
+            estimate_container.append(estimates)
+            score_container.append(score)
+
+        # return parameters with minimal score
+        min_score_id = np.argmin(score_container)
+        self.estimated_parameters, self.objective_score = [estimate_container[min_score_id], score_container[min_score_id]]
 
 
-    def set_objective_function(self, objective_function: pints.ErrorMeasure) -> None:
-        """Sets the objective function which is minimised to find the optimal parameter set.
+    def set_error_function(self, error_function: pints.ErrorMeasure) -> None:
+        """Sets the objective function which is minimised to find the optimal parameter set. For multiple problems, all
+        error functions are updated to the selected function.
 
         Arguments:
-            objective_function {pints.ErrorMeasure} -- Valid objective functions are [MeanSquaredError,
-            SumOfSquaresError] in pints.
+            error_function {pints.ErrorMeasure} -- Valid error functions are [MeanSquaredError,
+            RootMeanSquaredError, SumOfSquaresError] in pints.
         """
-        valid_obj_func = [pints.MeanSquaredError, pints.SumOfSquaresError]
+        # List of valid error functions
+        valid_err_func = [pints.MeanSquaredError, pints.SumOfSquaresError]
 
-        if objective_function not in valid_obj_func:
+        # check of validity of selected error function
+        if error_function not in valid_err_func:
             raise ValueError('Objective function is not supported.')
 
-        self.objective_function = objective_function(self.problem)
+        # update error function
+        for problem_id, problem in enumerate(self.problem_container):
+            self.error_function_container[problem_id] = error_function(problem)
 
 
     def set_optimiser(self, optimiser: pints.Optimiser) -> None:
@@ -198,7 +241,7 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         Arguments:
             optimiser {pints.Optimiser} -- Valid optimisers are [CMAES, NelderMead, PSO, SNES, XNES] in pints.
         """
-        valid_optimisers = [pints.CMAES, pints.NelderMead, pints.SNES, pints.XNES]
+        valid_optimisers = [pints.CMAES, pints.NelderMead, pints.PSO, pints.SNES, pints.XNES]
 
         if optimiser not in valid_optimisers:
             raise ValueError('Method is not supported.')
@@ -214,43 +257,3 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         """
         min_values, max_values = boundaries[0], boundaries[1]
         self.parameter_boundaries = pints.RectangularBoundaries(min_values, max_values)
-
-
-    def get_estimate(self) -> List:
-        """Returns the estimated parameters that minimise the objective function in a dictionary and the corresponding
-        score of the objective function.
-
-        Returns:
-            List -- [parameter dictionary, corresponding score of the objective function]
-        """
-        if self.estimated_parameters is None:
-            raise ValueError('The estimated parameter is None. Try to run the `find_optimal_parameter` routine again?')
-        parameter_dict = self._create_parameter_dict(self.estimated_parameters)
-
-        return [parameter_dict, self.objective_score]
-
-
-    def _create_parameter_dict(self, estimated_parameter:np.ndarray) -> Dict:
-        """Creates a dictionary of the optimal parameters by assigning the corresponding names to them.
-
-        Arguments:
-            estimated_parameter {np.ndarray} -- Parameter values resulting from the optimisation.
-
-        Return:
-            {Dict} -- Estimated parameter values with their name as key.
-        """
-        state_dimension = self.problem._model.n_outputs()
-        state_names = self.problem._model.state_names
-        parameter_names = self.problem._model.parameter_names
-
-        parameter_dict = {}
-        # Note that the estimated parameters are [inital values, model parameter].
-        for parameter_id, value in enumerate(estimated_parameter):
-            if parameter_id < state_dimension:
-                parameter_dict[state_names[parameter_id]] = value
-            else:
-                reset_id = parameter_id-state_dimension
-                parameter_dict[parameter_names[reset_id]] = value
-
-        return parameter_dict
-

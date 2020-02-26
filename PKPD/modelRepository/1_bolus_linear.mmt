@@ -1,0 +1,35 @@
+[[model]]
+name: Linear, single-compartment PK model of drug distribution with bolus injection.
+author: SABS:R3
+
+# Initial values
+central_compartment.drug = 0 [ng]
+
+[central_compartment]
+# bound variables (dosing controlled by the protocol, and time)
+dose_rate = 0 [ng/h]
+    in [ng/h]
+    bind pace
+    desc: Dose rate in ng/h. Controlled by protocol.
+time = 0 [h]
+    in [h]
+    bind time
+    desc: independent time variable in h.
+
+# compartment internal parameters
+CL = 2 [mL/h]
+    in [mL/h]
+    desc: Clearance/elimination rate from central compartment.
+V = 4 [mL]
+    in [mL]
+    desc: Volume of central compartment.
+
+# state variable
+dot(drug) = dose_rate - drug * CL / V
+    in [ng]
+    desc: Drug in central compartment in ng.
+
+# convert to concentration
+drug_concentration = drug / V
+    in [ng/mL]
+    desc: Drug concentration in central compartment in ng/mL.

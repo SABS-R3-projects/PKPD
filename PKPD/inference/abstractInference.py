@@ -22,8 +22,3 @@ class AbstractInverseProblem(object):
         PSO, SNES, xNES. For more information see pints documentation https://pints.readthedocs.io/.
         """
         raise NotImplementedError
-
-    def get_estimate(self):
-        """Returns the estimated parameters as well as their objective function score.
-        """
-        raise NotImplementedError
