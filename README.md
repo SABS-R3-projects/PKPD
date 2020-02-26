@@ -27,5 +27,5 @@ Congratulations! You successfully installed PKPD.
 
 Start the program by opening a terminal and typing
 ```
-python -m PKPD
+python3 -m PKPD
 ```
