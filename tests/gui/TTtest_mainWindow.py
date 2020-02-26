@@ -7,6 +7,7 @@ from PyQt5 import QtWidgets, QtCore
 
 from PKPD.gui.mainWindow import MainWindow
 
+
 class TestMainWindow(unittest.TestCase):
     """Tests the methods of the MainWindow class.
     """
@@ -40,7 +41,6 @@ class TestMainWindow(unittest.TestCase):
         # closing application, the usual sys.exit(app.exec_()) kept did not close the app automatically.
         QtCore.QTimer.singleShot(0.1, window.close)
 
-
     def test_set_window_size_broad_screen(self, desktop_dimension=[1000, 200]):
         """Tests whether the resulting main window size obeys the aspect ratio 5/4 and whether either the width is 3/4 of the sreen
         width or the height is equal the screen height.
@@ -69,7 +69,6 @@ class TestMainWindow(unittest.TestCase):
 
         # closing application, the usual sys.exit(app.exec_()) kept did not close the app automatically.
         QtCore.QTimer.singleShot(0.1, window.close)
-
 
     def test_set_window_size_high_screen(self, desktop_dimension=[200, 1000]):
         """Tests whether the resulting main window size obeys the aspect ratio 5/4 and whether either the width is 3/4 of the sreen

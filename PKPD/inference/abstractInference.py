@@ -1,5 +1,6 @@
 from pints import SingleOutputProblem
 
+
 class AbstractInverseProblem(object):
     """Abstract class for inverse problems. Daughter classes will specifiy into SingleOutputInverseProblems and MultiOutputInverseProblems
     basing on pints.SingleOutputProblem and pints.MultiOutputProblem. For more information, see pints documentation https://pints.readthedocs.io/.

@@ -23,7 +23,6 @@ class DoubleSlider(QtWidgets.QSlider):
         # connect slider changes to a method that can deal with the wanted decimal precision
         self.valueChanged.connect(self.emitDoubleValueChanged)
 
-
     def emitDoubleValueChanged(self):
         """Reaction to changing the slider position. Emits the slider value in the appropriate precision.
         """
@@ -35,7 +34,6 @@ class DoubleSlider(QtWidgets.QSlider):
 
         # emit value
         self.doubleValueChanged.emit(value)
-
 
     def value(self):
         """Returns the current value of the slider in the appropriate precision.
@@ -51,7 +49,6 @@ class DoubleSlider(QtWidgets.QSlider):
 
         return value
 
-
     def setMinimum(self, minimum):
         """Sets minimum of slider range.
 
@@ -63,7 +60,6 @@ class DoubleSlider(QtWidgets.QSlider):
 
         # set QSlider minimum
         super(DoubleSlider, self).setMinimum(qslider_minimum)
-
 
     def setMaximum(self, maximum):
         """Sets maximum of slider range.
@@ -77,7 +73,6 @@ class DoubleSlider(QtWidgets.QSlider):
         # set QSlider maximum
         super(DoubleSlider, self).setMaximum(qslider_maximum)
 
-
     def setValue(self, value):
         """Sets position of slider to given value.
 
@@ -90,12 +85,10 @@ class DoubleSlider(QtWidgets.QSlider):
         # set QSlider value
         super(DoubleSlider, self).setValue(qslider_value)
 
-
     def setTickInterval(self):
         """Sets tick intervals to chosen level of precision.
         """
         super(DoubleSlider, self).setTickInterval(self._unit_conversion_factor)
-
 
     def minimum(self):
         """Gets minimum of slider range.
@@ -110,7 +103,6 @@ class DoubleSlider(QtWidgets.QSlider):
         minimum = float(qslider_minimum) / self._unit_conversion_factor
 
         return minimum
-
 
     def maximum(self):
         """Gets maximum of slider range.

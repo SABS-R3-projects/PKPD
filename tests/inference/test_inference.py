@@ -23,7 +23,6 @@ class TestSingleOutputProblem(unittest.TestCase):
     # noise-free data, to check whether optimisation works
     data_one_comp_model = model_result
 
-
     def test_find_optimal_parameter(self):
         """Test whether the find_optimal_parameter method works as expected.
         """
@@ -44,7 +43,6 @@ class TestSingleOutputProblem(unittest.TestCase):
             estimated_value = estimated_paramters[parameter_id]
             assert true_value == pytest.approx(estimated_value, rel=0.05)
 
-
     def test_set_objective_function(self):
         """Test whether the set_objective_function method works as expected.
         """
@@ -60,7 +58,6 @@ class TestSingleOutputProblem(unittest.TestCase):
 
             # assert that error measure is set as expected
             assert type(obj_func(problem.problem)) == type(problem.objective_function)
-
 
     def test_set_optimiser(self):
         """Test whether the set_optimiser method works as expected. The estimated values
@@ -100,7 +97,6 @@ class TestMultiOutputProblem(unittest.TestCase):
     # noise free data to check that inference works
     data_two_comp_model = model_result
 
-
     def test_find_optimal_parameter(self):
         """Test whether the find_optimal_parameter method works as expected.
         """
@@ -122,7 +118,6 @@ class TestMultiOutputProblem(unittest.TestCase):
 
             assert true_value == pytest.approx(estimated_value, rel=0.05)
 
-
     def test_set_objective_function(self):
         """Test whether the set_objective_function method works as expected.
         """
@@ -141,7 +136,6 @@ class TestMultiOutputProblem(unittest.TestCase):
 
 
         valid_obj_func = [pints.MeanSquaredError, pints.SumOfSquaresError]
-
 
     def test_optimiser(self):
         """Test whether the set_optimiser method works as expected. The estimated values

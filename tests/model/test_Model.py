@@ -6,14 +6,12 @@ import numpy as np
 from PKPD.model import model as m
 
 
-
 class TestSingleOutputModel(unittest.TestCase):
     """Tests the functionality of all methods of the SingleOutputModel class.
     """
     # Test case I: 1-compartment model
     file_name = 'PKPD/modelRepository/1_bolus_linear.mmt'
     one_comp_model = m.SingleOutputModel(file_name)
-
 
     def test_init(self):
         """Tests whether the Model class initialises as expected.
@@ -32,7 +30,6 @@ class TestSingleOutputModel(unittest.TestCase):
             assert parameter_names[parameter_id] == parameter
         assert number_parameters_to_fit == self.one_comp_model.number_parameters_to_fit
 
-
     def test_n_parameters(self):
         """Tests whether the n_parameter method returns the correct number of fit parameters.
         """
@@ -43,7 +40,6 @@ class TestSingleOutputModel(unittest.TestCase):
         ## assert correct number of parameters is returned.
         assert n_parameters == self.one_comp_model.n_parameters()
 
-
     def test_n_outputs(self):
         """Tests whether the n_outputs method returns the correct number of outputs.
         """
@@ -53,7 +49,6 @@ class TestSingleOutputModel(unittest.TestCase):
 
         ## assert correct number of outputs.
         assert n_outputs == self.one_comp_model.n_outputs()
-
 
     def test_simulate(self):
         """Tests whether the simulate method works as expected. Tests implicitly also whether
@@ -89,7 +84,6 @@ class TestMultiOutputModel(unittest.TestCase):
     output_dimension = 2
     two_comp_model.set_output_dimension(output_dimension)
 
-
     def test_init(self):
         """Tests whether the Model class initialises as expected.
         """
@@ -107,7 +101,6 @@ class TestMultiOutputModel(unittest.TestCase):
         assert state_names == self.two_comp_model.state_names
         assert parameter_names == self.two_comp_model.parameter_names
 
-
     def test_n_parameters(self):
         """Tests whether the n_parameter method returns the correct number of fit parameters.
         """
@@ -118,7 +111,6 @@ class TestMultiOutputModel(unittest.TestCase):
         ## assert correct number of parameters is returned.
         assert n_parameters == self.two_comp_model.n_parameters()
 
-
     def test_n_outputs(self):
         """Tests whether the n_outputs method returns the correct number of outputs.
         """
@@ -128,7 +120,6 @@ class TestMultiOutputModel(unittest.TestCase):
 
         ## assert correct number of outputs.
         assert n_outputs == self.two_comp_model.n_outputs()
-
 
     def test_simulate(self):
         """Tests whether the simulate method works as expected. Tests implicitly also whether

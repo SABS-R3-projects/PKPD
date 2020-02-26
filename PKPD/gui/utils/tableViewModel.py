@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 
+
 class PandasModel(QtCore.QAbstractTableModel):
     """PandasModel class extending QAbstractTableModel for Pandas dataframes, such that PandasModel instances are compatible
     with PyQt's QTableView. In particular designed to deal with PKPD data.

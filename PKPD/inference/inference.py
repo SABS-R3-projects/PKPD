@@ -33,7 +33,6 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         self.estimated_parameters = None
         self.objective_score = None
 
-
     def find_optimal_parameter(self, initial_parameter:np.ndarray, number_of_iterations:int=5) -> None:
         """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the
         distance of the model to the data with respect to the objective function. Optimisation is run number_of_iterations times and
@@ -70,7 +69,6 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         min_score_id = np.argmin(score_container)
         self.estimated_parameters, self.objective_score = [estimate_container[min_score_id], score_container[min_score_id]]
 
-
     def set_objective_function(self, objective_function: pints.ErrorMeasure) -> None:
         """Sets the objective function which is minimised to find the optimal parameter set.
 
@@ -85,7 +83,6 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
 
         self.objective_function = objective_function(self.problem)
 
-
     def set_optimiser(self, optimiser: pints.Optimiser) -> None:
         """Sets the optimiser to find the "global" minimum of the objective function.
 
@@ -98,7 +95,6 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
             raise ValueError('Method is not supported.')
 
         self.optimiser = optimiser
-
 
     def set_parameter_boundaries(self, boundaries:List):
         """Sets the parameter boundaries for inference.
@@ -140,7 +136,6 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         self.estimated_parameters = None
         self.objective_score = None
 
-
     def find_optimal_parameter(self, initial_parameter:np.ndarray, number_of_iterations:int=5) -> None:
         """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the
         distance of the model to the data with respect to the objective function.
@@ -177,7 +172,6 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         min_score_id = np.argmin(score_container)
         self.estimated_parameters, self.objective_score = [estimate_container[min_score_id], score_container[min_score_id]]
 
-
     def set_objective_function(self, objective_function: pints.ErrorMeasure) -> None:
         """Sets the objective function which is minimised to find the optimal parameter set.
 
@@ -192,7 +186,6 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
 
         self.objective_function = objective_function(self.problem)
 
-
     def set_optimiser(self, optimiser: pints.Optimiser) -> None:
         """Sets the optimiser to find the "global" minimum of the objective function.
 
@@ -205,7 +198,6 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
             raise ValueError('Method is not supported.')
 
         self.optimiser = optimiser
-
 
     def set_parameter_boundaries(self, boundaries:List):
         """Sets the parameter boundaries for inference.

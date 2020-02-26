@@ -35,7 +35,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
         # fill the empty window with content
         self._arrange_window_content()
 
-
     def _set_window_size(self):
         """Keeps an aspect ratio width / height of 5/4 and scales the width such that 0.75 of the screen width is covered. If this
         leads to a window height exceeding the screen height, the aspect ratio is kept and the window height is set to the screen
@@ -69,7 +68,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
             )
         )
 
-
     def _format_images(self):
         """Scales images and logos according to the desktop size.
         """
@@ -85,7 +83,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
         red_cross = QtGui.QPixmap('images/FALSE.png')
         self.rescaled_rc = red_cross.scaledToHeight(self.desktop_height * 0.03)
 
-
     def _arrange_window_content(self):
         """Defines the layout of the main window.
         """
@@ -93,7 +90,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
         self.tabs = self._create_tabs()
         self.setCentralWidget(self.tabs)
         self.setStatusBar(self._create_status_bar())
-
 
     def _create_tabs(self):
         """Creates the home and simulation tab.
@@ -112,7 +108,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
         return tabs
 
-
     def _create_status_bar(self):
         """Creates a status bar displaying the current program version and the producers of the program.
 
@@ -126,7 +121,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
         return status_bar
 
-
     def _create_SABS_logo(self):
         """Creates SABS R3 logo in the status bar.
 
@@ -138,7 +132,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
         label.setPixmap(self.rescaled_sabs)
 
         return label
-
 
     def next_tab(self):
         """Switches to the simulation tab, when triggered by clicking the 'next' QPushButton on the home tab.
@@ -201,7 +194,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
             # generate error message
             error_message = 'At least one of the files does not seem to exist or does not have the correct file format. Please check again!'
             QtWidgets.QMessageBox.question(self, 'Files not found!', error_message, QtWidgets.QMessageBox.Yes)
-
 
     def _are_files_correct(self) -> List[bool]:
         """Checks whether data exist and have the correct format (.mmt and .csv, respectively).

@@ -32,7 +32,6 @@ class SingleOutputModel(AbstractModel):
         self.simulation = myokit.Simulation(model, protocol)
         self.model = model
 
-
     def _get_default_output_name(self, model:myokit.Model):
         """Returns 'central_compartment.drug_concentration' as output_name by default. If variable does not exist in model, first state
         variable name is returned.
@@ -51,7 +50,6 @@ class SingleOutputModel(AbstractModel):
             first_state_name = self.state_names[0]
             return first_state_name
 
-
     def _get_parameter_names(self, model:myokit.Model):
         """Gets parameter names of the ODE model, i.e. initial conditions are excluded.
 
@@ -67,7 +65,6 @@ class SingleOutputModel(AbstractModel):
 
         return parameter_names
 
-
     def n_parameters(self) -> int:
         """Returns the number of parameters of the model, i.e. initial conditions and model
         parameters.
@@ -77,7 +74,6 @@ class SingleOutputModel(AbstractModel):
         """
         return self.number_parameters_to_fit
 
-
     def n_outputs(self) -> None:
         """Returns the dimension of the state variable.
 
@@ -86,7 +82,6 @@ class SingleOutputModel(AbstractModel):
         """
         return 1
 
-
     def set_output(self, output_name):
         """Sets the output of the model.
 
@@ -94,7 +89,6 @@ class SingleOutputModel(AbstractModel):
             output_name {[type]} -- [description]
         """
         self.output_name = output_name
-
 
     def simulate(self, parameters:np.ndarray, times:np.ndarray) -> array:
         """Solves the forward problem and returns the state values evaluated at the times provided.
@@ -113,7 +107,6 @@ class SingleOutputModel(AbstractModel):
         result = self.simulation.run(duration=times[-1]+1, log=[self.output_name], log_times=times)
 
         return result[self.output_name]
-
 
     def _set_parameters(self, parameters:np.ndarray) -> None:
         """Internal helper method to set the parameters of the forward model.
@@ -167,7 +160,6 @@ class MultiOutputModel(AbstractModel):
 
         return parameter_names
 
-
     def n_parameters(self) -> int:
         """Returns the number of parameters of the model, i.e. initial conditions and model
         parameters.
@@ -177,7 +169,6 @@ class MultiOutputModel(AbstractModel):
         """
         return self.number_parameters_to_fit
 
-
     def n_outputs(self) -> None:
         """Returns the dimension of the state variable.
 
@@ -185,7 +176,6 @@ class MultiOutputModel(AbstractModel):
             int -- Dimensionality of the output.
         """
         return self.output_dimension
-
 
     def simulate(self, parameters:np.ndarray, times:np.ndarray) -> np.ndarray:
         """Solves the forward problem and returns the state values evaluated at the times provided.
@@ -209,7 +199,6 @@ class MultiOutputModel(AbstractModel):
 
         return np.array(result).transpose()
 
-
     def _set_parameters(self, parameters:np.ndarray) -> None:
         """Internal helper method to set the parameters of the forward model.
 
@@ -219,7 +208,6 @@ class MultiOutputModel(AbstractModel):
         self.simulation.set_state(parameters[:self.state_dimension])
         for param_id, value in enumerate(parameters[self.state_dimension:]):
             self.simulation.set_constant(self.parameter_names[param_id], value)
-
 
     def set_output_dimension(self, data_dimension:int):
         """Set output dimension to data dimension, so optimisation/inference can be performed.
@@ -234,7 +222,6 @@ class MultiOutputModel(AbstractModel):
         # if dimension of outputs does not match, fill with default outputs
         if len(self.output_names) != self.output_dimension:
             self._set_default_output_names()
-
 
     def _set_default_output_names(self):
         """Returns 'central_compartment.drug_concentration' as output_name by default. If variable does not exist in model, first state
@@ -263,7 +250,6 @@ class MultiOutputModel(AbstractModel):
         elif self.state_dimension >= self.output_dimension:
             self.output_names = self.state_names[:self.output_dimension]
 
-
     def set_output(self, output_names:List):
         """Set output of the model.
 
@@ -272,6 +258,7 @@ class MultiOutputModel(AbstractModel):
         """
         self.output_dimension = len(output_names)
         self.output_names = output_names
+
 
 def set_unit_format():
     """
@@ -292,5 +279,6 @@ def set_unit_format():
     # Set Preferred Representation in Myokit
     for name, unit in common_units.items():
         myokit.Unit.register_preferred_representation(name, unit)
+
 
 set_unit_format()
