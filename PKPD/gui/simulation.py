@@ -256,10 +256,8 @@ class SimulationTab(QtWidgets.QDialog):
         scroll.setWidget(slider_group)
         scroll.setWidgetResizable(True)
 
-        # fix vertical space that sliders can take up
-        height = 0.7 * self.main_window.height
+        # fix the width of sliders
         width = 0.35 * self.main_window.width
-        scroll.setFixedHeight(height)
         scroll.setFixedWidth(width)
         #layout.setAlignment(info, Qt.AlignTop)
 
