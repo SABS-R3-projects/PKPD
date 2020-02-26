@@ -243,6 +243,9 @@ class SimulationTab(QtWidgets.QDialog):
     def filter_data(self):
         """Filter time and state data from rows for which the state only contains NaNs.
         """
+        # initialise container for time and state data
+        self.time_data_container = []
+        self.state_data_container = []
         # if single output problem, remove all entries where state is NaN
         if self.is_single_output_model:
             # create NaN mask
@@ -269,6 +272,15 @@ class SimulationTab(QtWidgets.QDialog):
             # update patient IDs mask and patient IDs
             self.patient_ids_mask = self.patient_ids_mask[mask]
             self.patient_ids = np.unique(self.patient_ids_mask)
+
+        # split time and date data into patients
+        for patient_id in self.patient_ids:
+            # create patient mask
+            mask = self.patient_ids_mask == patient_id
+
+            # add patient specific data to container
+            self.time_data_container.append(self.time_data[mask])
+            self.state_data_container.append(self.state_data[mask])
 
     def update_dose_schedule(self, schedule:List) -> None:
         """Update dose schedule.
@@ -303,6 +315,9 @@ class SimulationTab(QtWidgets.QDialog):
         """Adds the data from the in the home tab chosen data file to the previously initialised figure. For
         multi-dimensional data, the figure is split into subplots.
         """
+        # get number of patients
+        number_of_patients = len(self.patient_ids)
+
         if self.is_single_output_model: # single output
             # clear figure
             self.data_model_figure.clf()
@@ -312,13 +327,11 @@ class SimulationTab(QtWidgets.QDialog):
 
             # create plot
             self.data_model_ax = self.data_model_figure.subplots()
-            for patient_id in self.patient_ids:
-                # create mask for patient specific data
-                mask = self.patient_ids_mask == patient_id
+            for patient in range(number_of_patients):
 
                 # create scatter plot
-                self.data_model_ax.scatter(x=self.time_data[mask],
-                                           y=self.state_data[mask],
+                self.data_model_ax.scatter(x=self.time_data_container[patient],
+                                           y=self.state_data_container[patient],
                                            marker='o',
                                            edgecolor='black',
                                            alpha=0.5
@@ -350,13 +363,10 @@ class SimulationTab(QtWidgets.QDialog):
             for dim in range(self.data_dimension):
 
                 # color data by patient ID
-                for patient_id in self.patient_ids:
-                    # create mask for patient specific data
-                    mask = self.patient_ids_mask == patient_id
-
+                for patient in range(number_of_patients):
                     # create scatter plot
-                    self.data_model_ax[dim].scatter(x=self.time_data[mask],
-                                                    y=self.state_data[mask, dim],
+                    self.data_model_ax[dim].scatter(x=self.time_data_container[patient],
+                                                    y=self.state_data_container[patient][:, dim],
                                                     marker='o',
                                                     edgecolor='black',
                                                     alpha=0.5

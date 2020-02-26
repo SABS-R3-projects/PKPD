@@ -200,9 +200,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 # switch to simulation tab
                 self.tabs.setCurrentIndex(self.sim_tab_index)
 
-                # instantiate inverse problem (after switching to simulation tab to improve user experience)
-                self._instantiate_inverse_problem()
-
             except ValueError:
                 # generate error message
                 error_message = 'The .csv file does not seem to be properly formatted. Please check again!'
@@ -211,6 +208,14 @@ class MainWindow(abstractGui.AbstractMainWindow):
                                                error_message,
                                                QtWidgets.QMessageBox.Yes
                                                )
+
+            # instantiate inverse problem (after switching to simulation tab to improve user experience)
+            try:
+                self._instantiate_inverse_problem()
+            except Exception as e:
+                warning_message = 'Warning: The initialisation of the inverse problem failed.'
+                QtWidgets.QMessageBox.question(self, warning_message, str(e),
+                                               QtWidgets.QMessageBox.Yes)
 
             # Check Units in MMT file
             try:
@@ -255,15 +260,15 @@ class MainWindow(abstractGui.AbstractMainWindow):
         if self.simulation.is_single_output_model:
             # instantiate single output problem
             self.problem = inf.SingleOutputInverseProblem(models=self.model_container,
-                                                          times=self.simulation.time_data,
-                                                          values=self.simulation.state_data
+                                                          times=self.simulation.time_data_container,
+                                                          values=self.simulation.state_data_container
             )
 
         else:
             # instantiate multi output problem
             self.problem = inf.MultiOutputInverseProblem(models=self.model_container,
-                                                         times=self.simulation.time_data,
-                                                         values=self.simulation.state_data
+                                                         times=self.simulation.time_data_container,
+                                                         values=self.simulation.state_data_container
             )
 
     def _show_animated_logo(self):
