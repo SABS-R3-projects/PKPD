@@ -2,8 +2,8 @@ from PyQt5 import QtWidgets, QtCore
 
 
 class DoubleSlider(QtWidgets.QSlider):
-    """Extension to QSlider class that allows for float precision in slider values. Qts QSlider can only in/decrement their values
-    in integer steps, which is modified by this class
+    """Extension to QSlider class that allows for float precision in slider values. Qts QSlider can only in/decrement
+    their values in integer steps, which is modified by this class
 
     Arguments:
         {QSlider} -- PyQt5's slider class.

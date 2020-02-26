@@ -45,16 +45,17 @@ class MainWindow(abstractGui.AbstractMainWindow):
         self.ani_timer.timeout.connect(self._arrange_window_content)
 
     def _set_window_size(self):
-        """Keeps an aspect ratio width / height of 5/4 and scales the width such that 0.75 of the screen width is covered. If this
-        leads to a window height exceeding the screen height, the aspect ratio is kept and the window height is set to the screen
-        height.
+        """Keeps an aspect ratio width / height of 5/4 and scales the width such that 0.75 of the screen width is
+        covered. If this leads to a window height exceeding the screen height, the aspect ratio is kept and the window
+        height is set to the screen height.
         """
         width_coverage = 0.75  # subjective aesthetic choice
         aspect_ratio = 5 / 4  # subjective aesthetic choice
 
         # sanity check
         if (self.desktop_width < 1) or (self.desktop_height < 1):
-            raise ValueError('Resolution of desktop appears to be too low, i.e. less than a pixel for either width or height.')
+            raise ValueError('Resolution of desktop appears to be too low, i.e. less than a pixel for either width or'
+                             ' height.')
 
         self.width = int(self.desktop_width * width_coverage)
         self.height = int(self.width / aspect_ratio)
@@ -206,15 +207,18 @@ class MainWindow(abstractGui.AbstractMainWindow):
             except ValueError:
                 # generate error message
                 error_message = 'The .csv file does not seem to be properly formatted. Please check again!'
-                QtWidgets.QMessageBox.question(self, 'Data structure not compatible!', error_message, QtWidgets.QMessageBox.Yes)
+                QtWidgets.QMessageBox.question(self,
+                                               'Data structure not compatible!',
+                                               error_message,
+                                               QtWidgets.QMessageBox.Yes
+                                               )
 
             # Check Units in MMT file
             try:
                 self.model.model.check_units(mode=myokit.UNIT_STRICT)
             except Exception as e: # Display Warning if Inconsistent
                 warning_message = 'Warning: Units may be inconsistent'
-                QtWidgets.QMessageBox.question(self, warning_message, str(e),
-                                               QtWidgets.QMessageBox.Yes)
+                QtWidgets.QMessageBox.question(self, warning_message, str(e), QtWidgets.QMessageBox.Yes)
         else:
             # update file dialog icons
             if not self.home.is_model_file_valid:
@@ -227,7 +231,8 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 self.home.data_check_mark.setPixmap(self.rescaled_cm)
 
             # generate error message
-            error_message = 'At least one of the files does not seem to exist or does not have the correct file format. Please check again!'
+            error_message = 'At least one of the files does not seem to exist or does not have the correct file ' \
+                            'format. Please check again!'
             QtWidgets.QMessageBox.question(self, 'Files not found!', error_message, QtWidgets.QMessageBox.Yes)
 
     def _instantiate_inverse_problem(self):

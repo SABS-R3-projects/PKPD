@@ -8,9 +8,9 @@ from PKPD.model.abstractModel import AbstractModel
 
 
 class SingleOutputModel(AbstractModel):
-    """Model class inheriting from pints.ForwardModel. To solve the forward problem methods from the
-    myokit package are employed. The sole difference to the MultiOutputProblem is that the simulate method
-    returns a 1d array instead of a 2d array.
+    """Model class inheriting from pints.ForwardModel. To solve the forward problem methods from the myokit package are
+    employed. The sole difference to the MultiOutputProblem is that the simulate method returns a 1d array instead of a
+    2d array.
     """
     def __init__(self, mmt_file:str) -> None:
         """Initialises the model class.
@@ -33,8 +33,8 @@ class SingleOutputModel(AbstractModel):
         self.model = model
 
     def _get_default_output_name(self, model:myokit.Model):
-        """Returns 'central_compartment.drug_concentration' as output_name by default. If variable does not exist in model, first state
-        variable name is returned.
+        """Returns 'central_compartment.drug_concentration' as output_name by default. If variable does not exist in
+        model, first state variable name is returned.
 
         Arguments:
             model {myokit.Model} -- A myokit model.
@@ -61,13 +61,16 @@ class SingleOutputModel(AbstractModel):
         """
         parameter_names = []
         for component in model.components(sort=True):
-            parameter_names += [var.qname() for var in component.variables(state=False, inter=False, bound=False, sort=True)]
+            parameter_names += [var.qname() for var in component.variables(state=False,
+                                                                           inter=False,
+                                                                           bound=False,
+                                                                           sort=True
+                                                                           )]
 
         return parameter_names
 
     def n_parameters(self) -> int:
-        """Returns the number of parameters of the model, i.e. initial conditions and model
-        parameters.
+        """Returns the number of parameters of the model, i.e. initial conditions and model parameters.
 
         Returns:
             int -- Number of parameters.
@@ -120,9 +123,9 @@ class SingleOutputModel(AbstractModel):
 
 
 class MultiOutputModel(AbstractModel):
-    """Model class inheriting from pints.ForwardModel. To solve the forward problem methods from the
-    myokit package are employed. The sole difference to the SingleOutputProblem is that the simulate method
-    returns a 2d array instead of a 1d array.
+    """Model class inheriting from pints.ForwardModel. To solve the forward problem methods from the myokit package are
+    employed. The sole difference to the SingleOutputProblem is that the simulate method returns a 2d array instead of a
+    1d array.
     """
     def __init__(self, mmt_file:str) -> None:
         """Initialises the model class.
@@ -161,8 +164,7 @@ class MultiOutputModel(AbstractModel):
         return parameter_names
 
     def n_parameters(self) -> int:
-        """Returns the number of parameters of the model, i.e. initial conditions and model
-        parameters.
+        """Returns the number of parameters of the model, i.e. initial conditions and model parameters.
 
         Returns:
             int -- Number of parameters.
@@ -210,8 +212,8 @@ class MultiOutputModel(AbstractModel):
             self.simulation.set_constant(self.parameter_names[param_id], value)
 
     def set_output_dimension(self, data_dimension:int):
-        """Set output dimension to data dimension, so optimisation/inference can be performed.
-        Output state will be set to default output names.
+        """Set output dimension to data dimension, so optimisation/inference can be performed. Output state will be set
+        to default output names.
 
         Arguments:
             data_dimension {int} -- Dimensionality of input data.
@@ -224,8 +226,8 @@ class MultiOutputModel(AbstractModel):
             self._set_default_output_names()
 
     def _set_default_output_names(self):
-        """Returns 'central_compartment.drug_concentration' as output_name by default. If variable does not exist in model, first state
-        variable name is returned.
+        """Returns 'central_compartment.drug_concentration' as output_name by default. If variable does not exist in
+        model, first state variable name is returned.
 
         Arguments:
             model {myokit.Model} -- A myokit model.

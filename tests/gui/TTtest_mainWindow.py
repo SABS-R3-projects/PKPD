@@ -12,8 +12,8 @@ class TestMainWindow(unittest.TestCase):
     """Tests the methods of the MainWindow class.
     """
     def test_set_window_size_square_screen(self, desktop_dimension=[200, 200]):
-        """Tests whether the resulting main window size obeys the aspect ratio 5/4 and whether either the width is 3/4 of the sreen
-        width or the height is equal the screen height assuming a square desktop 200x200
+        """Tests whether the resulting main window size obeys the aspect ratio 5/4 and whether either the width is 3/4
+        of the screen width or the height is equal the screen height assuming a square desktop 200x200
 
         Arguments:
             desktop_width {int} -- Screen width in pixel.
@@ -42,8 +42,8 @@ class TestMainWindow(unittest.TestCase):
         QtCore.QTimer.singleShot(0.1, window.close)
 
     def test_set_window_size_broad_screen(self, desktop_dimension=[1000, 200]):
-        """Tests whether the resulting main window size obeys the aspect ratio 5/4 and whether either the width is 3/4 of the sreen
-        width or the height is equal the screen height.
+        """Tests whether the resulting main window size obeys the aspect ratio 5/4 and whether either the width is 3/4
+        of the screen width or the height is equal the screen height.
 
         Arguments:
             desktop_dimension {List} -- Screen dimension in pixel.
@@ -71,8 +71,8 @@ class TestMainWindow(unittest.TestCase):
         QtCore.QTimer.singleShot(0.1, window.close)
 
     def test_set_window_size_high_screen(self, desktop_dimension=[200, 1000]):
-        """Tests whether the resulting main window size obeys the aspect ratio 5/4 and whether either the width is 3/4 of the sreen
-        width or the height is equal the screen height.
+        """Tests whether the resulting main window size obeys the aspect ratio 5/4 and whether either the width is 3/4
+        of the screen width or the height is equal the screen height.
 
         Arguments:
             desktop_dimension {List} -- Screen dimension in pixel.

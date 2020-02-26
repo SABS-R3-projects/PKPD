@@ -51,8 +51,8 @@ class TestSingleOutputModel(unittest.TestCase):
         assert n_outputs == self.one_comp_model.n_outputs()
 
     def test_simulate(self):
-        """Tests whether the simulate method works as expected. Tests implicitly also whether
-        the _set_parameters method works properly.
+        """Tests whether the simulate method works as expected. Tests implicitly also whether the _set_parameters method
+        works properly.
         """
         # Test case I: 1-compartment model
         parameters = [0, 2, 4]  # different from initialised parameters
@@ -64,7 +64,10 @@ class TestSingleOutputModel(unittest.TestCase):
         model.set_value('central_compartment.CL', parameters[1])
         model.set_value('central_compartment.V', parameters[2])
         simulation = myokit.Simulation(model, protocol)
-        myokit_result = simulation.run(duration=times[-1]+1, log=['central_compartment.drug_concentration'], log_times = times)
+        myokit_result = simulation.run(duration=times[-1]+1,
+                                       log=['central_compartment.drug_concentration'],
+                                       log_times = times
+                                       )
         expected_result = myokit_result.get('central_compartment.drug_concentration')
 
         # assert that Model.simulate returns the same result.
@@ -122,8 +125,8 @@ class TestMultiOutputModel(unittest.TestCase):
         assert n_outputs == self.two_comp_model.n_outputs()
 
     def test_simulate(self):
-        """Tests whether the simulate method works as expected. Tests implicitly also whether
-        the _set_parameters method works properly.
+        """Tests whether the simulate method works as expected. Tests implicitly also whether the _set_parameters method
+        works properly.
         """
         output_names = ['central_compartment.drug_concentration',
                         'peripheral_compartment.drug_concentration']

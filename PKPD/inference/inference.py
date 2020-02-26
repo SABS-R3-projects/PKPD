@@ -8,12 +8,12 @@ from PKPD.inference.abstractInference import AbstractInverseProblem
 
 
 class SingleOutputInverseProblem(AbstractInverseProblem):
-    """Single-output inverse problem based on pints.SingleOutputProblem https://pints.readthedocs.io/. Default objective function
-    is pints.SumOfSquaresError and default optimiser is pints.CMAES.
+    """Single-output inverse problem based on pints.SingleOutputProblem https://pints.readthedocs.io/. Default objective
+    function is pints.SumOfSquaresError and default optimiser is pints.CMAES.
     """
     def __init__(self, models: List[m.SingleOutputModel], times: List[np.ndarray], values: List[np.ndarray]):
-        """Initialises a single output inference problem with default objective function pints.SumOfSquaresError
-        and default optimiser pints.CMAES. Standard deviation in initial starting point of optimisation as well as
+        """Initialises a single output inference problem with default objective function pints.SumOfSquaresError and
+        default optimiser pints.CMAES. Standard deviation in initial starting point of optimisation as well as
         restricted domain of support for inferred parameters is disabled by default.
 
         Arguments:
@@ -48,9 +48,9 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         self.objective_score = None
 
     def find_optimal_parameter(self, initial_parameter:np.ndarray, number_of_iterations:int=5) -> None:
-        """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the
-        distance of the model to the data with respect to the objective function. Optimisation is run number_of_iterations times and
-        result with minimal score is returned.
+        """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that
+        minimises the distance of the model to the data with respect to the objective function. Optimisation is run
+        number_of_iterations times and result with minimal score is returned.
 
         Arguments:
             initial_parameter {np.ndarray} -- Starting point in parameter space of the optimisation algorithm.
@@ -72,7 +72,8 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
                                                     x0=initial_parameter,
                                                     sigma0=self.initial_parameter_uncertainty,
                                                     boundaries=self.parameter_boundaries,
-                                                    method=self.optimiser)
+                                                    method=self.optimiser
+                                                    )
 
         # run optimisation 'number_of_iterations' times
         estimate_container = []
@@ -84,15 +85,17 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
 
         # return parameters with minimal score
         min_score_id = np.argmin(score_container)
-        self.estimated_parameters, self.objective_score = [estimate_container[min_score_id], score_container[min_score_id]]
+        self.estimated_parameters, self.objective_score = [estimate_container[min_score_id],
+                                                           score_container[min_score_id]
+                                                           ]
 
     def set_error_function(self, error_function: pints.ErrorMeasure) -> None:
         """Sets the objective function which is minimised to find the optimal parameter set. For multiple problems, all
         error functions are updated to the selected function.
 
         Arguments:
-            error_function {pints.ErrorMeasure} -- Valid error functions are [MeanSquaredError,
-            RootMeanSquaredError, SumOfSquaresError] in pints.
+            error_function {pints.ErrorMeasure} -- Valid error functions are [MeanSquaredError, RootMeanSquaredError,
+                                                   SumOfSquaresError] in pints.
         """
         # List of valid error functions
         valid_err_func = [pints.MeanSquaredError, pints.RootMeanSquaredError, pints.SumOfSquaresError]
@@ -133,12 +136,12 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
 
 
 class MultiOutputInverseProblem(AbstractInverseProblem):
-    """Multi-output inverse problem based on pints.MultiOutputProblem https://pints.readthedocs.io/. Default objective function
-    is pints.SumOfSquaresError and default optimiser is pints.CMAES.
+    """Multi-output inverse problem based on pints.MultiOutputProblem https://pints.readthedocs.io/. Default objective
+    function is pints.SumOfSquaresError and default optimiser is pints.CMAES.
     """
     def __init__(self, models: List[m.MultiOutputModel], times: List[np.ndarray], values: List[np.ndarray]):
-        """Initialises a multi-output inference problem with default objective function pints.SumOfSquaresError
-        and default optimiser pints.CMAES. Standard deviation in initial starting point of optimisation as well as
+        """Initialises a multi-output inference problem with default objective function pints.SumOfSquaresError and
+        default optimiser pints.CMAES. Standard deviation in initial starting point of optimisation as well as
         restricted domain of support for inferred parameters is disabled by default.
 
         Arguments:
@@ -162,7 +165,7 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         # initialise optimiser
         self.optimiser = pints.CMAES
 
-        # initialise fluctiations around starting point of optimisation
+        # initialise fluctuations around starting point of optimisation
         self.initial_parameter_uncertainty = None
 
         # initialise parameter constraints
@@ -173,8 +176,8 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         self.objective_score = None
 
     def find_optimal_parameter(self, initial_parameter:np.ndarray, number_of_iterations:int=5) -> None:
-        """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the
-        distance of the model to the data with respect to the objective function.
+        """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that
+        minimises the distance of the model to the data with respect to the objective function.
 
         Arguments:
             initial_parameter {np.ndarray} -- Starting point in parameter space of the optimisation algorithm.
@@ -195,7 +198,8 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
                                                     x0=initial_parameter,
                                                     sigma0=self.initial_parameter_uncertainty,
                                                     boundaries=self.parameter_boundaries,
-                                                    method=self.optimiser)
+                                                    method=self.optimiser
+                                                    )
 
         # run optimisation 'number_of_iterations' times
         estimate_container = []
@@ -207,7 +211,9 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
 
         # return parameters with minimal score
         min_score_id = np.argmin(score_container)
-        self.estimated_parameters, self.objective_score = [estimate_container[min_score_id], score_container[min_score_id]]
+        self.estimated_parameters, self.objective_score = [estimate_container[min_score_id],
+                                                           score_container[min_score_id]
+                                                           ]
 
     def set_error_function(self, error_function: pints.ErrorMeasure) -> None:
         """Sets the objective function which is minimised to find the optimal parameter set. For multiple problems, all
