@@ -902,6 +902,7 @@ class SimulationTab(QtWidgets.QDialog):
         decimal_places = 1  # to match slider precision
         min_value.setValidator(QDoubleValidator(lower_bound, upper_bound, decimal_places))
         max_value.setValidator(QDoubleValidator(lower_bound, upper_bound, decimal_places))
+        text_field.setValidator(QDoubleValidator(lower_bound, upper_bound, 3))
 
         # Align all centrally for consistency
         text_field.setAlignment(QtCore.Qt.AlignCenter)
@@ -915,6 +916,8 @@ class SimulationTab(QtWidgets.QDialog):
 
         min_value.editingFinished.connect(self._update_slider_boundaries)
         max_value.editingFinished.connect(self._update_slider_boundaries)
+
+        text_field.editingFinished.connect(self._update_parameter_text_field)
 
         # keep track of parameter values and min/max labels
         self.parameter_text_field_container[parameter_id] = text_field
@@ -945,6 +948,20 @@ class SimulationTab(QtWidgets.QDialog):
         elif self.enable_live_plotting and not self.is_single_output_model:
             self._plot_multi_output_model()
 
+    def _update_parameter_text_field(self):
+        # Iterate over sliders
+        for slider_id, slider in enumerate(self.slider_container):
+            # Get Current Textbox value
+            # Round to 1dp to correspond to slider precision
+            new_value = round(number=float(self.parameter_text_field_container[slider_id].text()), ndigits=1)
+            # Check new value is in range ?
+            # TODO THIS
+            # Set new slider boundaries (set to min or max if out of range)
+            slider.setValue(new_value)
+            # Update Textfield to reflect this
+            self.parameter_text_field_container[slider_id].setText(str(slider.value()))
+
+
     def _update_slider_boundaries(self):
         """"
         Updates slider boundaries to correspond to inputted boundaries in text box
@@ -956,7 +973,7 @@ class SimulationTab(QtWidgets.QDialog):
             # Round to 1dp to correspond to slider precision
             new_min = round(number=float(self.slider_min_max_label_container[slider_id][0].text()), ndigits=1)
             new_max = round(number=float(self.slider_min_max_label_container[slider_id][1].text()), ndigits=1)
-            # Set new slider boundaries (if possible)
+            # Set new slider boundaries (by default both will be set to lowest val if min > max)
             slider.setMinimum(round(number=new_min, ndigits=1))
             slider.setMaximum(round(number=new_max, ndigits=1))
             # Display new slider boundaries in text box
