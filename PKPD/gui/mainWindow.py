@@ -196,7 +196,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 # fill sliders, plot options and parameter table with parameters in model
                 self.simulation.fill_parameter_slider_group()
                 self.simulation.fill_plot_option_window()
-                self.simulation.fill_parameter_table()
 
                 # switch to simulation tab
                 self.tabs.setCurrentIndex(self.sim_tab_index)
