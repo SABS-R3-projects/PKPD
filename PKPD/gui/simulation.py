@@ -1151,7 +1151,13 @@ class SimulationTab(QtWidgets.QDialog):
                 # Generate error message (eg. if bounds are too narrow)
                 # Show error message as generated in PINTS
                 error_message = 'Check Boundaries are Suitable: \n' + str(e)
-                self.data_model_ax.lines.pop()  # quick fix to remove old plot
+
+                # Quick Fix to Remove Old Plot:
+                if self.is_single_output_model:  #remove one line
+                    self.data_model_ax.lines.pop()
+                else:
+                    for dim in range(len(self.data_model_ax)):
+                        self.data_model_ax[dim].lines.pop()
                 QtWidgets.QMessageBox.question(self, 'Value error!', error_message, QtWidgets.QMessageBox.Yes)
 
 
