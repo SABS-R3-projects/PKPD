@@ -994,7 +994,7 @@ class SimulationTab(QtWidgets.QDialog):
                                 ' Please try different inference settings!')
                 QtWidgets.QMessageBox.question(self, 'Numerical error!', error_message, QtWidgets.QMessageBox.Yes)
             except ValueError as e:
-                error_message = str(e)
+                error_message = 'Check Boundaries: ' + str(e)
                 QtWidgets.QMessageBox.question(self, 'Value error!', error_message, QtWidgets.QMessageBox.Yes)
                 # generate error message
 
