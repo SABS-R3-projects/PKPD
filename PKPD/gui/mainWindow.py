@@ -286,10 +286,4 @@ if __name__ == '__main__':
     # show window
     window.show()
 
-    # # show our animation
-    # window._show_animated_logo()
-    #
-    # # fill the window with content
-    # window._arrange_window_content()
-
     sys.exit(app.exec_())
