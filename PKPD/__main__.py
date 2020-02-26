@@ -1,12 +1,12 @@
 import sys
-import PKPD.gui.mainWindow as mainwindow
+import PKPD.gui.mainWindow as mainWindow
 from PyQt5 import QtWidgets
 
 
 def main():
     # Create window instance
     app = QtWidgets.QApplication(sys.argv)
-    window = mainwindow.MainWindow(app)
+    window = mainWindow.MainWindow(app)
 
     # show window
     window.show()
