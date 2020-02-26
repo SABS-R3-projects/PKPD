@@ -765,8 +765,8 @@ class SimulationTab(QtWidgets.QDialog):
         # fill up grid with slider objects
         # length of parameters so can fill up in correct order later
         self.slider_container = [None]*len(parameter_names)  # store in list to be able to update later
-        self.slider_min_max_label_container = [None]*len(parameter_names) # store in list to be able to update later
-        self.parameter_text_field_container = [None]*len(parameter_names) # store in list to be able to update later
+        self.slider_min_max_label_container = [None]*len(parameter_names)  # store in list to be able to update later
+        self.parameter_text_field_container = [None]*len(parameter_names)  # store in list to be able to update later
 
         # fill up grid with inferred parameter boxes
         self.inferred_boxes = [None] * len(parameter_names)
@@ -1110,7 +1110,7 @@ class SimulationTab(QtWidgets.QDialog):
                 # plot inferred model
                 self._plot_inferred_model()
 
-                # update slider position to infered parameters
+                # update slider position to inferred parameters
                 self._update_sliders_to_inferred_params()
 
                 # update parameter table
