@@ -46,12 +46,12 @@ class HomeTab(abstractGui.AbstractHomeTab):
         model_display = self._create_model_display()
 
         # arrange button/text and label vertically
-        vbox = QtWidgets.QVBoxLayout()
-        vbox.addLayout(model_selection_group)
-        vbox.addLayout(model_display)
-        vbox.addStretch(1)
+        v_box = QtWidgets.QVBoxLayout()
+        v_box.addLayout(model_selection_group)
+        v_box.addLayout(model_display)
+        v_box.addStretch(1)
 
-        group.setLayout(vbox)
+        group.setLayout(v_box)
 
         return group
 
@@ -79,12 +79,12 @@ class HomeTab(abstractGui.AbstractHomeTab):
         self.model_check_mark = self._create_file_check_mark()
 
         # arrange button and text horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(model_selection_button)
-        hbox.addWidget(self.model_path_text_field)
-        hbox.addWidget(self.model_check_mark)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(model_selection_button)
+        h_box.addWidget(self.model_path_text_field)
+        h_box.addWidget(self.model_check_mark)
 
-        return hbox
+        return h_box
 
     def _create_model_selection_window(self):
         """Creates model selection window consisting of the model library and buttons to either choose a model
@@ -104,12 +104,12 @@ class HomeTab(abstractGui.AbstractHomeTab):
         button_group = self._create_model_button_group()
 
         # arrange window content vertically
-        vbox = QtWidgets.QVBoxLayout()
-        vbox.addWidget(model_library_group)
-        vbox.addLayout(button_group)
+        v_box = QtWidgets.QVBoxLayout()
+        v_box.addWidget(model_library_group)
+        v_box.addLayout(button_group)
 
         # add options to window
-        self.model_selection_window.setLayout(vbox)
+        self.model_selection_window.setLayout(v_box)
 
     def _create_model_library_group(self):
         """Creates model library, consisting of dropdown menus detailing the properties of the models.
@@ -126,16 +126,16 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # create dosing options
         dose_options = self._create_dose_options()
 
-        # create trasition rate options
+        # create transition rate options
         transition_rate_options = self._create_transition_rate_options()
 
         # arrange vertically
-        vbox = QtWidgets.QVBoxLayout()
-        vbox.addLayout(compartment_options)
-        vbox.addLayout(dose_options)
-        vbox.addLayout(transition_rate_options)
-        vbox.addStretch(1)
-        group.setLayout(vbox)
+        v_box = QtWidgets.QVBoxLayout()
+        v_box.addLayout(compartment_options)
+        v_box.addLayout(dose_options)
+        v_box.addLayout(transition_rate_options)
+        v_box.addStretch(1)
+        group.setLayout(v_box)
 
         return group
 
@@ -158,11 +158,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
             self.compartment_dropdown_menu.addItem(number)
 
         # arrange label and dropdown menu horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(label)
-        hbox.addWidget(self.compartment_dropdown_menu)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(label)
+        h_box.addWidget(self.compartment_dropdown_menu)
 
-        return hbox
+        return h_box
 
     def _create_dose_options(self):
         """Creates dose type dropdown menu.
@@ -183,11 +183,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
             self.dose_type_dropdown_menu.addItem(dose_type)
 
         # arrange label and dropdown menu horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(label)
-        hbox.addWidget(self.dose_type_dropdown_menu)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(label)
+        h_box.addWidget(self.dose_type_dropdown_menu)
 
-        return hbox
+        return h_box
 
     def _create_transition_rate_options(self):
         """Creates transition rates dropdown menu.
@@ -208,11 +208,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
             self.transition_rate_dropdown_menu.addItem(transition_rate)
 
         # arrange label and dropdown menu horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(label)
-        hbox.addWidget(self.transition_rate_dropdown_menu)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(label)
+        h_box.addWidget(self.transition_rate_dropdown_menu)
 
-        return hbox
+        return h_box
 
     def _create_model_button_group(self):
         """Creates model button group consisting of a 'select model', 'cancel' and 'select from file' button.
@@ -235,12 +235,12 @@ class HomeTab(abstractGui.AbstractHomeTab):
         file_button.clicked.connect(self.on_model_file_click)
 
         # arrange buttons horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(select_button)
-        hbox.addWidget(cancel_button)
-        hbox.addWidget(file_button)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(select_button)
+        h_box.addWidget(cancel_button)
+        h_box.addWidget(file_button)
 
-        return hbox
+        return h_box
 
     def _create_model_display(self):
         """Creates display for the model .mmt file.
@@ -267,10 +267,10 @@ class HomeTab(abstractGui.AbstractHomeTab):
         scroll.setFixedHeight(height)
 
         # arrange display window horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(scroll)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(scroll)
 
-        return hbox
+        return h_box
 
     def _create_data_group(self):
         """Creates the data file dialog group consisting of a label, a button that opens the file dialog, a text field that displays
@@ -292,12 +292,12 @@ class HomeTab(abstractGui.AbstractHomeTab):
         check_box_group = self._create_check_box_group()
 
         # arrange button/text and label vertically
-        vbox = QtWidgets.QVBoxLayout()
-        vbox.addLayout(data_selection_group)
-        vbox.addLayout(data_display)
-        vbox.addLayout(check_box_group)
+        v_box = QtWidgets.QVBoxLayout()
+        v_box.addLayout(data_selection_group)
+        v_box.addLayout(data_display)
+        v_box.addLayout(check_box_group)
 
-        group.setLayout(vbox)
+        group.setLayout(v_box)
 
         return group
 
@@ -322,12 +322,12 @@ class HomeTab(abstractGui.AbstractHomeTab):
         self.data_check_mark = self._create_file_check_mark()
 
         # arrange button and text horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(button)
-        hbox.addWidget(self.data_path_text_field)
-        hbox.addWidget(self.data_check_mark)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(button)
+        h_box.addWidget(self.data_path_text_field)
+        h_box.addWidget(self.data_check_mark)
 
-        return hbox
+        return h_box
 
     def _create_data_display(self):
         """Creates display for the data .csv file.
@@ -354,10 +354,10 @@ class HomeTab(abstractGui.AbstractHomeTab):
         scroll.setFixedHeight(height)
 
         # arrange display window horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(scroll)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(scroll)
 
-        return hbox
+        return h_box
 
     def _create_check_box_group(self):
         """Creates check boxes for the presence of patient IDs and doses in the data set.
@@ -384,12 +384,12 @@ class HomeTab(abstractGui.AbstractHomeTab):
         self.dose_schedule_check_box.setEnabled(False)
 
         # arrange check boxes horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(self.patient_id_check_box)
-        hbox.addWidget(self.dose_schedule_check_box)
-        hbox.addStretch(1)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(self.patient_id_check_box)
+        h_box.addWidget(self.dose_schedule_check_box)
+        h_box.addStretch(1)
 
-        return hbox
+        return h_box
 
     def _create_next_button(self):
         """Creates a button to be able to switch to the simulation tab.
@@ -401,11 +401,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
         button.clicked.connect(self.on_next_click)
 
         # arrange button and text horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addStretch(1)
-        hbox.addWidget(button)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addStretch(1)
+        h_box.addWidget(button)
 
-        return hbox
+        return h_box
 
     def _create_file_check_mark(self):
         """Creates a label object that indicates whether a chosen data file is valid. Default is a question mark. Upon file
@@ -445,7 +445,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
         # update QLineEdit in the GUI to selected file
         meta_data = [
-            'No. Copmartments: ',
+            'No. Compartments: ',
             'Dose Type: ',
             'Transition Rates: '
         ]
@@ -520,7 +520,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # check format
         is_format_correct = file_path.split('.')[-1] == 'mmt'
 
-        # are both citeria satisifed
+        # are both criteria satisfied
         is_path_valid = is_file_existent and is_format_correct
 
         return is_path_valid
@@ -675,7 +675,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         self.dose_schedule_check_box.setChecked(is_data_format_as_expected)
 
     def _dose_format_check(self, last_column:pd.Series()):
-        """Hereustic method to check whether format coincides with the one expected from a dosing schedule (checks whether meaningful entries are evenly spaced).
+        """Heuristic method to check whether format coincides with the one expected from a dosing schedule (checks whether meaningful entries are evenly spaced).
 
         Arguments:
             last_column {pd.Series} -- Last non-empty column of dataframe.
@@ -704,7 +704,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         are_patient_ids_provided = self.patient_id_check_box.isChecked()
         is_dosing_schedule_provided = self.dose_schedule_check_box.isChecked()
 
-        # get number dataframe's number of columns
+        # get dataframe's number of columns
         number_of_columns = self.data_df.shape[1]
 
         # if # columns = 3, patient IDs and dose schedule cannot be present simultaneously

@@ -9,7 +9,7 @@ from PKPD.inference import inference
 
 
 class TestSingleOutputProblem(unittest.TestCase):
-    """Testing the methods of the SingleOutputinverseProblem class.
+    """Testing the methods of the SingleOutputInverseProblem class.
     """
     ## Test case: Linear One Compartment Model with Bolus dosing
     # generating data
@@ -36,11 +36,11 @@ class TestSingleOutputProblem(unittest.TestCase):
 
         # solve inverse problem
         problem.find_optimal_parameter(initial_parameter=initial_parameters)
-        estimated_paramters = problem.estimated_parameters
+        estimated_parameters = problem.estimated_parameters
 
-        # assert aggreement of estimates with true paramters
+        # assert agreement of estimates with true parameters
         for parameter_id, true_value in enumerate(self.true_parameters_one_comp_model):
-            estimated_value = estimated_paramters[parameter_id]
+            estimated_value = estimated_parameters[parameter_id]
             assert true_value == pytest.approx(estimated_value, rel=0.05)
 
     def test_set_objective_function(self):
@@ -112,7 +112,7 @@ class TestMultiOutputProblem(unittest.TestCase):
         problem.find_optimal_parameter(initial_parameter=initial_parameters)
         estimated_parameters = problem.estimated_parameters
 
-        # assert aggreement of estimates with true paramters
+        # assert agreement of estimates with true parameters
         for parameter_id, true_value in enumerate(self.true_parameters):
             estimated_value = estimated_parameters[parameter_id]
 

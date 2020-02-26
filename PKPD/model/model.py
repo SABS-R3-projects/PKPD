@@ -12,14 +12,14 @@ class SingleOutputModel(AbstractModel):
     myokit package are employed. The sole difference to the MultiOutputProblem is that the simulate method
     returns a 1d array instead of a 2d array.
     """
-    def __init__(self, mmtfile:str) -> None:
+    def __init__(self, mmt_file:str) -> None:
         """Initialises the model class.
 
         Arguments:
-            mmtfile {str} -- Path to the mmtfile defining the model and the protocol.
+            mmt_file {str} -- Path to the mmt_file defining the model and the protocol.
         """
         # load model and protocol
-        model, protocol, _ = myokit.load(mmtfile)
+        model, protocol, _ = myokit.load(mmt_file)
 
         # get state, parameter and output names
         self.state_names = [state.qname() for state in model.states()]
@@ -103,7 +103,7 @@ class SingleOutputModel(AbstractModel):
         self.simulation.reset()
         self._set_parameters(parameters)
 
-        # duration is the last time point plus an increment to iclude the last time step.
+        # duration is the last time point plus an increment to include the last time step.
         result = self.simulation.run(duration=times[-1]+1, log=[self.output_name], log_times=times)
 
         return result[self.output_name]
@@ -124,14 +124,14 @@ class MultiOutputModel(AbstractModel):
     myokit package are employed. The sole difference to the SingleOutputProblem is that the simulate method
     returns a 2d array instead of a 1d array.
     """
-    def __init__(self, mmtfile:str) -> None:
+    def __init__(self, mmt_file:str) -> None:
         """Initialises the model class.
 
         Arguments:
-            mmtfile {str} -- Path to the mmtfile defining the model and the protocol.
+            mmt_file {str} -- Path to the mmt_file defining the model and the protocol.
         """
         # load model and protocol
-        model, protocol, _ = myokit.load(mmtfile)
+        model, protocol, _ = myokit.load(mmt_file)
 
         # get state, parameter and output names
         self.state_names = [state.qname() for state in model.states()]
@@ -190,7 +190,7 @@ class MultiOutputModel(AbstractModel):
         self.simulation.reset()
         self._set_parameters(parameters)
 
-        # duration is the last time point plus an increment to iclude the last time step.
+        # duration is the last time point plus an increment to include the last time step.
         output = self.simulation.run(duration=times[-1]+1, log=self.output_names, log_times = times)
 
         result = []

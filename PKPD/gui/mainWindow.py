@@ -40,8 +40,8 @@ class MainWindow(abstractGui.AbstractMainWindow):
         leads to a window height exceeding the screen height, the aspect ratio is kept and the window height is set to the screen
         height.
         """
-        width_coverage = 0.75 # subjective aesthetical choice
-        aspect_ratio = 5 / 4 # subjective aesthetical choice
+        width_coverage = 0.75 # subjective aesthetic choice
+        aspect_ratio = 5 / 4 # subjective aesthetic choice
 
         # sanity check
         if (self.desktop_width < 1) or (self.desktop_height < 1):

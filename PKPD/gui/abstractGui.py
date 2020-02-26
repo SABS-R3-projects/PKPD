@@ -11,7 +11,7 @@ class AbstractMainWindow(QtWidgets.QMainWindow):
         raise NotImplementedError
 
     def _create_tabs(self):
-        # creates tabs e.g. for model/data managment and simulation
+        # creates tabs e.g. for model/data management and simulation
         raise NotImplementedError
 
     def _create_status_bar(self):
