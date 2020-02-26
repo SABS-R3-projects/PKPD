@@ -801,17 +801,13 @@ class SimulationTab(QtWidgets.QDialog):
             # Round to 1dp to correspond to slider precision
             new_min = round(number=float(self.slider_min_max_label_container[slider_id][0].text()), ndigits=1)
             new_max = round(number=float(self.slider_min_max_label_container[slider_id][1].text()), ndigits=1)
-            # Set textbox display to rounded values
+            # Set new slider boundaries
+            # Slider
             #if new_min < new_max:  # sanity check to avoid problems with inference
             self.slider_min_max_label_container[slider_id][0].setText(str(new_min))
             self.slider_min_max_label_container[slider_id][1].setText(str(new_max))
             # Update slider boundaries to these values (and colour)
-            slider.setMinimum(round(number=new_min, ndigits=1))
-            slider.setMaximum(round(number=new_max, ndigits=1))
-            self.slider_min_max_label_container[slider_id][0].setStyleSheet(
-                "QLineEdit{background-color: #ECE8E4; color: black; border: None}")
-            self.slider_min_max_label_container[slider_id][1].setStyleSheet(
-                "QLineEdit{background-color: #ECE8E4; color: black; border: None}")
+
             """
             else:
                 # Colour text red to show slider has not been updated since min > max
