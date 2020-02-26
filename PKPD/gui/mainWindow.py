@@ -166,6 +166,21 @@ class MainWindow(abstractGui.AbstractMainWindow):
         """
         if self.home.is_model_file_valid and self.home.is_data_file_valid:
             try:
+                # piece dataframe into ID, time, states and dose data
+                self.simulation.extract_data_from_dataframe()
+
+                # get dose schedule TODO: write test
+                self.simulation.get_dose_schedule()
+
+                # filter data from time points with no information TODO: write test
+                self.simulation.filter_data()
+
+                # TODO: move data extraction from ploting
+                # add plot of dosing schedule
+                # add dose schedule option button
+                # list doses of patient, if available
+                # allow for adding of doses
+
                 # plot data in simulation tab
                 self.simulation.add_data_to_data_model_plot()
 
@@ -173,29 +188,26 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 self.simulation.enable_live_plotting = False
                 self.simulation.enable_line_removal = False
 
-                # instantiate model and inverse problem
-                if self.simulation.is_single_output_model:
+                # instantiate model
+                if self.simulation.is_single_output_model: # single output
                     self.model = m.SingleOutputModel(self.home.model_file)
-                    self.problem = inf.SingleOutputInverseProblem(model=self.model,
-                                                                times=self.simulation.time_data,
-                                                                values=self.simulation.state_data)
-                else:
+                else: # multi output
                     self.model = m.MultiOutputModel(self.home.model_file)
 
                     # set model output dimension to data dimension
                     self.model.set_output_dimension(self.simulation.data_dimension)
 
-                    self.problem = inf.MultiOutputInverseProblem(model=self.model,
-                                                                times=self.simulation.time_data,
-                                                                values=self.simulation.state_data)
-
-                # fill sliders, plot optinos and parameter tabel with parameters in model
+                # fill sliders, plot options and parameter table with parameters in model
                 self.simulation.fill_parameter_slider_group()
                 self.simulation.fill_plot_option_window()
                 self.simulation.fill_parameter_table()
 
                 # switch to simulation tab
                 self.tabs.setCurrentIndex(self.sim_tab_index)
+
+                # instantiate inverse problem (after switching to simulation tab to improve user experience)
+                self._instantiate_inverse_problem()
+
             except ValueError:
                 # generate error message
                 error_message = 'The .csv file does not seem to be properly formatted. Please check again!'
@@ -224,20 +236,38 @@ class MainWindow(abstractGui.AbstractMainWindow):
             QtWidgets.QMessageBox.question(self, 'Files not found!', error_message, QtWidgets.QMessageBox.Yes)
 
 
-    def _are_files_correct(self) -> List[bool]:
-        """Checks whether data exist and have the correct format (.mmt and .csv, respectively).
-
-        Returns:
-            {List[bool]} -- Returns flags for the model and data file.
+    def _instantiate_inverse_problem(self):
+        """Instantiates inverse problem for parameter optimisation.
         """
+        # create model container for patients
+        self.model_container = []
 
-        # data sanity check
-        self.data_file = self.home.data_text.text()
-        data_is_file = os.path.isfile(self.data_file)
-        data_correct_format = self.data_file.split('.')[-1] == 'csv'
-        correct_data = data_is_file and data_correct_format
+        # number of patients
+        number_of_patients = len(self.simulation.patient_ids)
 
-        return correct_data
+        # update schedule for each patient model
+        for patient in range(number_of_patients):
+            # update dose schedule TODO: write test
+            self.simulation.update_dose_schedule(schedule=self.simulation.dose_schedule[patient])
+
+            # add model to container
+            self.model_container.append(self.model)
+
+        # instantiate inverse problem
+        if self.simulation.is_single_output_model:
+            # instantiate single output problem
+            self.problem = inf.SingleOutputInverseProblem(models=self.model_container,
+                                                          times=self.simulation.time_data,
+                                                          values=self.simulation.state_data
+            )
+
+        else:
+            # instantiate multi output problem
+            self.problem = inf.MultiOutputInverseProblem(models=self.model_container,
+                                                         times=self.simulation.time_data,
+                                                         values=self.simulation.state_data
+            )
+
 
     def _show_animated_logo(self):
         self.setWindowTitle(self.window_title)
