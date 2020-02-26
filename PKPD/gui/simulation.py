@@ -258,7 +258,9 @@ class SimulationTab(QtWidgets.QDialog):
 
         # fix vertical space that sliders can take up
         height = 0.7 * self.main_window.height
+        width = 0.35 * self.main_window.width
         scroll.setFixedHeight(height)
+        scroll.setFixedWidth(width)
         #layout.setAlignment(info, Qt.AlignTop)
 
         return scroll
@@ -749,10 +751,11 @@ class SimulationTab(QtWidgets.QDialog):
         text_field.setAlignment(QtCore.Qt.AlignCenter)
         min_value.setAlignment(QtCore.Qt.AlignCenter)
         max_value.setAlignment(QtCore.Qt.AlignCenter)
+        # ECE8E4
 
         # Set Display Style - colour chosen to match default background
-        min_value.setStyleSheet("QLineEdit{background-color: #ECE8E4; color: black; border: None}")
-        max_value.setStyleSheet("QLineEdit{background-color: #ECE8E4; color: black; border: None}")
+        min_value.setStyleSheet("QLineEdit{background-color: rgba(0, 0, 0, 0); color: black; border: None}")
+        max_value.setStyleSheet("QLineEdit{background-color: rgba(0, 0, 0, 0); color: black; border: None}")
 
         min_value.editingFinished.connect(self._update_slider_boundaries)
         max_value.editingFinished.connect(self._update_slider_boundaries)
@@ -799,22 +802,24 @@ class SimulationTab(QtWidgets.QDialog):
             new_min = round(number=float(self.slider_min_max_label_container[slider_id][0].text()), ndigits=1)
             new_max = round(number=float(self.slider_min_max_label_container[slider_id][1].text()), ndigits=1)
             # Set textbox display to rounded values
-            if new_min < new_max:  # sanity check to avoid problems with inference
-                self.slider_min_max_label_container[slider_id][0].setText(str(new_min))
-                self.slider_min_max_label_container[slider_id][1].setText(str(new_max))
-                # Update slider boundaries to these values (and colour)
-                slider.setMinimum(round(number=new_min, ndigits=1))
-                slider.setMaximum(round(number=new_max, ndigits=1))
-                self.slider_min_max_label_container[slider_id][0].setStyleSheet(
-                    "QLineEdit{background-color: #ECE8E4; color: black; border: None}")
-                self.slider_min_max_label_container[slider_id][1].setStyleSheet(
-                    "QLineEdit{background-color: #ECE8E4; color: black; border: None}")
+            #if new_min < new_max:  # sanity check to avoid problems with inference
+            self.slider_min_max_label_container[slider_id][0].setText(str(new_min))
+            self.slider_min_max_label_container[slider_id][1].setText(str(new_max))
+            # Update slider boundaries to these values (and colour)
+            slider.setMinimum(round(number=new_min, ndigits=1))
+            slider.setMaximum(round(number=new_max, ndigits=1))
+            self.slider_min_max_label_container[slider_id][0].setStyleSheet(
+                "QLineEdit{background-color: #ECE8E4; color: black; border: None}")
+            self.slider_min_max_label_container[slider_id][1].setStyleSheet(
+                "QLineEdit{background-color: #ECE8E4; color: black; border: None}")
+            """
             else:
                 # Colour text red to show slider has not been updated since min > max
                 self.slider_min_max_label_container[slider_id][0].setStyleSheet(
                     "QLineEdit{background-color: #ECE8E4; color: red; border: None}")
                 self.slider_min_max_label_container[slider_id][1].setStyleSheet(
                     "QLineEdit{background-color: #ECE8E4; color: red; border: None}")
+            """
 
 
     def fill_plot_option_window(self):
@@ -935,7 +940,10 @@ class SimulationTab(QtWidgets.QDialog):
         inferred_param.setMaximumHeight(2*header_height + cell_height)
         header_width = inferred_param.horizontalHeader().width()
         cell_width = inferred_param.columnWidth(0)
-        inferred_param.setMinimumWidth(max(cell_width, header_width))
+        #inferred_param.setMaximumWidth(max(cell_width, header_width))
+        #inferred_param.setMinimumWidth(max(cell_width, header_width))
+        #inferred_param.setHorizontalPolicy(QtWidgets.QSizePolicy.Minimum)
+        inferred_param.setFixedWidth(min(cell_width, header_width))
 
         return inferred_param
 
@@ -985,6 +993,11 @@ class SimulationTab(QtWidgets.QDialog):
                 error_message = str('A numerical error occurred during the simulation likely due to unsuitable inference settings.' +
                                 ' Please try different inference settings!')
                 QtWidgets.QMessageBox.question(self, 'Numerical error!', error_message, QtWidgets.QMessageBox.Yes)
+            except ValueError as e:
+                error_message = str(e)
+                QtWidgets.QMessageBox.question(self, 'Value error!', error_message, QtWidgets.QMessageBox.Yes)
+                # generate error message
+
 
 
     def _set_parameter_boundaries(self, initial_parameters:np.ndarray):
