@@ -902,7 +902,7 @@ class SimulationTab(QtWidgets.QDialog):
         decimal_places = 1  # to match slider precision
         min_value.setValidator(QDoubleValidator(lower_bound, upper_bound, decimal_places))
         max_value.setValidator(QDoubleValidator(lower_bound, upper_bound, decimal_places))
-        text_field.setValidator(QDoubleValidator(lower_bound, upper_bound, 3))
+        text_field.setValidator(QDoubleValidator(lower_bound, upper_bound, decimal_places))
 
         # Align all centrally for consistency
         text_field.setAlignment(QtCore.Qt.AlignCenter)
@@ -955,7 +955,6 @@ class SimulationTab(QtWidgets.QDialog):
             # Round to 1dp to correspond to slider precision
             new_value = round(number=float(self.parameter_text_field_container[slider_id].text()), ndigits=1)
             # Check new value is in range ?
-            # TODO THIS
             # Set new slider boundaries (set to min or max if out of range)
             slider.setValue(new_value)
             # Update Textfield to reflect this
