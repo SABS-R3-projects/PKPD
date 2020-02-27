@@ -214,12 +214,16 @@ class SimulationTab(QtWidgets.QDialog):
         """
         # if no dose schedule is provided, set dose schedule to None for each patient
         if self.raw_dose_schedule is None:
-            self.dose_schedule = [None] * len(self.patient_ids)
+            # create flag for no dosing
+            no_dosing_flag = [None] * len(self.patient_ids)
+
+            # create dose container
+            self.dose_schedule = dict(zip(self.patient_ids, no_dosing_flag))
 
         # if dose schedule is provided, extract protocols for patients
         else:
             # initialise dose container
-            self.dose_schedule = []
+            self.dose_schedule = {}
             for patient_id in self.patient_ids:
                 # create patient mask
                 patient_mask = self.patient_ids_mask == patient_id
@@ -228,7 +232,7 @@ class SimulationTab(QtWidgets.QDialog):
                 raw_time_data = self.time_data[patient_mask]
                 raw_dose_data = self.raw_dose_schedule[patient_mask]
 
-                # crate NaN mask
+                # create NaN mask
                 nan_mask =~ np.isnan(raw_dose_data)
 
                 # filter nans
@@ -237,14 +241,14 @@ class SimulationTab(QtWidgets.QDialog):
                 # save extracted schedule in container
                 if not dose_data:
                     # if dose data is empty, fill cotainer with None
-                    self.dose_schedule.append(None)
+                    self.dose_schedule[patient_id] = None
                 else:
                     # set duration of doses (arbitrary) TODO: come up with better solution
                     number_of_doses = len(dose_data)
                     duration_data = np.ones(number_of_doses)
 
                     # if dose data not empty, fill container with data
-                    self.dose_schedule.append([time_data, dose_data, duration_data])
+                    self.dose_schedule[patient_id] = [time_data, dose_data, duration_data]
 
 
     def filter_data(self):
@@ -253,6 +257,7 @@ class SimulationTab(QtWidgets.QDialog):
         # initialise container for time and state data
         self.time_data_container = []
         self.state_data_container = []
+
         # if single output problem, remove all entries where state is NaN
         if self.is_single_output_model:
             # create NaN mask
@@ -337,7 +342,6 @@ class SimulationTab(QtWidgets.QDialog):
             # create plot
             self.data_model_ax = self.data_model_figure.subplots()
             for patient in range(number_of_patients):
-
                 # create scatter plot
                 self.data_model_ax.scatter(x=self.time_data_container[patient], y=self.state_data_container[patient], marker='o', edgecolor='black',
                                             alpha=0.5)
@@ -348,6 +352,11 @@ class SimulationTab(QtWidgets.QDialog):
 
             # add data label to legend (hack)
             self.data_model_ax.scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
+
+            # add dosing time point to figure
+
+
+            # create legend
             self.data_model_ax.legend()
 
         else: # multi output
