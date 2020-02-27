@@ -3,6 +3,8 @@
 
 PKPD is a graphical interface for pharmacokinetic and (work in progress) pharmacodynamic modelling. It's for people who want to model pharmacological metabolism without having to touch any code!
 
+<img src="/images/pkpd-3vol-simulated.png" title="screenshot">
+
 ## Quickstart
 
 PKPD requires python 3.6+ and [myokit](http://myokit.org). To get started, git clone the repository and run the setup.py to install it as a python module. The interface can then be called from the terminal or command line using `python -m PKPD`.
@@ -33,8 +35,8 @@ Type `git --version` to check if you have git already.
 - On ubuntu, run `sudo apt-get install git`.
 - On iOS, the command above will show you how to install it if it is not installed.
 
-### D) How to install PKPD
-1. Make sure you have python and myokit installed. ![install-pic](install-pic.png)
+### D) How to install PKPD   
+1. Make sure you have python and myokit installed. 
 2. Open the terminal (or command line, on windows) and go to the folder you want to download to (using `cd`).
 3. Download PKPD using:-
 ```
@@ -48,6 +50,10 @@ cd PKPD
 ```
 pip install -e .
 ```
+These commands should look like the picture below.
+
+<img src="/images/pkpd-install-pic.png" title="install">
+
 Congratulations! You successfully installed PKPD.
 
 ### E) Use
