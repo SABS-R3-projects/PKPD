@@ -353,8 +353,15 @@ class SimulationTab(QtWidgets.QDialog):
             # add data label to legend (hack)
             self.data_model_ax.scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
 
-            # add dosing time point to figure
+            # get dose schedule of patient no 1
+            schedule = self.dose_schedule[self.patient_ids[0]]
 
+            # set plot model to first patient
+            self.update_dose_schedule(schedule=schedule)
+
+            # add dosing times of  to figure
+            # TODO: add the vertical line here
+            self.data_model_ax.axvline()
 
             # create legend
             self.data_model_ax.legend()
