@@ -183,7 +183,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 self.simulation.enable_line_removal = False
 
                 # instantiate model
-                if self.simulation.is_single_output_model: # single output
+                if self.simulation.is_single_output_model:  # single output
                     self.model = m.SingleOutputModel(self.home.model_file)
                 else:  # multi output
                     self.model = m.MultiOutputModel(self.home.model_file)
@@ -221,7 +221,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
             # Check Units in MMT file
             try:
                 self.model.model.check_units(mode=myokit.UNIT_STRICT)
-            except Exception as e: # Display Warning if Inconsistent
+            except Exception as e:  # Display Warning if Inconsistent
                 warning_message = 'Warning: Units may be inconsistent'
                 QtWidgets.QMessageBox.question(self, warning_message, str(e), QtWidgets.QMessageBox.Yes)
         else:

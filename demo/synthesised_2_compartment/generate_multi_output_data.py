@@ -22,11 +22,11 @@ times = np.linspace(0.0, 24.0, 100)
 model_result = model.simulate(true_parameters, times)
 
 # add white noise to generate data
-scale = np.mean(model_result) * 0.05 # arbitrary choice of noise (not too much, not too little)
-noise =  np.random.normal(loc=0.0,
-                          scale=scale,
-                          size=model_result.shape
-                          )
+scale = np.mean(model_result) * 0.05  # arbitrary choice of noise (not too much, not too little)
+noise = np.random.normal(loc=0.0,
+                         scale=scale,
+                         size=model_result.shape
+                         )
 data = model_result + noise
 
 df = pd.DataFrame({'time_h': times, 'central_ng_mL': data[:, 0], 'peripheral_ng_mL': data[:, 1]})

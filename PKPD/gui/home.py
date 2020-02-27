@@ -514,7 +514,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
                             'valid model file.'
             QtWidgets.QMessageBox.question(self, 'Model file invalid!', error_message, QtWidgets.QMessageBox.Yes)
 
-    def _is_model_file_valid(self, file_path:str) -> bool:
+    def _is_model_file_valid(self, file_path: str) -> bool:
         """Checks the validity of the chosen model file.
 
         Arguments:
@@ -594,7 +594,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
             error_message = 'The selected data file is invalid! Please, try again.'
             QtWidgets.QMessageBox.question(self, 'Data file invalid!', error_message, QtWidgets.QMessageBox.Yes)
 
-    def _is_data_file_valid(self, file_path:str) -> bool:
+    def _is_data_file_valid(self, file_path: str) -> bool:
         """Checks the validity of the chosen model file.
 
         Arguments:

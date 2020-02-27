@@ -223,7 +223,7 @@ class SimulationTab(QtWidgets.QDialog):
                 raw_dose_data = self.raw_dose_schedule[patient_mask]
 
                 # crate NaN mask
-                nan_mask =~ np.isnan(raw_dose_data)
+                nan_mask = ~np.isnan(raw_dose_data)
 
                 # filter nans
                 time_data, dose_data = raw_time_data[nan_mask], raw_dose_data[nan_mask]
@@ -249,7 +249,7 @@ class SimulationTab(QtWidgets.QDialog):
         # if single output problem, remove all entries where state is NaN
         if self.is_single_output_model:
             # create NaN mask
-            mask =~ np.isnan(self.state_data)
+            mask = ~np.isnan(self.state_data)
 
             # time and state data for non-NaN values
             self.time_data = self.time_data[mask]
@@ -262,7 +262,7 @@ class SimulationTab(QtWidgets.QDialog):
         # if multi output problem, remove only those rows where all state entries are NaN
         else:
             # create NaN mask
-            mask2d =~ np.isnan(self.state_data)
+            mask2d = ~np.isnan(self.state_data)
             mask = np.all(mask2d, axis=1)
 
             # mask patient_id_mask, time and state data for non-NaN values
@@ -282,7 +282,7 @@ class SimulationTab(QtWidgets.QDialog):
             self.time_data_container.append(self.time_data[mask])
             self.state_data_container.append(self.state_data[mask])
 
-    def update_dose_schedule(self, schedule:List) -> None:
+    def update_dose_schedule(self, schedule: List) -> None:
         """Update dose schedule.
 
         Arguments:
@@ -789,8 +789,6 @@ class SimulationTab(QtWidgets.QDialog):
             box.setContentLayout(lay)
             self.parameter_sliders.setAlignment(QtCore.Qt.AlignTop)  # display nicely
 
-
-
         # initialise container to store parameter values (for efficiency)
         number_parameters = len(self.parameter_text_field_container)
         self.parameter_values = np.empty(number_parameters)
@@ -806,7 +804,7 @@ class SimulationTab(QtWidgets.QDialog):
             child = self.parameter_sliders.takeAt(0)
             child.widget().deleteLater()
 
-    def _create_slider(self, parameter_name: str, parameter_id : int):
+    def _create_slider(self, parameter_name: str, parameter_id: int):
         """Creates slider group. Includes parameter label, value slider, value text field and labels for slider
         boundaries.
 

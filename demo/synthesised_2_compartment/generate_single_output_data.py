@@ -19,11 +19,11 @@ times = np.linspace(0.0, 24.0, 100)
 model_result = model.simulate(true_parameters, times)
 
 # add white noise to generate data
-scale = np.mean(model_result) * 0.05 # arbitrary choice of noise (not too much, not too little)
+scale = np.mean(model_result) * 0.05  # arbitrary choice of noise (not too much, not too little)
 data = model_result + np.random.normal(loc=0.0,
                                        scale=scale,
                                        size=len(model_result)
-)
+                                       )
 
 df = pd.DataFrame({'time_h': times, 'concentration_ng_mL': data})
 df.to_csv('demo/synthesised_2_compartment/two_compartment_single_output.csv', index=False)
