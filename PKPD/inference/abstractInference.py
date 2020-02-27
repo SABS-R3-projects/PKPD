@@ -10,7 +10,7 @@ class AbstractInverseProblem(object):
         """
         raise NotImplementedError
 
-    def set_objective_function(self):
+    def set_error_function(self):
         """Sets objective function which is minimised to find parameters. Allowed objective functions are those implemented in
         pints, i.e. MeanSquaredError, RootMeanSquaredError, SumOfSquaresError. ProbabilityBasedError and SumOfErrors are not yet
         supported. For more information see pints documentation https://pints.readthedocs.io/.

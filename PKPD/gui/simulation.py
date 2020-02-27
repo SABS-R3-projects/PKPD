@@ -679,6 +679,14 @@ class SimulationTab(QtWidgets.QDialog):
         # get corresponding pints method
         method = optimiser_dict[optimiser]
 
+        # if Nelder-Mead, disable parameter boundaries (boundaries are not compatible with Nelder-Mead)
+        if optimiser == 'Nelder-Mead':
+            # uncheck boundaries
+            self.boundarytoggle.setChecked(False)
+
+            # update boundaries
+            self._set_boundary_check()
+
         # update optimiser
         self.main_window.problem.set_optimiser(method)
 
@@ -698,7 +706,7 @@ class SimulationTab(QtWidgets.QDialog):
         measure = error_measure_dict[error_measure]
 
         # update error measure
-        self.main_window.problem.set_objective_function(measure)
+        self.main_window.problem.set_error_function(measure)
 
 
     def _set_boundary_check(self):
