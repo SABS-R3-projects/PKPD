@@ -12,7 +12,7 @@ class SingleOutputModel(AbstractModel):
     employed. The sole difference to the MultiOutputProblem is that the simulate method returns a 1d array instead of a
     2d array.
     """
-    def __init__(self, mmt_file:str) -> None:
+    def __init__(self, mmt_file:str, initial_conditions: bool = False) -> None:
         """Initialises the model class.
 
         Arguments:
@@ -26,7 +26,14 @@ class SingleOutputModel(AbstractModel):
         self.state_dimension = model.count_states()
         self.output_name = self._get_default_output_name(model)
         self.parameter_names = self._get_parameter_names(model)
-        self.number_parameters_to_fit = model.count_variables(inter=False, bound=False)
+
+        self.infer_initial_conditions = initial_conditions
+
+        # Check if initial conditions included in inference
+        if self.infer_initial_conditions:  # include initial conditions
+            self.number_parameters_to_fit = model.count_variables(inter=False, bound=False)
+        else:  # just infer parameters
+            self.number_parameters_to_fit = len(self.parameter_names)
 
         # instantiate the simulation
         self.simulation = myokit.Simulation(model, protocol)
@@ -117,8 +124,16 @@ class SingleOutputModel(AbstractModel):
         Arguments:
             parameters {np.ndarray} -- Parameters of the model. By convention [initial condition, model parameters].
         """
-        self.simulation.set_state(parameters[:self.state_dimension])
-        for param_id, value in enumerate(parameters[self.state_dimension:]):
+        # Check if initial conditions are included in inference
+        if self.infer_initial_conditions:
+            # No modification required
+            params = parameters
+        else:
+            # Set initial conditions to zero by default
+            params = np.concatenate([np.zeros(self.state_dimension), parameters])
+
+        self.simulation.set_state(params[:self.state_dimension])
+        for param_id, value in enumerate(params[self.state_dimension:]):
             self.simulation.set_constant(self.parameter_names[param_id], value)
 
 
@@ -127,7 +142,7 @@ class MultiOutputModel(AbstractModel):
     employed. The sole difference to the SingleOutputProblem is that the simulate method returns a 2d array instead of a
     1d array.
     """
-    def __init__(self, mmt_file:str) -> None:
+    def __init__(self, mmt_file: str, initial_conditions: bool = False) -> None:
         """Initialises the model class.
 
         Arguments:
@@ -142,7 +157,13 @@ class MultiOutputModel(AbstractModel):
         self.output_names = []
         self.output_dimension = None
         self.parameter_names = self._get_parameter_names(model)
-        self.number_parameters_to_fit = model.count_variables(inter=False, bound=False)
+        self.infer_initial_conditions = initial_conditions
+
+        # Check if initial conditions included in inference
+        if self.infer_initial_conditions:  # include initial conditions in number of variables
+            self.number_parameters_to_fit = model.count_variables(inter=False, bound=False)
+        else:   # just infer parameters
+            self.number_parameters_to_fit = len(self.parameter_names)
 
         # instantiate the simulation
         self.simulation = myokit.Simulation(model, protocol)
@@ -207,8 +228,17 @@ class MultiOutputModel(AbstractModel):
         Arguments:
             parameters {np.ndarray} -- Parameters of the model. By convention [initial condition, model parameters].
         """
-        self.simulation.set_state(parameters[:self.state_dimension])
-        for param_id, value in enumerate(parameters[self.state_dimension:]):
+        # Check if inferring initial conditions
+        if self.infer_initial_conditions:
+            # No modification required
+            params = parameters
+        else:
+            # Set initial conditions to zero by default
+            params = np.concatenate([np.zeros(self.state_dimension), parameters])
+
+        # Set parameters
+        self.simulation.set_state(params[:self.state_dimension])
+        for param_id, value in enumerate(params[self.state_dimension:]):
             self.simulation.set_constant(self.parameter_names[param_id], value)
 
     def set_output_dimension(self, data_dimension:int):
