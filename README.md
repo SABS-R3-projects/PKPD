@@ -1,5 +1,4 @@
-# PKPD: pharmacokinetics simplified
-[![Build Status](https://travis-ci.org/SABS-R3-projects/PKPD.svg?branch=master)](https://travis-ci.org/SABS-R3-projects/PKPD)
+# PKPD: pharmacokinetics simplified   <img align="right" src="https://travis-ci.org/SABS-R3-projects/PKPD.svg?branch=master">
 
 PKPD is a graphical interface for pharmacokinetic and (work in progress) pharmacodynamic modelling. It's for people who want to model pharmacological metabolism without having to touch any code!
 
