@@ -16,7 +16,7 @@ class TestSingleOutputProblem(unittest.TestCase):
     # generating data
     file_name = 'PKPD/modelRepository/1_bolus_linear.mmt'
     one_comp_model = m.SingleOutputModel(file_name)
-    true_parameters_one_comp_model = [0, 1, 4]  # [initial drug, CL, V]
+    true_parameters_one_comp_model = [1, 4]  # [initial drug, CL, V]
 
     # create protocol object
     protocol = myokit.Protocol()
@@ -39,7 +39,7 @@ class TestSingleOutputProblem(unittest.TestCase):
                                                        )
 
         # start somewhere in parameter space (close to the solution for ease)
-        initial_parameters = np.array([0.1, 1.1, 4.1])
+        initial_parameters = np.array([1.1, 4.1])
 
         # solve inverse problem
         problem.find_optimal_parameter(initial_parameter=initial_parameters, number_of_iterations=1)
@@ -104,10 +104,10 @@ class TestMultiOutputProblem(unittest.TestCase):
     # set dimensionality of data
     two_comp_model.set_output_dimension(2)
 
-    # List of parameters: ['central_compartment.drug', 'dose_compartment.drug', 'peripheral_compartment.drug',
-    # 'central_compartment.CL', 'central_compartment.Kcp', 'central_compartment.V', 'dose_compartment.Ka',
+    # List of parameters:
+    # ['central_compartment.CL', 'central_compartment.Kcp', 'central_compartment.V',
     # 'peripheral_compartment.Kpc', 'peripheral_compartment.V']
-    true_parameters = [1, 1, 1, 3, 5, 2, 2]
+    true_parameters = [1, 3, 5, 2, 2]
 
     times = np.linspace(0.0, 24.0, 100)
     model_result = two_comp_model.simulate(true_parameters, times)
@@ -124,7 +124,7 @@ class TestMultiOutputProblem(unittest.TestCase):
                                                       )
 
         # start somewhere in parameter space (close to the solution for ease)
-        initial_parameters = np.array([1, 1, 1, 3, 5, 2, 2])
+        initial_parameters = np.array([1, 3, 5, 2, 2])
 
         # solve inverse problem
         problem.find_optimal_parameter(initial_parameter=initial_parameters)
