@@ -169,7 +169,7 @@ class MultiOutputModel(AbstractModel):
         self.simulation = myokit.Simulation(model, protocol)
         self.model = model
 
-    def _get_parameter_names(self, model:myokit.Model):
+    def _get_parameter_names(self, model: myokit.Model):
         """Gets parameter names of the ODE model, i.e. initial conditions are excluded.
 
         Arguments:
@@ -180,7 +180,11 @@ class MultiOutputModel(AbstractModel):
         """
         parameter_names = []
         for component in model.components(sort=True):
-            parameter_names += [var.qname() for var in component.variables(state=False, inter=False, bound=False, sort=True)]
+            parameter_names += [var.qname() for var in component.variables(state=False,
+                                                                           inter=False,
+                                                                           bound=False,
+                                                                           sort=True
+                                                                           )]
 
         return parameter_names
 
@@ -200,7 +204,7 @@ class MultiOutputModel(AbstractModel):
         """
         return self.output_dimension
 
-    def simulate(self, parameters:np.ndarray, times:np.ndarray) -> np.ndarray:
+    def simulate(self, parameters: np.ndarray, times: np.ndarray) -> np.ndarray:
         """Solves the forward problem and returns the state values evaluated at the times provided.
 
         Arguments:
@@ -222,7 +226,7 @@ class MultiOutputModel(AbstractModel):
 
         return np.array(result).transpose()
 
-    def _set_parameters(self, parameters:np.ndarray) -> None:
+    def _set_parameters(self, parameters: np.ndarray) -> None:
         """Internal helper method to set the parameters of the forward model.
 
         Arguments:
@@ -241,7 +245,7 @@ class MultiOutputModel(AbstractModel):
         for param_id, value in enumerate(params[self.state_dimension:]):
             self.simulation.set_constant(self.parameter_names[param_id], value)
 
-    def set_output_dimension(self, data_dimension:int):
+    def set_output_dimension(self, data_dimension: int):
         """Set output dimension to data dimension, so optimisation/inference can be performed. Output state will be set
         to default output names.
 
@@ -282,7 +286,7 @@ class MultiOutputModel(AbstractModel):
         elif self.state_dimension >= self.output_dimension:
             self.output_names = self.state_names[:self.output_dimension]
 
-    def set_output(self, output_names:List):
+    def set_output(self, output_names: List):
         """Set output of the model.
 
         Arguments:

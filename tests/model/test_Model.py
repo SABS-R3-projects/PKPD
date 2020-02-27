@@ -128,10 +128,9 @@ class TestMultiOutputModel(unittest.TestCase):
         """Tests whether the simulate method works as expected. Tests implicitly also whether the _set_parameters method
         works properly.
         """
-        output_names = ['central_compartment.drug_concentration',
-                        'peripheral_compartment.drug_concentration']
+        output_names = ['central_compartment.drug_concentration', 'peripheral_compartment.drug_concentration']
         state_dimension = 2
-        parameters = [0, 0, 1, 3, 5, 2, 2] # states + parameters
+        parameters = [0, 0, 1, 3, 5, 2, 2]  # states + parameters
         parameter_names = ['central_compartment.CL',
                            'central_compartment.Kcp',
                            'central_compartment.V',

@@ -70,13 +70,11 @@ class MainWindow(abstractGui.AbstractMainWindow):
         size.setWidth(self.width)
         size.setHeight(self.height)
 
-        self.setGeometry(QtWidgets.QStyle.alignedRect(
-            QtCore.Qt.LeftToRight,
-            QtCore.Qt.AlignCenter,
-            size,
-            self.available_geometry
-            )
-        )
+        self.setGeometry(QtWidgets.QStyle.alignedRect(QtCore.Qt.LeftToRight,
+                                                      QtCore.Qt.AlignCenter,
+                                                      size,
+                                                      self.available_geometry
+                                                      ))
 
     def _format_images(self):
         """Scales images and logos according to the desktop size.
@@ -185,7 +183,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 self.simulation.enable_line_removal = False
 
                 # instantiate model
-                if self.simulation.is_single_output_model: # single output
+                if self.simulation.is_single_output_model:  # single output
                     self.model = m.SingleOutputModel(self.home.model_file)
                 else:  # multi output
                     self.model = m.MultiOutputModel(self.home.model_file)
@@ -214,13 +212,16 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 self._instantiate_inverse_problem()
             except Exception as e:
                 warning_message = 'Warning: The initialisation of the inverse problem failed.'
-                QtWidgets.QMessageBox.question(self, warning_message, str(e),
-                                               QtWidgets.QMessageBox.Yes)
+                QtWidgets.QMessageBox.question(self,
+                                               warning_message,
+                                               str(e),
+                                               QtWidgets.QMessageBox.Yes
+                                               )
 
             # Check Units in MMT file
             try:
                 self.model.model.check_units(mode=myokit.UNIT_STRICT)
-            except Exception as e: # Display Warning if Inconsistent
+            except Exception as e:  # Display Warning if Inconsistent
                 warning_message = 'Warning: Units may be inconsistent'
                 QtWidgets.QMessageBox.question(self, warning_message, str(e), QtWidgets.QMessageBox.Yes)
         else:
@@ -262,14 +263,14 @@ class MainWindow(abstractGui.AbstractMainWindow):
             self.problem = inf.SingleOutputInverseProblem(models=self.model_container,
                                                           times=self.simulation.time_data_container,
                                                           values=self.simulation.state_data_container
-            )
+                                                          )
 
         else:
             # instantiate multi output problem
             self.problem = inf.MultiOutputInverseProblem(models=self.model_container,
                                                          times=self.simulation.time_data_container,
                                                          values=self.simulation.state_data_container
-            )
+                                                         )
 
     def _show_animated_logo(self):
         self.setWindowTitle(self.window_title)

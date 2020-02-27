@@ -62,7 +62,7 @@ class SingleOutputInverseProblem(AbstractInverseProblem):
         # set default randomness in initial parameter values, if not specified in GUI
         if self.initial_parameter_uncertainty is None:
             # TODO: evaluate how to choose uncertainty best, to obtain most stable results
-            self.initial_parameter_uncertainty = initial_parameter + 0.1 # arbitrary
+            self.initial_parameter_uncertainty = initial_parameter + 0.1  # arbitrary
 
         # create sum of errors measure
         error_measure = pints.SumOfErrors(self.error_function_container)

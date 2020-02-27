@@ -36,7 +36,7 @@ class TestMainWindow(unittest.TestCase):
         assert pytest.approx(window.width / window.height, rel=0.05) == expected_aspect_ratio
         assert (pytest.approx(window.width, rel=0.05) == int(desktop_width * expected_width_coverage) or
                 pytest.approx(window.height, rel=0.05) == int(desktop_height * expected_height_coverage)
-               )
+                )
 
         # closing application, the usual sys.exit(app.exec_()) kept did not close the app automatically.
         QtCore.QTimer.singleShot(0.1, window.close)
@@ -65,7 +65,7 @@ class TestMainWindow(unittest.TestCase):
         assert pytest.approx(window.width / window.height, rel=0.05) == expected_aspect_ratio
         assert (pytest.approx(window.width, rel=0.05) == int(desktop_width * expected_width_coverage) or
                 pytest.approx(window.height, rel=0.05) == int(desktop_height * expected_height_coverage)
-               )
+                )
 
         # closing application, the usual sys.exit(app.exec_()) kept did not close the app automatically.
         QtCore.QTimer.singleShot(0.1, window.close)
@@ -94,7 +94,7 @@ class TestMainWindow(unittest.TestCase):
         assert pytest.approx(window.width / window.height, rel=0.05) == expected_aspect_ratio
         assert (pytest.approx(window.width, rel=0.05) == int(desktop_width * expected_width_coverage) or
                 pytest.approx(window.height, rel=0.05) == int(desktop_height * expected_height_coverage)
-               )
+                )
 
         # closing application, the usual sys.exit(app.exec_()) kept did not close the app automatically.
         QtCore.QTimer.singleShot(0.1, window.close)
