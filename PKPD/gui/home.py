@@ -3,6 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
+import myokit
 
 from PKPD.gui import abstractGui, mainWindow
 from PKPD.gui.utils.tableViewModel import PandasModel
@@ -22,6 +23,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         self.library_directory = 'PKPD/modelRepository/'
         self.model_file = None
         self.data_df = None
+        self.compartments = ['Select']
 
         # arrange content
         grid = QtWidgets.QGridLayout()
@@ -463,9 +465,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         self.model_check_mark.setPixmap(self.main_window.rescaled_cm)
 
         # update model display
-        with open(self.model_file, 'r') as model_file:
-            contents = model_file.read()
-            self.model_display_text_field.setText(contents)
+        self._read_model_file()
 
         # close select model window
         self.model_selection_window.close()
@@ -503,9 +503,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
             self.model_check_mark.setPixmap(self.main_window.rescaled_cm)
 
             # update model display
-            with open(self.model_file, 'r') as model_file:
-                contents = model_file.read()
-                self.model_display_text_field.setText(contents)
+            self._read_model_file()
 
             # close select model window
             self.model_selection_window.close()
@@ -534,6 +532,20 @@ class HomeTab(abstractGui.AbstractHomeTab):
         is_path_valid = is_file_existent and is_format_correct
 
         return is_path_valid
+
+    def _read_model_file(self):
+        with open(self.model_file, 'r') as model_file:
+            contents = model_file.read()
+            self.model_display_text_field.setText(contents)
+            model, _, _ = myokit.load(self.model_file)
+            components = list(model.components(sort=False))
+            self.compartments = ['Select']
+            for component in components:
+                self.compartments.append(component.name())
+            for dropdown in self.compartment_dropdowns:
+                if dropdown is not None:
+                    dropdown.clear()
+                    dropdown.addItems(self.compartments)
 
     @QtCore.pyqtSlot()
     def on_data_click(self):
@@ -582,7 +594,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
                 #Create drop down menus for columns
                 num_columns = self.data_display.model().columnCount()
                 self.compartment_dropdowns = [None]*num_columns
-                self.compartments = ['None']
+
                 for i in range(1, num_columns):
                     self._create_compartment_dropdown(i)
 
