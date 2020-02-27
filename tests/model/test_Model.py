@@ -50,6 +50,19 @@ class TestSingleOutputModel(unittest.TestCase):
         # assert correct number of outputs.
         assert n_outputs == self.one_comp_model.n_outputs()
 
+    def test_set_initial_conditions(self):
+        """
+        Tests whether set_initial_conditions functions sets correct initial conditions
+        Returns:
+        """
+        old_ic = np.zeros(1)
+        assert old_ic == self.one_comp_model.initial_conditions  # check correct default
+        new_ic = np.array([2])
+        self.one_comp_model.set_initial_conditions(new_ic)
+        assert new_ic == self.one_comp_model.initial_conditions  # check set
+        self.one_comp_model.set_initial_conditions(old_ic)
+        assert old_ic == self.one_comp_model.initial_conditions  # check set back
+
     def test_simulate(self):
         """Tests whether the simulate method works as expected. Tests implicitly also whether the _set_parameters method
         works properly.
@@ -123,6 +136,22 @@ class TestMultiOutputModel(unittest.TestCase):
 
         # assert correct number of outputs.
         assert n_outputs == self.two_comp_model.n_outputs()
+
+    def test_set_initial_conditions(self):
+        """
+        Tests whether set_initial_conditions functions sets correct initial conditions
+        Returns:
+        """
+        old_ic = np.zeros(2)
+        for i in range(len(old_ic)):
+            assert old_ic[i] == self.two_comp_model.initial_conditions[i]  # check correct default
+        new_ic = np.array([2,2])
+        self.two_comp_model.set_initial_conditions(new_ic)
+        for i in range(len(old_ic)):
+            assert new_ic[i] == self.two_comp_model.initial_conditions[i]  # check set to new
+        self.two_comp_model.set_initial_conditions(old_ic)
+        for i in range(len(old_ic)):
+            assert old_ic[i] == self.two_comp_model.initial_conditions[i]  # check set back to old
 
     def test_simulate(self):
         """Tests whether the simulate method works as expected. Tests implicitly also whether the _set_parameters method

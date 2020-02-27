@@ -26,6 +26,7 @@ class SingleOutputModel(AbstractModel):
         self.state_dimension = model.count_states()
         self.output_name = self._get_default_output_name(model)
         self.parameter_names = self._get_parameter_names(model)
+        self.initial_conditions = np.zeros(self.state_dimension)
 
         # Identify which states are NOT called drug
         non_drug_states = [name.split('.')[-1] != 'drug' for name in self.state_names]
@@ -137,11 +138,14 @@ class SingleOutputModel(AbstractModel):
             params = parameters
         else:
             # Set initial conditions to zero by default
-            params = np.concatenate([np.zeros(self.state_dimension), parameters])
+            params = np.concatenate([self.initial_conditions, parameters])
 
         self.simulation.set_state(params[:self.state_dimension])
         for param_id, value in enumerate(params[self.state_dimension:]):
             self.simulation.set_constant(self.parameter_names[param_id], value)
+
+    def set_initial_conditions(self, initial_conditions: np.ndarray):
+        self.initial_conditions = initial_conditions
 
 
 class MultiOutputModel(AbstractModel):
@@ -164,6 +168,7 @@ class MultiOutputModel(AbstractModel):
         self.output_names = []
         self.output_dimension = None
         self.parameter_names = self._get_parameter_names(model)
+        self.initial_conditions = np.zeros(self.state_dimension)
 
         # Identify which states are NOT called drug
         non_drug_states = [name.split('.')[-1] != 'drug' for name in self.state_names]
@@ -251,7 +256,7 @@ class MultiOutputModel(AbstractModel):
             params = parameters
         else:
             # Set initial conditions to zero by default
-            params = np.concatenate([np.zeros(self.state_dimension), parameters])
+            params = np.concatenate([self.initial_conditions, parameters])
 
         # Set parameters
         self.simulation.set_state(params[:self.state_dimension])
@@ -307,6 +312,9 @@ class MultiOutputModel(AbstractModel):
         """
         self.output_dimension = len(output_names)
         self.output_names = output_names
+
+    def set_initial_conditions(self, initial_conditions: np.ndarray):
+        self.initial_conditions = initial_conditions
 
 
 def set_unit_format():
