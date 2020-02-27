@@ -179,7 +179,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         label = QtWidgets.QLabel('dose type:')
 
         # define options
-        valid_types = ['bolus', 'subcut']
+        valid_types = ['bolus', 'extravas']
 
         # create dropdown menu for options
         self.dose_type_dropdown_menu = QtWidgets.QComboBox()

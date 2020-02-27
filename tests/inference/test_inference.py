@@ -89,7 +89,7 @@ class TestSingleOutputProblem(unittest.TestCase):
 class TestMultiOutputProblem(unittest.TestCase):
     """Testing the methods of MultiOutputInverseProblem class.
     """
-    ## Test case: Linear Two Compartment Model with Subcutaneous Dosing
+    ## Test case: Linear Two Compartment Model with extravascular Dosing
     # generating data
     file_name = 'PKPD/modelRepository/2_bolus_linear.mmt'
     two_comp_model = m.MultiOutputModel(file_name)

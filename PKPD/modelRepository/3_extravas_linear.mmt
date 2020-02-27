@@ -1,11 +1,12 @@
 [[model]]
-name: Linear, two-compartment PK model of drug distribution with subcutaneous injection.
+name: Linear, two-compartment PK model of drug distribution with extravascular injection.
 author: SABS:R3
 
 # Initial values
 central_compartment.drug = 0 [ng]
 dose_compartment.drug = 0 [ng]
-peripheral_compartment.drug = 0 [ng]
+peripheral_compartment_1.drug = 0 [ng]
+peripheral_compartment_2.drug = 0 [ng]
 
 [dose_compartment]
 # bound variables (dosing controlled by the protocol, and time)
@@ -36,16 +37,20 @@ CL = 2 [mL/h]
 V = 4 [mL]
     in [mL]
     desc: Volume of central compartment.
-Kcp = 0 [1/h]
+Kcp1 = 0 [1/h]
     in [1/h]
-    desc: Transition rate from the central compartment to the peripheral compartment.
+    desc: Transition rate from the central compartment to the peripheral compartment 1.
+Kcp2 = 0 [1/h]
+    in [1/h]
+    desc: Transition rate from the central compartment to the peripheral compartment 2.
 
 # compartment external parameters
 use dose_compartment.Ka as Ka
-use peripheral_compartment.Kpc as Kpc
+use peripheral_compartment_1.Kpc as Kp1c
+use peripheral_compartment_2.Kpc as Kp2c
 
 # state variable
-dot(drug) = Ka * dose_compartment.drug - drug * CL / V - drug * Kcp + peripheral_compartment.drug * Kpc
+dot(drug) = Ka * dose_compartment.drug - drug * CL / V - drug * (Kcp1 + Kcp2) + peripheral_compartment_1.drug * Kp1c + peripheral_compartment_2.drug * Kp2c
     in [ng]
     desc: Drug in central compartment in ng.
 
@@ -54,7 +59,7 @@ drug_concentration = drug / V
     in [ng/mL]
     desc: Drug concentration in central compartment in ng/mL.
 
-[peripheral_compartment]
+[peripheral_compartment_1]
 # compartment interal parameters
 V = 2 [mL]
     in [mL]
@@ -64,7 +69,28 @@ Kpc = 0 [1/h]
     desc: Transition rate from the peripheral compartment to the central compartment.
 
 # compartment external parameters
-use central_compartment.Kcp as Kcp
+use central_compartment.Kcp2 as Kcp
+
+# state variable
+dot(drug) = central_compartment.drug * Kcp - drug * Kpc
+    in [ng]
+
+# convert to concentration
+drug_concentration = drug / V
+    in [ng/mL]
+    desc: Drug concentration in peripheral compartment in ng/mL.
+
+[peripheral_compartment_2]
+# compartment interal parameters
+V = 2 [mL]
+    in [mL]
+    desc: Volume of peripheral compartment.
+Kpc = 0 [1/h]
+    in [1/h]
+    desc: Transition rate from the peripheral compartment to the central compartment.
+
+# compartment external parameters
+use central_compartment.Kcp1 as Kcp
 
 # state variable
 dot(drug) = central_compartment.drug * Kcp - drug * Kpc
