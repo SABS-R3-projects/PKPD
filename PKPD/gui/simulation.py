@@ -8,8 +8,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from matplotlib import patches
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtGui import QDoubleValidator
+from PyQt5 import QtCore, QtWidgets, QtGui
 
 from PKPD.gui.utils import slider as sl
 from PKPD.inference import inference as inf
@@ -912,8 +911,8 @@ class SimulationTab(QtWidgets.QDialog):
         lower_bound = 0.0
         upper_bound = np.inf
         decimal_places = 1  # to match slider precision
-        min_value.setValidator(QDoubleValidator(lower_bound, upper_bound, decimal_places))
-        max_value.setValidator(QDoubleValidator(lower_bound, upper_bound, decimal_places))
+        min_value.setValidator(QtGui.QDoubleValidator(lower_bound, upper_bound, decimal_places))
+        max_value.setValidator(QtGui.QDoubleValidator(lower_bound, upper_bound, decimal_places))
 
         # Align all centrally for consistency
         text_field.setAlignment(QtCore.Qt.AlignCenter)

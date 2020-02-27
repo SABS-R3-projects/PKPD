@@ -197,9 +197,8 @@ class MainWindow(abstractGui.AbstractMainWindow):
                     # set model output dimension to data dimension
                     self.model.set_output_dimension(self.simulation.data_dimension)
 
-                # fill sliders, plot options and parameter table with parameters in model
+                # fill sliders with parameters in model
                 self.simulation.fill_parameter_slider_group()
-                self.simulation.fill_plot_option_window()
 
                 # switch to simulation tab
                 self.tabs.setCurrentIndex(self.sim_tab_index)
