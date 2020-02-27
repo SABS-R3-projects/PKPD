@@ -7,7 +7,7 @@ class PandasModel(QtCore.QAbstractTableModel):
     """PandasModel class extending QAbstractTableModel for Pandas dataframes, such that PandasModel instances are
     compatible with PyQt's QTableView. In particular designed to deal with PKPD data.
     """
-    def __init__(self, data:pd.DataFrame, is_id_present:bool, is_dosing_present:bool):
+    def __init__(self, data: pd.DataFrame, is_id_present: bool, is_dosing_present: bool):
         QtCore.QAbstractTableModel.__init__(self)
         # replace NaN values in data by '.' to make it more familiar to users
         self._data = data.replace(np.nan, '.')
@@ -31,7 +31,7 @@ class PandasModel(QtCore.QAbstractTableModel):
         """
         return self._data.shape[1]
 
-    def data(self, index, role=QtCore.Qt.DisplayRole) -> None:
+    def data(self, index, role=QtCore.Qt.DisplayRole):
         """Qt internal method to display entries in QTableView. Customised to color columns by meaning (patient IDs,
         time, states dose schedule).
         """

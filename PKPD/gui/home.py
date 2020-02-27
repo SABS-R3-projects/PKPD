@@ -26,7 +26,8 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # arrange content
         grid = QtWidgets.QGridLayout()
         grid.addWidget(self._create_model_group(), 0, 0)
-        grid.addWidget(self._create_data_group(), 1, 0)
+        self.data_group = self._create_data_group()
+        grid.addWidget(self.data_group, 1, 0)
         grid.addLayout(self._create_next_button(), 2, 0)
 
         self.setLayout(grid)
@@ -292,13 +293,13 @@ class HomeTab(abstractGui.AbstractHomeTab):
         data_display = self._create_data_display()
 
         # create data format check box group
-        check_box_group = self._create_check_box_group()
+        self.data_options_group = self._create_data_options_group()
 
         # arrange button/text and label vertically
         v_box = QtWidgets.QVBoxLayout()
         v_box.addLayout(data_selection_group)
         v_box.addLayout(data_display)
-        v_box.addLayout(check_box_group)
+        v_box.addLayout(self.data_options_group)
 
         group.setLayout(v_box)
 
@@ -362,14 +363,14 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
         return h_box
 
-    def _create_check_box_group(self):
+    def _create_data_options_group(self):
         """Creates check boxes for the presence of patient IDs and doses in the data set.
 
         Returns:
             {QHBoxLayout} -- Returns check box group object.
         """
         # create check box for presence of patient ID data
-        self.patient_id_check_box = QtWidgets.QCheckBox('Patient ID provided')
+        self.patient_id_check_box = QtWidgets.QCheckBox('ID provided')
 
         # connect un-/checking box to reaction
         self.patient_id_check_box.stateChanged.connect(self.on_check_box_click)
@@ -569,9 +570,6 @@ class HomeTab(abstractGui.AbstractHomeTab):
                 # update check mark
                 self.data_check_mark.setPixmap(self.main_window.rescaled_cm)
 
-                # check presence of patient IDs/doses and update check boxes
-                self._update_check_boxes()
-
                 # update data display
                 self.data_display.setModel(PandasModel(self.data_df,
                                                        self.patient_id_check_box.isChecked(),
@@ -580,6 +578,20 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
                 # make content fill the reserved space of the table view
                 self.data_display.resizeColumnsToContents()
+
+                #Create drop down menus for columns
+                num_columns = self.data_display.model().columnCount()
+                self.compartment_dropdowns = [None]*num_columns
+                self.compartments = ['None']
+                for i in range(1, num_columns):
+                    self._create_compartment_dropdown(i)
+
+                # check presence of patient IDs/doses and update check boxes
+                self._update_check_boxes()
+
+                self._update_data_options_group()
+                self._show_hide_compartment_dropdown()
+
             else:
                 # generate error message
                 error_message = 'The selected dataset is not high dimensional enough! At least one time and one state' \
@@ -718,6 +730,34 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
         return is_equally_spaced
 
+    def _create_compartment_dropdown(self, column_number):
+        dropdown = QtWidgets.QComboBox()
+        dropdown.addItems(self.compartments)
+        dropdown.setFixedWidth(self.data_display.columnWidth(column_number)-5)
+        self.compartment_dropdowns[column_number] = dropdown
+
+    def _update_data_options_group(self):
+        for i in reversed(range(1, self.data_options_group.count()-2)):
+            self.data_options_group.itemAt(i).widget().deleteLater()
+        for widget in reversed(self.compartment_dropdowns):
+            if widget is not None:
+                self.data_options_group.insertWidget(1, widget)
+                print(widget)
+
+    def _show_hide_compartment_dropdown(self):
+        if self.patient_id_check_box.isChecked():
+            self.compartment_dropdowns[1].hide()
+            self.patient_id_check_box.setFixedWidth(self.data_display.columnWidth(0)+self.data_display.columnWidth(1)-2)
+        else:
+            self.compartment_dropdowns[1].show()
+            self.patient_id_check_box.setFixedWidth(self.data_display.columnWidth(0)-3)
+        if self.dose_schedule_check_box.isChecked():
+            self.compartment_dropdowns[-1].hide()
+        else:
+            self.compartment_dropdowns[-1].show()
+
+
+
     @QtCore.pyqtSlot()
     def on_check_box_click(self):
         """Reaction to checking either the patient ID or the dose schedule check box. Data display is updated based on
@@ -745,6 +785,9 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
         # make content fill the reserved space of the table view
         self.data_display.resizeColumnsToContents()
+
+        # update the dropdown lists
+        self._show_hide_compartment_dropdown()
 
     @QtCore.pyqtSlot()
     def on_next_click(self):
