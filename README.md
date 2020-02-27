@@ -5,7 +5,7 @@ Project on pharmacokinetics and pharmacodynamics.
 
 ## Installation
 
-PKPD depends on myokit, which can be installed with the instructions here: http://myokit.org/install
+PKPD depends on python 3.6+ and myokit, which can be installed with the instructions here: http://myokit.org/install
 
 1. Clone repository by opening the terminal and typing
 
@@ -25,9 +25,7 @@ Congratulations! You successfully installed PKPD.
 
 ## Use
 
-1. Open the terminal and enter the installed directory as in installation
-
-2. Start the program by typing
+Start the program by opening a terminal and typing
 ```
-python ./PKPD/gui/mainWindow.py
+python3 -m PKPD
 ```
