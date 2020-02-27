@@ -73,7 +73,6 @@ class TestSingleOutputModel(unittest.TestCase):
 
         # expected
         model, protocol, _ = myokit.load(self.file_name)
-        #model.set_state([parameters[0]])
         model.set_value('central_compartment.CL', parameters[0])
         model.set_value('central_compartment.V', parameters[1])
         simulation = myokit.Simulation(model, protocol)
@@ -172,10 +171,9 @@ class TestMultiOutputModel(unittest.TestCase):
         # initialise model
         model, protocol, _ = myokit.load(self.file_name)
 
-        # set initial conditions and parameter values
-        model.set_state(parameters[:state_dimension])
+        # set parameter values
         for parameter_id, name in enumerate(parameter_names):
-            model.set_value(name, parameters[state_dimension + parameter_id])
+            model.set_value(name, parameters[parameter_id])
 
         # solve model
         simulation = myokit.Simulation(model, protocol)
