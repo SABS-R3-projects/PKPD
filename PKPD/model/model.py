@@ -21,6 +21,9 @@ class SingleOutputModel(AbstractModel):
         # load model and protocol
         model, protocol, _ = myokit.load(mmtfile)
 
+        # get dose events from protocol
+        self.mmt_dose_events = self._get_mmt_dose_events(protocol)
+
         # get state, parameter and output names
         self.state_names = [state.qname() for state in model.states()]
         self.state_dimension = model.count_states()
@@ -32,6 +35,36 @@ class SingleOutputModel(AbstractModel):
         self.simulation = myokit.Simulation(model, protocol)
         self.model = model
 
+    def _get_mmt_dose_events(self, protocol: myokit.Protocol) -> np.ndarray:
+        """Get a list of dose events from the protocol provided in the model mmt file.
+
+        Arguments:
+            protocol {myokit.Protocol} -- Dosing protocol in mmt file.
+
+        Returns:
+            {np.ndarray} -- 2dim array with dose event details.
+        """
+        # get dose events from protocol
+        dose_events = protocol.events()
+
+        # get number of dose events
+        number_of_dose_events = len(dose_events)
+
+        # if no protocol is provided in mmt file, set mmt_dose_shedule to None
+        if number_of_dose_events == 0:
+            return None
+
+        # if protocol is provided, loop through events and safe level, start, duration, period, multiplier
+        else:
+            # initialise dose container
+            dose_event_container = np.empty(shape=(number_of_dose_events, 5))
+
+            # loop thorugh events
+            for event_id, event in enumerate(dose_events):
+                # safe event in container
+                dose_event_container[event_id, :] = event.level(), event.start(), event.duration(), event.period(), event.multiplier()
+
+            return dose_event_container
 
     def _get_default_output_name(self, model:myokit.Model):
         """Returns 'central_compartment.drug_concentration' as output_name by default. If variable does not exist in model, first state
@@ -140,6 +173,9 @@ class MultiOutputModel(AbstractModel):
         # load model and protocol
         model, protocol, _ = myokit.load(mmtfile)
 
+        # get dose events from protocol
+        self.mmt_dose_events = self._get_mmt_dose_events(protocol)
+
         # get state, parameter and output names
         self.state_names = [state.qname() for state in model.states()]
         self.state_dimension = model.count_states()
@@ -151,6 +187,37 @@ class MultiOutputModel(AbstractModel):
         # instantiate the simulation
         self.simulation = myokit.Simulation(model, protocol)
         self.model = model
+
+    def _get_mmt_dose_events(self, protocol: myokit.Protocol) -> np.ndarray:
+        """Get a list of dose events from the protocol provided in the model mmt file.
+
+        Arguments:
+            protocol {myokit.Protocol} -- Dosing protocol in mmt file.
+
+        Returns:
+            {np.ndarray} -- 2dim array with dose event details.
+        """
+        # get dose events from protocol
+        dose_events = protocol.events()
+
+        # get number of dose events
+        number_of_dose_events = len(dose_events)
+
+        # if no protocol is provided in mmt file, set mmt_dose_shedule to None
+        if number_of_dose_events == 0:
+            return None
+
+        # if protocol is provided, loop through events and safe level, start, duration, period, multiplier
+        else:
+            # initialise dose container
+            dose_event_container = np.empty(shape=(number_of_dose_events, 5))
+
+            # loop thorugh events
+            for event_id, event in enumerate(dose_events):
+                # safe event in container
+                dose_event_container[event_id, :] = event.level(), event.start(), event.duration(), event.period(), event.multiplier()
+
+            return dose_event_container
 
     def _get_parameter_names(self, model:myokit.Model):
         """Gets parameter names of the ODE model, i.e. initial conditions are excluded.

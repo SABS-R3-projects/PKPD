@@ -214,11 +214,17 @@ class SimulationTab(QtWidgets.QDialog):
         """
         # if no dose schedule is provided, set dose schedule to None for each patient
         if self.raw_dose_schedule is None:
-            # create flag for no dosing
-            no_dosing_flag = [None] * len(self.patient_ids)
+            # get mmt dose event
+            mmt_dose_events = self.main_window.model.mmt_dose_events
+
+            # format mmt dose events
+            mmt_dose_events = self._format_mmt_dose_events(events=mmt_dose_events)
+
+            # copy dose schedule for each patient
+            doses_of_patients = [mmt_dose_events] * len(self.patient_ids)
 
             # create dose container
-            self.dose_schedule = dict(zip(self.patient_ids, no_dosing_flag))
+            self.dose_schedule = dict(zip(self.patient_ids, doses_of_patients))
 
         # if dose schedule is provided, extract protocols for patients
         else:
@@ -250,6 +256,61 @@ class SimulationTab(QtWidgets.QDialog):
                     # if dose data not empty, fill container with data
                     self.dose_schedule[patient_id] = [time_data, dose_data, duration_data]
 
+    def _format_mmt_dose_events(self, events: np.ndarray) -> np.ndarray:
+        # initialise container
+        time_container = []
+        dose_container = []
+        duration_container = []
+
+        # if no events are provided, return None
+        if events is None:
+            return None
+
+        # if events are provided, format them apprpriately
+        else:
+            # loop through events
+            for event in events:
+                # get event details
+                level, start, duration, period, multiplier = event
+
+                # compute total dose amount
+                dose_amount = level * duration
+
+                # if event is not repeated, save event to containers
+                if multiplier == 0 and period == 0:
+                    # save event to conatiners
+                    time_container.append(start)
+                    dose_container.append(dose_amount)
+                    duration_container.append(duration)
+
+                # if event is repeated, but does not repeat indefinitely, save event multiplier times
+                elif multiplier > 0:
+                    for occurance in range(int(multiplier)):
+                        # save event to containers
+                        time_container.append(start + occurance * period)
+                        dose_container.append(dose_amount)
+                        duration_container.append(duration)
+
+                # if event is repeated indefinitely
+                else:
+                    # get determination of experiment
+                    final_time = np.max(self.time_data)
+
+                    # set first dose time
+                    dosing_time = start
+
+                    # add events, as long as dosing time does not exceed experimentation time
+                    while dosing_time < final_time:
+                        # save event to containers
+                        time_container.append(dosing_time)
+                        dose_container.append(dose_amount)
+                        duration_container.append(duration)
+
+                        # increment dosing time by period
+                        dosing_time += period
+
+            # convert to numpy arrays and return container
+            return [np.array(time_container), np.array(dose_container), np.array(duration_container)]
 
     def filter_data(self):
         """Filter time and state data from rows for which the state only contains NaNs.
@@ -294,7 +355,6 @@ class SimulationTab(QtWidgets.QDialog):
             self.time_data_container.append(self.time_data[mask])
             self.state_data_container.append(self.state_data[mask])
 
-
     def update_dose_schedule(self, schedule:List) -> None:
         """Update dose schedule.
 
@@ -324,7 +384,6 @@ class SimulationTab(QtWidgets.QDialog):
             # update dose schedule
             self.main_window.model.simulation.set_protocol(protocol)
 
-
     def add_data_to_data_model_plot(self):
         """Adds the data from the in the home tab chosen data file to the previously initialised figure. For multi-
         dimensional data, the figure is split into subplots.
@@ -350,23 +409,31 @@ class SimulationTab(QtWidgets.QDialog):
                 self.data_model_ax.set_xlabel(self.time_label)
                 self.data_model_ax.set_ylabel(state_label)
 
-            # add data label to legend (hack)
-            self.data_model_ax.scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
-
             # get dose schedule of patient no 1
             schedule = self.dose_schedule[self.patient_ids[0]]
 
-            # set plot model to first patient
-            self.update_dose_schedule(schedule=schedule)
+            # get dose times
+            dose_times = schedule[0]
 
-            # add dosing times of  to figure
-            # TODO: add the vertical line here
-            self.data_model_ax.axvline()
+            # add dosing times to figure
+            for time in dose_times:
+                self.data_model_ax.axvline(x=time, color='darkred', linestyle='dashed', alpha=0.5, linewidth=1)
+
+            # add data label and dosing points to legend (hack)
+            self.data_model_ax.scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
+            self.data_model_ax.plot([], [], color='darkred', linestyle='dashed', alpha=0.5, label="dose event")
+
 
             # create legend
             self.data_model_ax.legend()
 
         else: # multi output
+            # get dose schedule of patient no 1
+            schedule = self.dose_schedule[self.patient_ids[0]]
+
+            # get dose times
+            dose_times = schedule[0]
+
             # clear figure
             self.data_model_figure.clf()
 
@@ -385,8 +452,13 @@ class SimulationTab(QtWidgets.QDialog):
                     # add ylabel for compartment
                     self.data_model_ax[dim].set_ylabel(self.state_labels[dim])
 
-                # add legend to compartment subplot (hack)
+                # add dosing times to figure
+                for time in dose_times:
+                    self.data_model_ax[dim].axvline(x=time, color='darkred', linestyle='dashed', alpha=0.5, linewidth=1)
+
+                # add legend and dose times to compartment subplot (hack)
                 self.data_model_ax[dim].scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
+                self.data_model_ax[dim].plot([], [], color='darkred', linestyle='dashed', alpha=0.5, label="dose event")
                 self.data_model_ax[dim].legend()
 
             # add xlabel to the bottom of the vertically stacked subplots

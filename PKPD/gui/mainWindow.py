@@ -169,6 +169,15 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 # piece dataframe into ID, time, states and dose data
                 self.simulation.extract_data_from_dataframe()
 
+                # instantiate model
+                if self.simulation.is_single_output_model: # single output
+                    self.model = m.SingleOutputModel(self.home.model_file)
+                else: # multi output
+                    self.model = m.MultiOutputModel(self.home.model_file)
+
+                    # set model output dimension to data dimension
+                    self.model.set_output_dimension(self.simulation.data_dimension)
+
                 # get dose schedule TODO: write test
                 self.simulation.get_dose_schedule()
 
@@ -176,6 +185,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 self.simulation.filter_data()
 
                 # TODO: move data extraction from ploting
+                # only show dashed lines for central compartment!
                 # add plot of dosing schedule
                 # add dose schedule option button
                 # list doses of patient, if available
@@ -187,15 +197,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 # disable live plotting and line removal for the simulation
                 self.simulation.enable_live_plotting = False
                 self.simulation.enable_line_removal = False
-
-                # instantiate model
-                if self.simulation.is_single_output_model: # single output
-                    self.model = m.SingleOutputModel(self.home.model_file)
-                else: # multi output
-                    self.model = m.MultiOutputModel(self.home.model_file)
-
-                    # set model output dimension to data dimension
-                    self.model.set_output_dimension(self.simulation.data_dimension)
 
                 # fill sliders with parameters in model
                 self.simulation.fill_parameter_slider_group()
@@ -252,6 +253,10 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
             # add model to container
             self.model_container.append(self.model)
+
+        # set model for plotting to first patient
+        patient_one = self.simulation.patient_ids[0]
+        self.simulation.update_dose_schedule(schedule=self.simulation.dose_schedule[patient_one])
 
         # instantiate inverse problem
         if self.simulation.is_single_output_model:
