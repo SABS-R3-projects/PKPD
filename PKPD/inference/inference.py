@@ -177,7 +177,7 @@ class MultiOutputInverseProblem(AbstractInverseProblem):
         self.objective_score = None
 
 
-    def find_optimal_parameter(self, initial_parameter:np.ndarray, number_of_iterations:int=5) -> None:
+    def find_optimal_parameter(self, initial_parameter:np.ndarray, number_of_iterations:int=1) -> None:
         """Find point in parameter space that optimises the objective function, i.e. find the set of parameters that minimises the
         distance of the model to the data with respect to the objective function.
 
