@@ -77,3 +77,6 @@ Try replacing `pip` with `pip3`. If this doesn't work then you might not have py
 **I get the message `ṫ̵̛͇̺͇͓͐̈́̀͒̿̏̆͝h̵̡̯̮̬̍͗̿̐̐̏̅͗̉̆̅̉͜ĕ̴͓̯͉͗̒̎͑͂̂̒̒͗̈́̓ṛ̶̡̭̗͕̀̄̅͐ę̶͔̹̥̖̠̼̎i̷̞̗̥̮̒̕s̵̲̱̭͔͙̑̐̾́̀̏̊̚͠â̶̧̫̣̗͔̘̹̝͓̬͇͒̿́̿̎ͅn̵̢̨̹̼̭̯͈̻̺̼̉̿̊̾͂̅͆͋̾̓͠ͅê̷̻͚̞̠̻̥̦͉̥͉̳̼̓͐̀́̓̌͗̃̕͠͝r̴̢̤͖̫͇̰̦̾͐̐̋͋͑̇͑͝r̸̛̛̼͔̺̹̯̼̻̅̾̐̅̋̋̉̍̀̚͝o̸͉̖̗̮̣͙͆̔̚r̵̠̳̖̟͉̞̰͕͍͂̋͒̾͗̿̋͜i̴̩̬͕̙̠͂̀̅n̴̢̢̳̤̥̣̠̻̹̥̼̮̞͑̍̒̈t̵̖̉̐̃́̊̌̋̚͝͝h̸̪̞͕̘̯̞͒̅̇e̴̠̓͌̒ṃ̷̧̭̞̬̳̹͔̹̙̈̊̑̓̇͛͒̓å̷͚̲̝͖̬̗̓͐̾̀̈͒͂̚͝ͅt̶͚̗͇̹̦̀͛̋ŗ̶̯͕̟̜͇̣̬̻̖̗̆̈́̍̊̀̎̈̑͑́͜͠i̸̡̡̛̟̺̮̤̽̒̋͒͝x̶̠̯͔̯̖̼̣̫͔̲̼̳̃̎`**
 
 Your computer is haunted. Consider employing an exorcist.
+
+## Issues and contributions
+If you find a bug or would like to contribute, then you are very welcome to get in contact through the github issues.
