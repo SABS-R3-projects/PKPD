@@ -12,7 +12,7 @@ class SingleOutputModel(AbstractModel):
     employed. The sole difference to the MultiOutputProblem is that the simulate method returns a 1d array instead of a
     2d array.
     """
-    def __init__(self, mmt_file:str, initial_conditions: bool = False) -> None:
+    def __init__(self, mmt_file: str) -> None:
         """Initialises the model class.
 
         Arguments:
@@ -27,7 +27,14 @@ class SingleOutputModel(AbstractModel):
         self.output_name = self._get_default_output_name(model)
         self.parameter_names = self._get_parameter_names(model)
 
-        self.infer_initial_conditions = initial_conditions
+        # Identify which states are NOT called drug
+        non_drug_states = [name.split('.')[-1] != 'drug' for name in self.state_names]
+
+        # Infer initial conditions if at least one state doesn't correspond to drug
+        # If all states correspond to drug - set these to zero when solving forward problem/inference
+        # TODO Could use non_drug_states to do inference only on non drug states?
+        self.infer_initial_conditions = (np.sum(non_drug_states) > 0)
+
 
         # Check if initial conditions included in inference
         if self.infer_initial_conditions:  # include initial conditions
@@ -142,7 +149,7 @@ class MultiOutputModel(AbstractModel):
     employed. The sole difference to the SingleOutputProblem is that the simulate method returns a 2d array instead of a
     1d array.
     """
-    def __init__(self, mmt_file: str, initial_conditions: bool = False) -> None:
+    def __init__(self, mmt_file: str) -> None:
         """Initialises the model class.
 
         Arguments:
@@ -157,7 +164,13 @@ class MultiOutputModel(AbstractModel):
         self.output_names = []
         self.output_dimension = None
         self.parameter_names = self._get_parameter_names(model)
-        self.infer_initial_conditions = initial_conditions
+
+        # Identify which states are NOT called drug
+        non_drug_states = [name.split('.')[-1] != 'drug' for name in self.state_names]
+
+        # Infer initial conditions if at least one state doesn't correspond to drug
+        # TODO Could use non_drug_states to do inference only on non drug states?
+        self.infer_initial_conditions = (np.sum(non_drug_states) > 0)
 
         # Check if initial conditions included in inference
         if self.infer_initial_conditions:  # include initial conditions in number of variables
