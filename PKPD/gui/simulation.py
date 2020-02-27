@@ -318,7 +318,7 @@ class SimulationTab(QtWidgets.QDialog):
         # get number of patients
         number_of_patients = len(self.patient_ids)
 
-        if self.is_single_output_model: # single output
+        if self.is_single_output_model:  # single output
             # clear figure
             self.data_model_figure.clf()
 
@@ -489,7 +489,7 @@ class SimulationTab(QtWidgets.QDialog):
         self.infer_option_window.setWindowTitle('Inference options')
 
         # define dropdown dimension
-        self.dropdown_menu_width = 190 # value arbitrary
+        self.dropdown_menu_width = 190  # value arbitrary
 
         # create inference options
         optimiser_options = self._create_optimiser_options()
@@ -715,7 +715,7 @@ class SimulationTab(QtWidgets.QDialog):
         self.plot_option_window.setWindowTitle('Plotting options')
 
         # define dropdown dimension
-        self.dropdown_menu_width = 190 # to match inference option window
+        self.dropdown_menu_width = 190  # to match inference option window
 
         # create plotting options
         y_axis_options = self._create_y_axis_options()

@@ -159,7 +159,11 @@ class MultiOutputModel(AbstractModel):
         """
         parameter_names = []
         for component in model.components(sort=True):
-            parameter_names += [var.qname() for var in component.variables(state=False, inter=False, bound=False, sort=True)]
+            parameter_names += [var.qname() for var in component.variables(state=False,
+                                                                           inter=False,
+                                                                           bound=False,
+                                                                           sort=True
+                                                                           )]
 
         return parameter_names
 

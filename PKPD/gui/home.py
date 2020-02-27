@@ -97,7 +97,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         self.model_selection_window.setWindowTitle('Model Selection')
 
         # define dropdown dimension (otherwise the width will differ as number of char varies)
-        self.dropdown_menu_width = 100 # value arbitrary
+        self.dropdown_menu_width = 100  # value arbitrary
 
         # create 'select from library' group
         model_library_group = self._create_model_library_group()
@@ -481,7 +481,8 @@ class HomeTab(abstractGui.AbstractHomeTab):
         files can be selected.
         """
         options = QtWidgets.QFileDialog.Options()
-        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()",
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self,
+                                                             "QFileDialog.getOpenFileName()",
                                                              "",
                                                              "Model Files (""*.mmt)",
                                                              options=options
