@@ -977,20 +977,6 @@ class SimulationTab(QtWidgets.QDialog):
             self.slider_min_max_label_container[slider_id][1].setText(str(slider.maximum()))
 
 
-    def fill_plot_option_window(self):
-        #  TODO: finish this!
-        # create text fields
-        for slider in self.slider_container:
-            pass
-
-
-    def fill_infer_option_window(self):
-        #  TODO: finish this!
-        # create text fields
-        for slider in self.slider_container:
-            pass
-
-
     @QtCore.pyqtSlot()
     def on_plot_model_click(self):
         """Reaction to left-clicking the 'plot model' button. Enables the 'live plotting feature' and plots the
