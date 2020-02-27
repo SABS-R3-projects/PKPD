@@ -56,7 +56,7 @@ class TestSingleOutputProblem(unittest.TestCase):
         problem = inference.SingleOutputInverseProblem(models=[self.one_comp_model],
                                                        times=[self.times],
                                                        values=[self.data_one_comp_model]
-        )
+                                                       )
 
         # iterate through valid error measures
         valid_err_func = [pints.MeanSquaredError, pints.RootMeanSquaredError, pints.SumOfSquaresError]
@@ -140,9 +140,9 @@ class TestMultiOutputProblem(unittest.TestCase):
         """Test whether the set_error_function method works as expected.
         """
         problem = inference.MultiOutputInverseProblem(models=[self.two_comp_model],
-                                                       times=[self.times],
-                                                       values=[self.data_two_comp_model]
-        )
+                                                      times=[self.times],
+                                                      values=[self.data_two_comp_model]
+                                                      )
 
         # iterate through valid error measures
         valid_err_func = [pints.MeanSquaredError, pints.SumOfSquaresError]
@@ -157,9 +157,9 @@ class TestMultiOutputProblem(unittest.TestCase):
         whether the optimiser are properly embedded.
         """
         problem = inference.MultiOutputInverseProblem(models=[self.two_comp_model],
-                                                       times=[self.times],
-                                                       values=[self.data_two_comp_model]
-                                                       )
+                                                      times=[self.times],
+                                                      values=[self.data_two_comp_model]
+                                                      )
 
         # iterate through valid optimisers
         valid_optimisers = [pints.CMAES, pints.NelderMead, pints.PSO, pints.SNES, pints.XNES]

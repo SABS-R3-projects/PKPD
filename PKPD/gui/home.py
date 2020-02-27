@@ -97,7 +97,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
         self.model_selection_window.setWindowTitle('Model Selection')
 
         # define dropdown dimension (otherwise the width will differ as number of char varies)
-        self.dropdown_menu_width = 100 # value arbitrary
+        self.dropdown_menu_width = 100  # value arbitrary
 
         # create 'select from library' group
         model_library_group = self._create_model_library_group()
@@ -481,7 +481,8 @@ class HomeTab(abstractGui.AbstractHomeTab):
         files can be selected.
         """
         options = QtWidgets.QFileDialog.Options()
-        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()",
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self,
+                                                             "QFileDialog.getOpenFileName()",
                                                              "",
                                                              "Model Files (""*.mmt)",
                                                              options=options
@@ -513,7 +514,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
                             'valid model file.'
             QtWidgets.QMessageBox.question(self, 'Model file invalid!', error_message, QtWidgets.QMessageBox.Yes)
 
-    def _is_model_file_valid(self, file_path:str) -> bool:
+    def _is_model_file_valid(self, file_path: str) -> bool:
         """Checks the validity of the chosen model file.
 
         Arguments:
@@ -593,7 +594,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
             error_message = 'The selected data file is invalid! Please, try again.'
             QtWidgets.QMessageBox.question(self, 'Data file invalid!', error_message, QtWidgets.QMessageBox.Yes)
 
-    def _is_data_file_valid(self, file_path:str) -> bool:
+    def _is_data_file_valid(self, file_path: str) -> bool:
         """Checks the validity of the chosen model file.
 
         Arguments:
