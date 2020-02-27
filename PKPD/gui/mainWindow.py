@@ -36,25 +36,26 @@ class MainWindow(abstractGui.AbstractMainWindow):
         self._show_animated_logo()
 
         # Timer to stop the animation
-        self.anitimer = QtCore.QTimer()
-        self.anitimer.setInterval(1950)
-        self.anitimer.setSingleShot(True)
-        self.anitimer.start()
+        self.ani_timer = QtCore.QTimer()
+        self.ani_timer.setInterval(1950)
+        self.ani_timer.setSingleShot(True)
+        self.ani_timer.start()
 
         # fill the window with content when timer runs out.
-        self.anitimer.timeout.connect(self._arrange_window_content)
+        self.ani_timer.timeout.connect(self._arrange_window_content)
 
     def _set_window_size(self):
-        """Keeps an aspect ratio width / height of 5/4 and scales the width such that 0.75 of the screen width is covered. If this
-        leads to a window height exceeding the screen height, the aspect ratio is kept and the window height is set to the screen
-        height.
+        """Keeps an aspect ratio width / height of 5/4 and scales the width such that 0.75 of the screen width is
+        covered. If this leads to a window height exceeding the screen height, the aspect ratio is kept and the window
+        height is set to the screen height.
         """
-        width_coverage = 0.75 # subjective aesthetical choice
-        aspect_ratio = 5 / 4 # subjective aesthetical choice
+        width_coverage = 0.75  # subjective aesthetic choice
+        aspect_ratio = 5 / 4  # subjective aesthetic choice
 
         # sanity check
         if (self.desktop_width < 1) or (self.desktop_height < 1):
-            raise ValueError('Resolution of desktop appears to be too low, i.e. less than a pixel for either width or height.')
+            raise ValueError('Resolution of desktop appears to be too low, i.e. less than a pixel for either width or'
+                             ' height.')
 
         self.width = int(self.desktop_width * width_coverage)
         self.height = int(self.width / aspect_ratio)
@@ -69,14 +70,11 @@ class MainWindow(abstractGui.AbstractMainWindow):
         size.setWidth(self.width)
         size.setHeight(self.height)
 
-        self.setGeometry(QtWidgets.QStyle.alignedRect(
-            QtCore.Qt.LeftToRight,
-            QtCore.Qt.AlignCenter,
-            size,
-            self.available_geometry
-            )
-        )
-
+        self.setGeometry(QtWidgets.QStyle.alignedRect(QtCore.Qt.LeftToRight,
+                                                      QtCore.Qt.AlignCenter,
+                                                      size,
+                                                      self.available_geometry
+                                                      ))
 
     def _format_images(self):
         """Scales images and logos according to the desktop size.
@@ -93,7 +91,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
         red_cross = QtGui.QPixmap('images/FALSE.png')
         self.rescaled_rc = red_cross.scaledToHeight(self.desktop_height * 0.03)
 
-
     def _arrange_window_content(self):
         """Defines the layout of the main window.
         """
@@ -104,7 +101,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
         self.tabs = self._create_tabs()
         self.setCentralWidget(self.tabs)
         self.setStatusBar(self._create_status_bar())
-
 
     def _create_tabs(self):
         """Creates the home and simulation tab.
@@ -123,7 +119,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
 
         return tabs
 
-
     def _create_status_bar(self):
         """Creates a status bar displaying the current program version and the producers of the program.
 
@@ -136,7 +131,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
         status_bar.addWidget(self.version_number)
 
         return status_bar
-
 
     def _create_SABS_logo(self):
         """Creates SABS R3 logo in the status bar.
@@ -175,7 +169,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 # filter data from time points with no information TODO: write test
                 self.simulation.filter_data()
 
-                # TODO: move data extraction from ploting
+                # TODO: move data extraction from plotting
                 # add plot of dosing schedule
                 # add dose schedule option button
                 # list doses of patient, if available
@@ -189,9 +183,9 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 self.simulation.enable_line_removal = False
 
                 # instantiate model
-                if self.simulation.is_single_output_model: # single output
+                if self.simulation.is_single_output_model:  # single output
                     self.model = m.SingleOutputModel(self.home.model_file)
-                else: # multi output
+                else:  # multi output
                     self.model = m.MultiOutputModel(self.home.model_file)
 
                     # set model output dimension to data dimension
@@ -207,23 +201,29 @@ class MainWindow(abstractGui.AbstractMainWindow):
             except ValueError:
                 # generate error message
                 error_message = 'The .csv file does not seem to be properly formatted. Please check again!'
-                QtWidgets.QMessageBox.question(self, 'Data structure not compatible!', error_message, QtWidgets.QMessageBox.Yes)
+                QtWidgets.QMessageBox.question(self,
+                                               'Data structure not compatible!',
+                                               error_message,
+                                               QtWidgets.QMessageBox.Yes
+                                               )
 
             # instantiate inverse problem (after switching to simulation tab to improve user experience)
             try:
                 self._instantiate_inverse_problem()
             except Exception as e:
                 warning_message = 'Warning: The initialisation of the inverse problem failed.'
-                QtWidgets.QMessageBox.question(self, warning_message, str(e),
-                                               QtWidgets.QMessageBox.Yes)
+                QtWidgets.QMessageBox.question(self,
+                                               warning_message,
+                                               str(e),
+                                               QtWidgets.QMessageBox.Yes
+                                               )
 
             # Check Units in MMT file
             try:
                 self.model.model.check_units(mode=myokit.UNIT_STRICT)
-            except Exception as e: # Display Warning if Inconsistent
+            except Exception as e:  # Display Warning if Inconsistent
                 warning_message = 'Warning: Units may be inconsistent'
-                QtWidgets.QMessageBox.question(self, warning_message, str(e),
-                                               QtWidgets.QMessageBox.Yes)
+                QtWidgets.QMessageBox.question(self, warning_message, str(e), QtWidgets.QMessageBox.Yes)
         else:
             # update file dialog icons
             if not self.home.is_model_file_valid:
@@ -236,9 +236,9 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 self.home.data_check_mark.setPixmap(self.rescaled_cm)
 
             # generate error message
-            error_message = 'At least one of the files does not seem to exist or does not have the correct file format. Please check again!'
+            error_message = 'At least one of the files does not seem to exist or does not have the correct file ' \
+                            'format. Please check again!'
             QtWidgets.QMessageBox.question(self, 'Files not found!', error_message, QtWidgets.QMessageBox.Yes)
-
 
     def _instantiate_inverse_problem(self):
         """Instantiates inverse problem for parameter optimisation.
@@ -263,15 +263,14 @@ class MainWindow(abstractGui.AbstractMainWindow):
             self.problem = inf.SingleOutputInverseProblem(models=self.model_container,
                                                           times=self.simulation.time_data_container,
                                                           values=self.simulation.state_data_container
-            )
+                                                          )
 
         else:
             # instantiate multi output problem
             self.problem = inf.MultiOutputInverseProblem(models=self.model_container,
                                                          times=self.simulation.time_data_container,
                                                          values=self.simulation.state_data_container
-            )
-
+                                                         )
 
     def _show_animated_logo(self):
         self.setWindowTitle(self.window_title)
@@ -279,7 +278,6 @@ class MainWindow(abstractGui.AbstractMainWindow):
         animation.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         self.setCentralWidget(animation)
         animation.movie().start()
-
 
 
 if __name__ == '__main__':

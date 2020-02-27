@@ -1,5 +1,6 @@
 import pints
 
+
 class AbstractModel(pints.ForwardModel):
     """To be done
     """

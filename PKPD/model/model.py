@@ -8,18 +8,18 @@ from PKPD.model.abstractModel import AbstractModel
 
 
 class SingleOutputModel(AbstractModel):
-    """Model class inheriting from pints.ForwardModel. To solve the forward problem methods from the
-    myokit package are employed. The sole difference to the MultiOutputProblem is that the simulate method
-    returns a 1d array instead of a 2d array.
+    """Model class inheriting from pints.ForwardModel. To solve the forward problem methods from the myokit package are
+    employed. The sole difference to the MultiOutputProblem is that the simulate method returns a 1d array instead of a
+    2d array.
     """
-    def __init__(self, mmtfile:str) -> None:
+    def __init__(self, mmt_file:str) -> None:
         """Initialises the model class.
 
         Arguments:
-            mmtfile {str} -- Path to the mmtfile defining the model and the protocol.
+            mmt_file {str} -- Path to the mmt_file defining the model and the protocol.
         """
         # load model and protocol
-        model, protocol, _ = myokit.load(mmtfile)
+        model, protocol, _ = myokit.load(mmt_file)
 
         # get state, parameter and output names
         self.state_names = [state.qname() for state in model.states()]
@@ -32,10 +32,9 @@ class SingleOutputModel(AbstractModel):
         self.simulation = myokit.Simulation(model, protocol)
         self.model = model
 
-
     def _get_default_output_name(self, model:myokit.Model):
-        """Returns 'central_compartment.drug_concentration' as output_name by default. If variable does not exist in model, first state
-        variable name is returned.
+        """Returns 'central_compartment.drug_concentration' as output_name by default. If variable does not exist in
+        model, first state variable name is returned.
 
         Arguments:
             model {myokit.Model} -- A myokit model.
@@ -51,7 +50,6 @@ class SingleOutputModel(AbstractModel):
             first_state_name = self.state_names[0]
             return first_state_name
 
-
     def _get_parameter_names(self, model:myokit.Model):
         """Gets parameter names of the ODE model, i.e. initial conditions are excluded.
 
@@ -63,20 +61,21 @@ class SingleOutputModel(AbstractModel):
         """
         parameter_names = []
         for component in model.components(sort=True):
-            parameter_names += [var.qname() for var in component.variables(state=False, inter=False, bound=False, sort=True)]
+            parameter_names += [var.qname() for var in component.variables(state=False,
+                                                                           inter=False,
+                                                                           bound=False,
+                                                                           sort=True
+                                                                           )]
 
         return parameter_names
 
-
     def n_parameters(self) -> int:
-        """Returns the number of parameters of the model, i.e. initial conditions and model
-        parameters.
+        """Returns the number of parameters of the model, i.e. initial conditions and model parameters.
 
         Returns:
             int -- Number of parameters.
         """
         return self.number_parameters_to_fit
-
 
     def n_outputs(self) -> None:
         """Returns the dimension of the state variable.
@@ -86,7 +85,6 @@ class SingleOutputModel(AbstractModel):
         """
         return 1
 
-
     def set_output(self, output_name):
         """Sets the output of the model.
 
@@ -94,7 +92,6 @@ class SingleOutputModel(AbstractModel):
             output_name {[type]} -- [description]
         """
         self.output_name = output_name
-
 
     def simulate(self, parameters:np.ndarray, times:np.ndarray) -> array:
         """Solves the forward problem and returns the state values evaluated at the times provided.
@@ -109,11 +106,10 @@ class SingleOutputModel(AbstractModel):
         self.simulation.reset()
         self._set_parameters(parameters)
 
-        # duration is the last time point plus an increment to iclude the last time step.
+        # duration is the last time point plus an increment to include the last time step.
         result = self.simulation.run(duration=times[-1]+1, log=[self.output_name], log_times=times)
 
         return result[self.output_name]
-
 
     def _set_parameters(self, parameters:np.ndarray) -> None:
         """Internal helper method to set the parameters of the forward model.
@@ -127,18 +123,18 @@ class SingleOutputModel(AbstractModel):
 
 
 class MultiOutputModel(AbstractModel):
-    """Model class inheriting from pints.ForwardModel. To solve the forward problem methods from the
-    myokit package are employed. The sole difference to the SingleOutputProblem is that the simulate method
-    returns a 2d array instead of a 1d array.
+    """Model class inheriting from pints.ForwardModel. To solve the forward problem methods from the myokit package are
+    employed. The sole difference to the SingleOutputProblem is that the simulate method returns a 2d array instead of a
+    1d array.
     """
-    def __init__(self, mmtfile:str) -> None:
+    def __init__(self, mmt_file: str) -> None:
         """Initialises the model class.
 
         Arguments:
-            mmtfile {str} -- Path to the mmtfile defining the model and the protocol.
+            mmt_file {str} -- Path to the mmt_file defining the model and the protocol.
         """
         # load model and protocol
-        model, protocol, _ = myokit.load(mmtfile)
+        model, protocol, _ = myokit.load(mmt_file)
 
         # get state, parameter and output names
         self.state_names = [state.qname() for state in model.states()]
@@ -152,7 +148,7 @@ class MultiOutputModel(AbstractModel):
         self.simulation = myokit.Simulation(model, protocol)
         self.model = model
 
-    def _get_parameter_names(self, model:myokit.Model):
+    def _get_parameter_names(self, model: myokit.Model):
         """Gets parameter names of the ODE model, i.e. initial conditions are excluded.
 
         Arguments:
@@ -163,20 +159,21 @@ class MultiOutputModel(AbstractModel):
         """
         parameter_names = []
         for component in model.components(sort=True):
-            parameter_names += [var.qname() for var in component.variables(state=False, inter=False, bound=False, sort=True)]
+            parameter_names += [var.qname() for var in component.variables(state=False,
+                                                                           inter=False,
+                                                                           bound=False,
+                                                                           sort=True
+                                                                           )]
 
         return parameter_names
 
-
     def n_parameters(self) -> int:
-        """Returns the number of parameters of the model, i.e. initial conditions and model
-        parameters.
+        """Returns the number of parameters of the model, i.e. initial conditions and model parameters.
 
         Returns:
             int -- Number of parameters.
         """
         return self.number_parameters_to_fit
-
 
     def n_outputs(self) -> None:
         """Returns the dimension of the state variable.
@@ -186,8 +183,7 @@ class MultiOutputModel(AbstractModel):
         """
         return self.output_dimension
 
-
-    def simulate(self, parameters:np.ndarray, times:np.ndarray) -> np.ndarray:
+    def simulate(self, parameters: np.ndarray, times: np.ndarray) -> np.ndarray:
         """Solves the forward problem and returns the state values evaluated at the times provided.
 
         Arguments:
@@ -200,7 +196,7 @@ class MultiOutputModel(AbstractModel):
         self.simulation.reset()
         self._set_parameters(parameters)
 
-        # duration is the last time point plus an increment to iclude the last time step.
+        # duration is the last time point plus an increment to include the last time step.
         output = self.simulation.run(duration=times[-1]+1, log=self.output_names, log_times = times)
 
         result = []
@@ -209,8 +205,7 @@ class MultiOutputModel(AbstractModel):
 
         return np.array(result).transpose()
 
-
-    def _set_parameters(self, parameters:np.ndarray) -> None:
+    def _set_parameters(self, parameters: np.ndarray) -> None:
         """Internal helper method to set the parameters of the forward model.
 
         Arguments:
@@ -220,10 +215,9 @@ class MultiOutputModel(AbstractModel):
         for param_id, value in enumerate(parameters[self.state_dimension:]):
             self.simulation.set_constant(self.parameter_names[param_id], value)
 
-
-    def set_output_dimension(self, data_dimension:int):
-        """Set output dimension to data dimension, so optimisation/inference can be performed.
-        Output state will be set to default output names.
+    def set_output_dimension(self, data_dimension: int):
+        """Set output dimension to data dimension, so optimisation/inference can be performed. Output state will be set
+        to default output names.
 
         Arguments:
             data_dimension {int} -- Dimensionality of input data.
@@ -235,10 +229,9 @@ class MultiOutputModel(AbstractModel):
         if len(self.output_names) != self.output_dimension:
             self._set_default_output_names()
 
-
     def _set_default_output_names(self):
-        """Returns 'central_compartment.drug_concentration' as output_name by default. If variable does not exist in model, first state
-        variable name is returned.
+        """Returns 'central_compartment.drug_concentration' as output_name by default. If variable does not exist in
+        model, first state variable name is returned.
 
         Arguments:
             model {myokit.Model} -- A myokit model.
@@ -263,8 +256,7 @@ class MultiOutputModel(AbstractModel):
         elif self.state_dimension >= self.output_dimension:
             self.output_names = self.state_names[:self.output_dimension]
 
-
-    def set_output(self, output_names:List):
+    def set_output(self, output_names: List):
         """Set output of the model.
 
         Arguments:
@@ -272,6 +264,7 @@ class MultiOutputModel(AbstractModel):
         """
         self.output_dimension = len(output_names)
         self.output_names = output_names
+
 
 def set_unit_format():
     """
@@ -292,5 +285,6 @@ def set_unit_format():
     # Set Preferred Representation in Myokit
     for name, unit in common_units.items():
         myokit.Unit.register_preferred_representation(name, unit)
+
 
 set_unit_format()

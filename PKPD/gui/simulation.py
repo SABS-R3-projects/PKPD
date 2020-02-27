@@ -64,16 +64,14 @@ class CollapsibleBox(QtWidgets.QWidget):
     @QtCore.pyqtSlot()
     def on_pressed(self):
         checked = self.manual_state
-        #print('Initial State: ', checked)
         self.toggle_button.setArrowType(
             QtCore.Qt.DownArrow if not checked else QtCore.Qt.RightArrow
         )
-        #print('After Setting Arrow Type', self.toggle_button.isChecked())
-        self.toggle_animation.setDirection(QtCore.QAbstractAnimation.Forward if not checked else QtCore.QAbstractAnimation.Backward)
+        self.toggle_animation.setDirection(
+            QtCore.QAbstractAnimation.Forward if not checked else QtCore.QAbstractAnimation.Backward
+        )
         self.toggle_animation.start()
-        #print('After Animation: ', self.toggle_button.isChecked())
 
-        #self.toggle_button.toggle()
         self.manual_state = not checked
 
     def setContentLayout(self, layout):
@@ -97,11 +95,9 @@ class CollapsibleBox(QtWidgets.QWidget):
         content_animation.setEndValue(content_height)
 
 
-
-
 class SimulationTab(QtWidgets.QDialog):
-    """Simulation tab class that is responsible for plotting the data and the model, as well as providing
-    the ability to infer an optimal set model parameters for the data set.
+    """Simulation tab class that is responsible for plotting the data and the model, as well as providing the ability to
+    infer an optimal set model parameters for the data set.
     """
     def __init__(self, main_window):
         super().__init__()
@@ -124,7 +120,6 @@ class SimulationTab(QtWidgets.QDialog):
         layout.addWidget(self.data_model_figure_view)
         layout.addLayout(self._init_interactive_group())
         self.setLayout(layout)
-
 
     def extract_data_from_dataframe(self):
         """Splits dataframe into ID, time, states and dose numpy arrays.
@@ -167,10 +162,9 @@ class SimulationTab(QtWidgets.QDialog):
         else:
             self.state_data = self.main_window.home.data_df[self.state_labels].to_numpy()
 
-
     def _get_data_labels(self):
-        """Returns the labels associated to the patient IDs, the time data, state data and dosing schedule. For non-existent labels
-        `None` is returned.
+        """Returns the labels associated to the patient IDs, the time data, state data and dosing schedule. For
+        non-existent labels `None` is returned.
         """
         # get labels in data frame
         labels = self.main_window.home.data_df.keys()
@@ -209,7 +203,6 @@ class SimulationTab(QtWidgets.QDialog):
 
             return patient_ID_label, time_label, state_labels, dose_label
 
-
     def get_dose_schedule(self):
         """Get dose schedule from data, if provided.
         """
@@ -230,14 +223,14 @@ class SimulationTab(QtWidgets.QDialog):
                 raw_dose_data = self.raw_dose_schedule[patient_mask]
 
                 # crate NaN mask
-                nan_mask =~ np.isnan(raw_dose_data)
+                nan_mask = ~np.isnan(raw_dose_data)
 
                 # filter nans
                 time_data, dose_data = raw_time_data[nan_mask], raw_dose_data[nan_mask]
 
                 # save extracted schedule in container
                 if not dose_data:
-                    # if dose data is empty, fill cotainer with None
+                    # if dose data is empty, fill container with None
                     self.dose_schedule.append(None)
                 else:
                     # set duration of doses (arbitrary) TODO: come up with better solution
@@ -246,7 +239,6 @@ class SimulationTab(QtWidgets.QDialog):
 
                     # if dose data not empty, fill container with data
                     self.dose_schedule.append([time_data, dose_data, duration_data])
-
 
     def filter_data(self):
         """Filter time and state data from rows for which the state only contains NaNs.
@@ -257,7 +249,7 @@ class SimulationTab(QtWidgets.QDialog):
         # if single output problem, remove all entries where state is NaN
         if self.is_single_output_model:
             # create NaN mask
-            mask =~ np.isnan(self.state_data)
+            mask = ~np.isnan(self.state_data)
 
             # time and state data for non-NaN values
             self.time_data = self.time_data[mask]
@@ -270,7 +262,7 @@ class SimulationTab(QtWidgets.QDialog):
         # if multi output problem, remove only those rows where all state entries are NaN
         else:
             # create NaN mask
-            mask2d =~ np.isnan(self.state_data)
+            mask2d = ~np.isnan(self.state_data)
             mask = np.all(mask2d, axis=1)
 
             # mask patient_id_mask, time and state data for non-NaN values
@@ -290,8 +282,7 @@ class SimulationTab(QtWidgets.QDialog):
             self.time_data_container.append(self.time_data[mask])
             self.state_data_container.append(self.state_data[mask])
 
-
-    def update_dose_schedule(self, schedule:List) -> None:
+    def update_dose_schedule(self, schedule: List) -> None:
         """Update dose schedule.
 
         Arguments:
@@ -320,15 +311,14 @@ class SimulationTab(QtWidgets.QDialog):
             # update dose schedule
             self.main_window.model.simulation.set_protocol(protocol)
 
-
     def add_data_to_data_model_plot(self):
-        """Adds the data from the in the home tab chosen data file to the previously initialised figure. For multi-
-        dimensional data, the figure is split into subplots.
+        """Adds the data from the in the home tab chosen data file to the previously initialised figure. For
+        multi-dimensional data, the figure is split into subplots.
         """
         # get number of patients
         number_of_patients = len(self.patient_ids)
 
-        if self.is_single_output_model: # single output
+        if self.is_single_output_model:  # single output
             # clear figure
             self.data_model_figure.clf()
 
@@ -340,18 +330,29 @@ class SimulationTab(QtWidgets.QDialog):
             for patient in range(number_of_patients):
 
                 # create scatter plot
-                self.data_model_ax.scatter(x=self.time_data_container[patient], y=self.state_data_container[patient], marker='o', edgecolor='black',
-                                            alpha=0.5)
+                self.data_model_ax.scatter(x=self.time_data_container[patient],
+                                           y=self.state_data_container[patient],
+                                           marker='o',
+                                           edgecolor='black',
+                                           alpha=0.5
+                                           )
 
                 # add x, y labels
                 self.data_model_ax.set_xlabel(self.time_label)
                 self.data_model_ax.set_ylabel(state_label)
 
             # add data label to legend (hack)
-            self.data_model_ax.scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
+            self.data_model_ax.scatter(x=[],
+                                       y=[],
+                                       marker='o',
+                                       color='darkgrey',
+                                       edgecolor='black',
+                                       alpha=0.5,
+                                       label='data'
+                                       )
             self.data_model_ax.legend()
 
-        else: # multi output
+        else:  # multi output
             # clear figure
             self.data_model_figure.clf()
 
@@ -364,14 +365,25 @@ class SimulationTab(QtWidgets.QDialog):
                 # color data by patient ID
                 for patient in range(number_of_patients):
                     # create scatter plot
-                    self.data_model_ax[dim].scatter(x=self.time_data_container[patient], y=self.state_data_container[patient][:, dim],
-                                                    marker='o', edgecolor='black', alpha=0.5)
+                    self.data_model_ax[dim].scatter(x=self.time_data_container[patient],
+                                                    y=self.state_data_container[patient][:, dim],
+                                                    marker='o',
+                                                    edgecolor='black',
+                                                    alpha=0.5
+                                                    )
 
                     # add ylabel for compartment
                     self.data_model_ax[dim].set_ylabel(self.state_labels[dim])
 
                 # add legend to compartment subplot (hack)
-                self.data_model_ax[dim].scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
+                self.data_model_ax[dim].scatter(x=[],
+                                                y=[],
+                                                marker='o',
+                                                color='darkgrey',
+                                                edgecolor='black',
+                                                alpha=0.5,
+                                                label='data'
+                                                )
                 self.data_model_ax[dim].legend()
 
             # add xlabel to the bottom of the vertically stacked subplots
@@ -380,12 +392,11 @@ class SimulationTab(QtWidgets.QDialog):
         # refresh canvas
         self.data_model_figure_view.draw()
 
-
     def _init_interactive_group(self):
         """Initialises the dose schedule interface, functional sliders and buttons of the simulation tab.
 
         Returns:
-            vbox {QVBoxLayout} -- Returns the layout arranging the sliders, buttons and the inferred parameter table.
+            v_box {QVBoxLayout} -- Returns the layout arranging the sliders, buttons and the inferred parameter table.
         """
         # initialise dose interface, sliders, 'plot model' button,'infer model' button and inferred parameters table
         dose_schedule_group = self._initialise_dose_schedule_group()
@@ -395,17 +406,15 @@ class SimulationTab(QtWidgets.QDialog):
         self.inferred_parameter_table = QtWidgets.QTableWidget()
 
         # arrange widgets vertically
-        vbox = QtWidgets.QVBoxLayout()
-        vbox.addWidget(slider_group)
-        vbox.addLayout(plot_buttons)
-        vbox.addLayout(infer_buttons)
+        v_box = QtWidgets.QVBoxLayout()
+        v_box.addWidget(slider_group)
+        v_box.addLayout(plot_buttons)
+        v_box.addLayout(infer_buttons)
 
-        return vbox
-
+        return v_box
 
     def _initialise_dose_schedule_group(self):
         pass
-
 
     def _initialise_slider_group(self):
         """Initialises the value sliders for the model parameters.
@@ -431,10 +440,8 @@ class SimulationTab(QtWidgets.QDialog):
         # fix the width of sliders
         width = 0.35 * self.main_window.width
         scroll.setFixedWidth(width)
-        #layout.setAlignment(info, Qt.AlignTop)
 
         return scroll
-
 
     def _initialise_plot_buttons(self):
         # create plot model button
@@ -449,12 +456,11 @@ class SimulationTab(QtWidgets.QDialog):
         self._create_plot_option_window()
 
         # arrange button horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(plot_button)
-        hbox.addWidget(option_button)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(plot_button)
+        h_box.addWidget(option_button)
 
-        return hbox
-
+        return h_box
 
     def _initialise_infer_buttons(self):
         # create plot model button
@@ -469,12 +475,11 @@ class SimulationTab(QtWidgets.QDialog):
         self._create_infer_option_window()
 
         # arrange button horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(infer_button)
-        hbox.addWidget(option_button)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(infer_button)
+        h_box.addWidget(option_button)
 
-        return hbox
-
+        return h_box
 
     def _create_infer_option_window(self):
         """Creates an option window to set the inference settings.
@@ -484,7 +489,7 @@ class SimulationTab(QtWidgets.QDialog):
         self.infer_option_window.setWindowTitle('Inference options')
 
         # define dropdown dimension
-        self.dropdown_menu_width = 190 # value arbitrary
+        self.dropdown_menu_width = 190  # value arbitrary
 
         # create inference options
         optimiser_options = self._create_optimiser_options()
@@ -495,21 +500,20 @@ class SimulationTab(QtWidgets.QDialog):
         apply_cancel_buttons = self._create_apply_cancel_buttons()
 
         # arrange options vertically
-        vbox = QtWidgets.QVBoxLayout()
-        vbox.addLayout(optimiser_options)
-        vbox.addLayout(objective_function_options)
-        vbox.addLayout(boundary_toggle)
-        vbox.addLayout(apply_cancel_buttons)
+        v_box = QtWidgets.QVBoxLayout()
+        v_box.addLayout(optimiser_options)
+        v_box.addLayout(objective_function_options)
+        v_box.addLayout(boundary_toggle)
+        v_box.addLayout(apply_cancel_buttons)
 
         # add options to window
-        self.infer_option_window.setLayout(vbox)
-
+        self.infer_option_window.setLayout(v_box)
 
     def _create_optimiser_options(self):
         """Creates a dropdown menu to select an optimiser method for the inference.
 
         Returns:
-            hbox {QHBoxLayout} -- Returns label and dropdown menu.
+            h_box {QHBoxLayout} -- Returns label and dropdown menu.
         """
         # create label
         label = QtWidgets.QLabel('selected optimiser:')
@@ -524,18 +528,17 @@ class SimulationTab(QtWidgets.QDialog):
             self.optimiser_dropdown_menu.addItem(optimiser)
 
         # arrange label and dropdown menu horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(label)
-        hbox.addWidget(self.optimiser_dropdown_menu)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(label)
+        h_box.addWidget(self.optimiser_dropdown_menu)
 
-        return hbox
-
+        return h_box
 
     def _create_objective_function_options(self):
         """Creates a dropdown menu to select an error measure for the inference.
 
         Returns:
-            hbox {QHBoxLayout} -- Returns label and dropdown menu.
+            h_box {QHBoxLayout} -- Returns label and dropdown menu.
         """
         # create label
         label = QtWidgets.QLabel('selected error measure:')
@@ -550,37 +553,35 @@ class SimulationTab(QtWidgets.QDialog):
             self.error_measure_dropdown_menu.addItem(error_measure)
 
         # arrange label and dropdown menu horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(label)
-        hbox.addWidget(self.error_measure_dropdown_menu)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(label)
+        h_box.addWidget(self.error_measure_dropdown_menu)
 
-        return hbox
-
+        return h_box
 
     def _create_boundary_toggle(self):
         """Creates a checkbox used to set boundary checks. Defaults to checked (True).
 
         Returns:
-            hbox {QHBoxLayout} -- Layout containing checkbox.
+            h_box {QHBoxLayout} -- Layout containing checkbox.
         """
 
         label = QtWidgets.QLabel('turn on boundary checking:')
-        self.boundarytoggle = QtWidgets.QCheckBox()
+        self.boundary_toggle = QtWidgets.QCheckBox()
 
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(label)
-        hbox.addWidget(self.boundarytoggle)
-        self.boundarytoggle.setChecked(True)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(label)
+        h_box.addWidget(self.boundary_toggle)
+        self.boundary_toggle.setChecked(True)
 
-        return hbox
-
+        return h_box
 
     def _create_apply_cancel_buttons(self):
-        """Creates an apply and cancel button to either update the inference settings or
-        closing the option window without updating.
+        """Creates an apply and cancel button to either update the inference settings or closing the option window
+        without updating.
 
         Returns:
-            hbox {QHBoxLayout} -- Returns layout aranging the apply and cancel button.
+            h_box {QHBoxLayout} -- Returns layout arranging the apply and cancel button.
         """
         # create apply and cancel button
         apply_button = QtWidgets.QPushButton('apply')
@@ -589,20 +590,19 @@ class SimulationTab(QtWidgets.QDialog):
         cancel_button.clicked.connect(self.on_infer_option_cancel_button_click)
 
         # arrange buttons horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addStretch(1)
-        hbox.addWidget(apply_button)
-        hbox.addWidget(cancel_button)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addStretch(1)
+        h_box.addWidget(apply_button)
+        h_box.addWidget(cancel_button)
 
-        return hbox
-
+        return h_box
 
     def _plot_options_apply_cancel_buttons(self):
-        """Creates an apply and cancel button to either update the inference settings or
-        closing the option window without updating.
+        """Creates an apply and cancel button to either update the inference settings or closing the option window
+        without updating.
 
         Returns:
-            hbox {QHBoxLayout} -- Returns layout aranging the apply and cancel button.
+            h_box {QHBoxLayout} -- Returns layout arranging the apply and cancel button.
         """
         # create apply and cancel button
         apply_button = QtWidgets.QPushButton('apply')
@@ -610,19 +610,18 @@ class SimulationTab(QtWidgets.QDialog):
         cancel_button = QtWidgets.QPushButton('cancel')
         cancel_button.clicked.connect(self.on_plot_option_cancel_click)
 
-        # arange buttons horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addStretch(1)
-        hbox.addWidget(apply_button)
-        hbox.addWidget(cancel_button)
+        # arrange buttons horizontally
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addStretch(1)
+        h_box.addWidget(apply_button)
+        h_box.addWidget(cancel_button)
 
-        return hbox
-
+        return h_box
 
     @QtCore.pyqtSlot()
     def on_infer_option_apply_click(self):
-        """Reaction to left-clicking the infer option 'apply' button. Updates the inference settings
-        and closes the option window.
+        """Reaction to left-clicking the infer option 'apply' button. Updates the inference settings and closes the
+        option window.
         """
         # update infer options
         self._set_optimiser()
@@ -632,29 +631,26 @@ class SimulationTab(QtWidgets.QDialog):
         # close option window
         self.infer_option_window.close()
 
-
     @QtCore.pyqtSlot()
     def on_plot_option_apply_click(self):
-        """Reaction to left-clicking the infer option 'apply' button. Updates the inference settings
-        and closes the option window.
+        """Reaction to left-clicking the infer option 'apply' button. Updates the inference settings and closes the
+        option window.
         """
         # update plot options
-        self._change_yaxis_scaling()
+        self._change_y_axis_scaling()
 
         # close option window
         self.plot_option_window.close()
 
+    def _change_y_axis_scaling(self):
 
-    def _change_yaxis_scaling(self):
-
-        scale = self.yaxis_dropdown_menu.currentText()
+        scale = self.y_axis_dropdown_menu.currentText()
         try:
             self.data_model_ax.set_yscale(scale)
         except:
             for elem in range(self.data_dimension):
                 self.data_model_ax[elem].set_yscale(scale)
-        self.data_model_figure_view.draw() #refresh canvas
-
+        self.data_model_figure_view.draw()  # refresh canvas
 
     def on_plot_option_cancel_click(self):
         """Reaction to left-clicking the infer option 'cancel' button. Closes the window.
@@ -662,9 +658,8 @@ class SimulationTab(QtWidgets.QDialog):
         # close option window
         self.plot_option_window.close()
 
-
     def _set_optimiser(self):
-        # TODO: Nelder-Mead does not support boundaries. So should be cross-linked with tunring boundaries off.
+        # TODO: Nelder-Mead does not support boundaries. So should be cross-linked with turning boundaries off.
         """Sets the optimiser method for inference to the in the dropdown menu selected method.
         """
         # get selected optimiser
@@ -683,7 +678,6 @@ class SimulationTab(QtWidgets.QDialog):
         # update optimiser
         self.main_window.problem.set_optimiser(method)
 
-
     def _set_error_measure(self):
         """Sets the error measure for inference to the in the dropdown menu selected measure.
         """
@@ -701,12 +695,10 @@ class SimulationTab(QtWidgets.QDialog):
         # update error measure
         self.main_window.problem.set_objective_function(measure)
 
-
     def _set_boundary_check(self):
         """Sets boundaries_are_on to True if the checkbox is checked when apply is clicked (False if not checked).
         """
-        self.boundaries_are_on = self.boundarytoggle.isChecked()
-
+        self.boundaries_are_on = self.boundary_toggle.isChecked()
 
     @QtCore.pyqtSlot()
     def on_infer_option_cancel_button_click(self):
@@ -714,7 +706,6 @@ class SimulationTab(QtWidgets.QDialog):
         """
         # close option window
         self.infer_option_window.close()
-
 
     def _create_plot_option_window(self):
         """Creates an option window to set the plotting settings.
@@ -724,24 +715,23 @@ class SimulationTab(QtWidgets.QDialog):
         self.plot_option_window.setWindowTitle('Plotting options')
 
         # define dropdown dimension
-        self.dropdown_menu_width = 190 # to match inference option window
+        self.dropdown_menu_width = 190  # to match inference option window
 
         # create plotting options
-        yaxis_options = self._create_yaxis_options()
+        y_axis_options = self._create_y_axis_options()
 
         # create apply / cancel buttons
         apply_cancel_buttons = self._plot_options_apply_cancel_buttons()
 
         # vertical layout
-        vbox = QtWidgets.QVBoxLayout()
-        vbox.addLayout(yaxis_options)
-        vbox.addLayout(apply_cancel_buttons)
+        v_box = QtWidgets.QVBoxLayout()
+        v_box.addLayout(y_axis_options)
+        v_box.addLayout(apply_cancel_buttons)
 
         # add options to window
-        self.plot_option_window.setLayout(vbox)
+        self.plot_option_window.setLayout(v_box)
 
-
-    def _create_yaxis_options(self):
+    def _create_y_axis_options(self):
         # create label
         label = QtWidgets.QLabel('y axis scaling:')
 
@@ -749,35 +739,34 @@ class SimulationTab(QtWidgets.QDialog):
         axis_types = ['linear', 'log']
 
         # create dropdown menu for options
-        self.yaxis_dropdown_menu = QtWidgets.QComboBox()
-        self.yaxis_dropdown_menu.setMinimumWidth(self.dropdown_menu_width)
+        self.y_axis_dropdown_menu = QtWidgets.QComboBox()
+        self.y_axis_dropdown_menu.setMinimumWidth(self.dropdown_menu_width)
         for scale in axis_types:
-            self.yaxis_dropdown_menu.addItem(scale)
+            self.y_axis_dropdown_menu.addItem(scale)
 
-        # arange label and dropdown menu horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(label)
-        hbox.addWidget(self.yaxis_dropdown_menu)
+        # arrange label and dropdown menu horizontally
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(label)
+        h_box.addWidget(self.y_axis_dropdown_menu)
 
-        return hbox
-
+        return h_box
 
     def fill_parameter_slider_group(self):
-        """Fills the initialised slider group with parameter sliders (the number of sliders is determined by the
-        number of parameters in the model).
+        """Fills the initialised slider group with parameter sliders (the number of sliders is determined by the number
+        of parameters in the model).
         """
         self._clear_slider_group()
 
         # get parameter names
         state_names = self.main_window.model.state_names
-        model_param_names = self.main_window.model.parameter_names # parameters except initial conditions
-        parameter_names = state_names + model_param_names # parameters including initial conditions
+        model_param_names = self.main_window.model.parameter_names  # parameters except initial conditions
+        parameter_names = state_names + model_param_names  # parameters including initial conditions
 
         # fill up grid with slider objects
         # length of parameters so can fill up in correct order later
         self.slider_container = [None]*len(parameter_names)  # store in list to be able to update later
-        self.slider_min_max_label_container = [None]*len(parameter_names) # store in list to be able to update later
-        self.parameter_text_field_container = [None]*len(parameter_names) # store in list to be able to update later
+        self.slider_min_max_label_container = [None]*len(parameter_names)  # store in list to be able to update later
+        self.parameter_text_field_container = [None]*len(parameter_names)  # store in list to be able to update later
 
         # fill up grid with inferred parameter boxes
         self.inferred_boxes = [None] * len(parameter_names)
@@ -790,7 +779,7 @@ class SimulationTab(QtWidgets.QDialog):
         # TODO Group parameters earlier to make this more efficient
         for name in collapse_boxes:
             box = CollapsibleBox("{}".format(name.replace('_', ' ').capitalize()))
-            self.parameter_sliders.addWidget(box) #add to parameter slider section
+            self.parameter_sliders.addWidget(box)  # add to parameter slider section
             lay = QtWidgets.QGridLayout()
             # Add correct parameters to each box component
             # But keeping original ID labelling so as not to affect inference etc.
@@ -798,46 +787,43 @@ class SimulationTab(QtWidgets.QDialog):
                 if param_name.split('.')[0] == name:
                     lay.addWidget(self._create_slider(param_name, param_id), param_id, 0)
             box.setContentLayout(lay)
-            #self.parameter_sliders.addStretch()
             self.parameter_sliders.setAlignment(QtCore.Qt.AlignTop)  # display nicely
-
-
 
         # initialise container to store parameter values (for efficiency)
         number_parameters = len(self.parameter_text_field_container)
         self.parameter_values = np.empty(number_parameters)
 
-
     def _clear_slider_group(self):
         """
         Clears the slider group from pre-existing sliders.
         """
-        # Solution from Stackoverflow:
+        # Solution from Stack Overflow:
         # https://stackoverflow.com/questions/4528347/clear-all-widgets-in-a-layout-in-pyqt
         # - using takeAt & deleteLater vs. itemAt & setParent(None) which didn't work in this case
         for _ in range(self.parameter_sliders.count()):
             child = self.parameter_sliders.takeAt(0)
             child.widget().deleteLater()
 
-
-    def _create_slider(self, parameter_name: str, parameter_id : int):
-        """Creates slider group. Includes parameter label, value slider, value text field and labels for slider boundaries.
+    def _create_slider(self, parameter_name: str, parameter_id: int):
+        """Creates slider group. Includes parameter label, value slider, value text field and labels for slider
+        boundaries.
 
         Arguments:
             parameter_name {str} -- Parameter name for which the slider is created.
             parameter_id {int} -- Order in which slider appears in list to match parameter values
-        
+
         Returns:
-            slider_box {QGroupBox} -- Returns a widget containing labels, a value slider and a value text field for the parameter.
+            slider_box {QGroupBox} -- Returns a widget containing labels, a value slider and a value text field for the
+                                      parameter.
         """
         # initialise widget
         slider_box = QtWidgets.QGroupBox(self._give_param_label(parameter_name))
 
         # create horizontal slider
         slider = sl.DoubleSlider()
-        slider.setMinimum(0.1) # arbitrary choice
-        slider.setValue(1) # default arbitrary, but it seems reasonable to avoid zero
-        slider.setMaximum(30) # arbitrary choice
+        slider.setMinimum(0.1)  # arbitrary choice
+        slider.setValue(1)  # default arbitrary, but it seems reasonable to avoid zero
+        slider.setMaximum(30)  # arbitrary choice
         slider.setTickPosition(sl.DoubleSlider.TicksBothSides)
 
         # keep track of sliders
@@ -848,24 +834,24 @@ class SimulationTab(QtWidgets.QDialog):
         slider.valueChanged[int].connect(self._update_parameter_values)
 
         # arrange slider and labels
-        vbox = QtWidgets.QVBoxLayout()
-        vbox.addWidget(slider)
-        vbox.addLayout(min_current_max_value)
-        vbox.addStretch(1)
+        v_box = QtWidgets.QVBoxLayout()
+        v_box.addWidget(slider)
+        v_box.addLayout(min_current_max_value)
+        v_box.addStretch(1)
 
         # create inferred parameters
         inferred_param = self._create_parameter_table(parameter_id)
 
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addLayout(vbox)
-        hbox.addWidget(inferred_param)
-        slider_box.setLayout(hbox)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addLayout(v_box)
+        h_box.addWidget(inferred_param)
+        slider_box.setLayout(h_box)
 
         return slider_box
 
     def _give_param_label(self, parameter_name):
-        """Takes a parameter name and returns a string with the parameter label (if exists), name (if no label),
-        and units.
+        """Takes a parameter name and returns a string with the parameter label (if exists), name (if no label), and
+        units.
 
         Arguments: parameter_name -- name of myokit parameter (string)
 
@@ -899,9 +885,9 @@ class SimulationTab(QtWidgets.QDialog):
         Arguments:
             slider {QtWidgets.QSlider} -- Parameter slider.
             parameter_id {int} -- Order in which slider appears in list to match parameter values
-        
+
         Returns:
-            hbox {QHBoxLayout} -- Returns a layout arranging the slider labels.
+            h_box {QHBoxLayout} -- Returns a layout arranging the slider labels.
         """
         # create min/max labels and text field for current value
         min_value = QtWidgets.QLineEdit('%.1f' % slider.minimum())
@@ -933,19 +919,18 @@ class SimulationTab(QtWidgets.QDialog):
         self.slider_min_max_label_container[parameter_id] = [min_value, max_value]
 
         # arrange widgets horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(min_value)
-        hbox.addStretch(1)
-        hbox.addWidget(text_field)
-        hbox.addStretch(1)
-        hbox.addWidget(max_value)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(min_value)
+        h_box.addStretch(1)
+        h_box.addWidget(text_field)
+        h_box.addStretch(1)
+        h_box.addWidget(max_value)
 
-        return hbox
-
+        return h_box
 
     def _update_parameter_values(self):
-        """Updates parameter text fields when slider position is moved and updates the model plot in the
-        figure, should live plotting be enabled.
+        """Updates parameter text fields when slider position is moved and updates the model plot in the figure, should
+        live plotting be enabled.
         """
         # update slider text fields
         for slider_id, slider in enumerate(self.slider_container):
@@ -976,13 +961,11 @@ class SimulationTab(QtWidgets.QDialog):
             self.slider_min_max_label_container[slider_id][0].setText(str(slider.minimum()))
             self.slider_min_max_label_container[slider_id][1].setText(str(slider.maximum()))
 
-
     def fill_plot_option_window(self):
         #  TODO: finish this!
         # create text fields
         for slider in self.slider_container:
             pass
-
 
     def fill_infer_option_window(self):
         #  TODO: finish this!
@@ -990,11 +973,10 @@ class SimulationTab(QtWidgets.QDialog):
         for slider in self.slider_container:
             pass
 
-
     @QtCore.pyqtSlot()
     def on_plot_model_click(self):
-        """Reaction to left-clicking the 'plot model' button. Enables the 'live plotting feature' and plots the
-        model with parameters from the current slider positions.
+        """Reaction to left-clicking the 'plot model' button. Enables the 'live plotting feature' and plots the model
+        with parameters from the current slider positions.
         """
         # enable live plotting with sliders
         self.enable_live_plotting = True
@@ -1015,9 +997,8 @@ class SimulationTab(QtWidgets.QDialog):
         else:
             self._plot_multi_output_model()
 
-        # enable removal of plots to prevent fludding of figure
+        # enable removal of plots to prevent flooding of figure
         self.enable_line_removal = True
-
 
     def _plot_single_output_model(self):
         """Plots the model in dashed, grey lines.
@@ -1027,7 +1008,7 @@ class SimulationTab(QtWidgets.QDialog):
                                                             times=self.times
                                                             )
 
-        # remove previous graph to avoid fludding the figure
+        # remove previous graph to avoid flooding the figure
         if self.enable_line_removal:
             self.data_model_ax.lines.pop()
 
@@ -1037,7 +1018,6 @@ class SimulationTab(QtWidgets.QDialog):
         # refresh canvas
         self.data_model_figure_view.draw()
 
-
     def _plot_multi_output_model(self):
         """Plots the model in dashed, grey lines. Each state dimension is plotted to a separate subplot.
         """
@@ -1046,7 +1026,7 @@ class SimulationTab(QtWidgets.QDialog):
                                                             times=self.times
                                                             )
 
-        # remove previous graphs from subplots to avoid fludding the figure
+        # remove previous graphs from subplots to avoid flooding the figure
         if self.enable_line_removal:
             for dim in range(self.data_dimension):
                 self.data_model_ax[dim].lines.pop()
@@ -1058,7 +1038,6 @@ class SimulationTab(QtWidgets.QDialog):
         # refresh canvas
         self.data_model_figure_view.draw()
 
-
     @QtCore.pyqtSlot()
     def on_plot_option_click(self):
         """Reaction to left-clicking the plot 'option' button. Opens the plot option window.
@@ -1066,14 +1045,12 @@ class SimulationTab(QtWidgets.QDialog):
         # open option window
         self.plot_option_window.open()
 
-
     @QtCore.pyqtSlot()
     def on_infer_option_click(self):
         """Reaction to left-clicking the inference 'option' button. Opens the plot option window.
         """
         # open option window
         self.infer_option_window.open()
-
 
     def _create_parameter_table(self, parameter_id: int):
         """Creates a small table to hold the inferred values for a parameter. Initially empty.
@@ -1089,24 +1066,21 @@ class SimulationTab(QtWidgets.QDialog):
 
         self.inferred_boxes[parameter_id] = inferred_param
 
-        # set the height and width of the inferred params
+        # set the height and width of the inferred param boxes
         header_height = inferred_param.horizontalHeader().height()
         cell_height = inferred_param.rowHeight(0)
         inferred_param.setMaximumHeight(2*header_height + cell_height)
         header_width = inferred_param.horizontalHeader().width()
         cell_width = inferred_param.columnWidth(0)
-        #inferred_param.setMaximumWidth(max(cell_width, header_width))
-        #inferred_param.setMinimumWidth(max(cell_width, header_width))
-        #inferred_param.setHorizontalPolicy(QtWidgets.QSizePolicy.Minimum)
         inferred_param.setFixedWidth(min(cell_width, header_width))
 
         return inferred_param
 
     @QtCore.pyqtSlot()
     def on_infer_model_click(self):
-        """Reaction to left-clicking the 'infer model' button. A parameter set for the model is estimated that minimises an objective function
-        with respect to the data. The initial point for the inference is taken from the slider position, and the inferred parameter set updates
-        the sliders and the inferred parameter table.
+        """Reaction to left-clicking the 'infer model' button. A parameter set for the model is estimated that minimises
+        an objective function with respect to the data. The initial point for the inference is taken from the slider
+        position, and the inferred parameter set updates the sliders and the inferred parameter table.
         """
         # disable live plotting
         self.enable_live_plotting = False
@@ -1118,7 +1092,8 @@ class SimulationTab(QtWidgets.QDialog):
         initial_parameters = np.empty(len(self.parameter_values))
         for parameter_id, parameter_text_field in enumerate(self.parameter_text_field_container):
             value = float(parameter_text_field.text())
-            initial_parameters[parameter_id] = value # Note: order of text fields matches order of params in inverse problem class
+            initial_parameters[parameter_id] = value
+            # Note: order of text fields matches order of params in inverse problem class
 
         # set parameter boundaries
         self._set_parameter_boundaries(initial_parameters)
@@ -1130,23 +1105,23 @@ class SimulationTab(QtWidgets.QDialog):
                 self.main_window.problem.find_optimal_parameter(initial_parameter=initial_parameters)
                 self.estimated_parameters = self.main_window.problem.estimated_parameters
 
-                # plot infered model
-                self._plot_infered_model()
+                # plot inferred model
+                self._plot_inferred_model()
 
-                # update slider position to infered parameters
+                # update slider position to inferred parameters
                 self._update_sliders_to_inferred_params()
 
                 # update parameter table
                 self._update_parameter_table()
             except ArithmeticError:
                 # generate error message
-                error_message = str('Convergence test failures occurred too many times during one internal time step or minimum' +
-                                ' step size was reached. Please try different inference settings!')
+                error_message = str('Convergence test failures occurred too many times during one internal time step or'
+                                    ' minimum step size was reached. Please try different inference settings!')
                 QtWidgets.QMessageBox.question(self, 'Convergence error!', error_message, QtWidgets.QMessageBox.Yes)
             except myokit.SimulationError:
                 # generate error message
-                error_message = str('A numerical error occurred during the simulation likely due to unsuitable inference settings.' +
-                                ' Please try different inference settings!')
+                error_message = str('A numerical error occurred during the simulation likely due to unsuitable '
+                                    'inference settings. Please try different inference settings!')
                 QtWidgets.QMessageBox.question(self, 'Numerical error!', error_message, QtWidgets.QMessageBox.Yes)
             except ValueError as e:
                 # Generate error message (eg. if bounds are too narrow)
@@ -1154,23 +1129,21 @@ class SimulationTab(QtWidgets.QDialog):
                 error_message = 'Check Boundaries are Suitable: \n' + str(e)
 
                 # Quick Fix to Remove Old Plot:
-                if self.is_single_output_model:  #remove one line
+                if self.is_single_output_model:  # remove one line
                     self.data_model_ax.lines.pop()
                 else:
                     for dim in range(len(self.data_model_ax)):
                         self.data_model_ax[dim].lines.pop()
                 QtWidgets.QMessageBox.question(self, 'Value error!', error_message, QtWidgets.QMessageBox.Yes)
 
-
-
     def _set_parameter_boundaries(self, initial_parameters:np.ndarray):
-        """Gets slider boundaries and restricts the parameter search to those intervals. If initial parameters lie outside the domain of
-        support, an error message is returned.
+        """Gets slider boundaries and restricts the parameter search to those intervals. If initial parameters lie
+        outside the domain of support, an error message is returned.
 
         Arguments:
             initial_parameters {np.ndarray} -- Initial point in parameter space for the inference.
         """
-        # tolerance extenstion of boundaries (as values can be set to slider boundaries)
+        # tolerance extension of boundaries (as values can be set to slider boundaries)
         increment = 1.0E-7
 
         # if boundaries are turned off, send None to optimiser
@@ -1185,7 +1158,7 @@ class SimulationTab(QtWidgets.QDialog):
             max_values = []
 
             for param_id, slider in enumerate(self.slider_container):
-                minimum = slider.minimum() - increment # extend boundaries for stability
+                minimum = slider.minimum() - increment  # extend boundaries for stability
                 maximum = slider.maximum() + increment
                 initial_value = initial_parameters[param_id]
 
@@ -1196,7 +1169,11 @@ class SimulationTab(QtWidgets.QDialog):
 
                     # generate error message
                     error_message = 'Initial parameters do not lie within boundaries. Please check again!'
-                    QtWidgets.QMessageBox.question(self, 'Parameters outside boundaries!', error_message, QtWidgets.QMessageBox.Yes)
+                    QtWidgets.QMessageBox.question(self,
+                                                   'Parameters outside boundaries!',
+                                                   error_message,
+                                                   QtWidgets.QMessageBox.Yes
+                                                   )
                     break
                 else:
                     # flag that initial values are correct
@@ -1210,8 +1187,7 @@ class SimulationTab(QtWidgets.QDialog):
             if self.correct_initial_values:
                 self.main_window.problem.set_parameter_boundaries([min_values, max_values])
 
-
-    def _plot_infered_model(self):
+    def _plot_inferred_model(self):
         """Plots inferred model in a solid, black line and removes all other lines from figure.
         """
         # define time points for model evaluation
@@ -1233,7 +1209,7 @@ class SimulationTab(QtWidgets.QDialog):
             # plot model
             self.data_model_ax.plot(times, state_values, color='black', label='model')
             self.data_model_ax.legend()
-        else: # multi-output problem
+        else:  # multi-output problem
             # remove all lines from figure
             for dim in range(self.data_dimension):
                 lines = self.data_model_ax[dim].lines
@@ -1247,7 +1223,6 @@ class SimulationTab(QtWidgets.QDialog):
 
         # refresh canvas
         self.data_model_figure_view.draw()
-
 
     def _update_sliders_to_inferred_params(self):
         """Set slider positions and text fields to inferred parameters.
@@ -1267,7 +1242,6 @@ class SimulationTab(QtWidgets.QDialog):
 
             # set text field value
             text_field.setText('%.1f' % rounded_value)
-
 
     def _update_parameter_table(self):
         """Fills parameter table cells with inferred parameter values.

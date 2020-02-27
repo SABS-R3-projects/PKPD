@@ -7,6 +7,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PKPD.gui import abstractGui, mainWindow
 from PKPD.gui.utils.tableViewModel import PandasModel
 
+
 class HomeTab(abstractGui.AbstractHomeTab):
     """HomeTab class responsible for model and data management.
     """
@@ -30,9 +31,9 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
         self.setLayout(grid)
 
-
     def _create_model_group(self):
-        """Creates the model file dialog group consisting of a label, the model selection group and a display window of the model .mmt file.
+        """Creates the model file dialog group consisting of a label, the model selection group and a display window of
+        the model .mmt file.
 
         Returns:
             {QGroupBox} -- Returns model group object.
@@ -46,19 +47,19 @@ class HomeTab(abstractGui.AbstractHomeTab):
         model_display = self._create_model_display()
 
         # arrange button/text and label vertically
-        vbox = QtWidgets.QVBoxLayout()
-        vbox.addLayout(model_selection_group)
-        vbox.addLayout(model_display)
-        vbox.addStretch(1)
+        v_box = QtWidgets.QVBoxLayout()
+        v_box.addLayout(model_selection_group)
+        v_box.addLayout(model_display)
+        v_box.addStretch(1)
 
-        group.setLayout(vbox)
+        group.setLayout(v_box)
 
         return group
 
-
     def _create_model_selection_group(self):
-        """Creates the model selection group consisting of a 'select model' button, that opens a model selection window, a
-        text field detailing further information about the model and an image response to the validity of the chosen model.
+        """Creates the model selection group consisting of a 'select model' button, that opens a model selection window,
+         a text field detailing further information about the model and an image response to the validity of the chosen
+         model.
 
         Returns:
             {QGroupBox} -- Returns model selection group object.
@@ -80,24 +81,23 @@ class HomeTab(abstractGui.AbstractHomeTab):
         self.model_check_mark = self._create_file_check_mark()
 
         # arrange button and text horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(model_selection_button)
-        hbox.addWidget(self.model_path_text_field)
-        hbox.addWidget(self.model_check_mark)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(model_selection_button)
+        h_box.addWidget(self.model_path_text_field)
+        h_box.addWidget(self.model_check_mark)
 
-        return hbox
-
+        return h_box
 
     def _create_model_selection_window(self):
-        """Creates model selection window consisting of the model library and buttons to either choose a model
-        from the library or from a local directory.
+        """Creates model selection window consisting of the model library and buttons to either choose a model from the
+        library or from a local directory.
         """
         # initialise pop-up window
         self.model_selection_window = QtWidgets.QDialog()
         self.model_selection_window.setWindowTitle('Model Selection')
 
         # define dropdown dimension (otherwise the width will differ as number of char varies)
-        self.dropdown_menu_width = 100 # value arbitrary
+        self.dropdown_menu_width = 100  # value arbitrary
 
         # create 'select from library' group
         model_library_group = self._create_model_library_group()
@@ -106,13 +106,12 @@ class HomeTab(abstractGui.AbstractHomeTab):
         button_group = self._create_model_button_group()
 
         # arrange window content vertically
-        vbox = QtWidgets.QVBoxLayout()
-        vbox.addWidget(model_library_group)
-        vbox.addLayout(button_group)
+        v_box = QtWidgets.QVBoxLayout()
+        v_box.addWidget(model_library_group)
+        v_box.addLayout(button_group)
 
         # add options to window
-        self.model_selection_window.setLayout(vbox)
-
+        self.model_selection_window.setLayout(v_box)
 
     def _create_model_library_group(self):
         """Creates model library, consisting of dropdown menus detailing the properties of the models.
@@ -129,19 +128,18 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # create dosing options
         dose_options = self._create_dose_options()
 
-        # create trasition rate options
+        # create transition rate options
         transition_rate_options = self._create_transition_rate_options()
 
         # arrange vertically
-        vbox = QtWidgets.QVBoxLayout()
-        vbox.addLayout(compartment_options)
-        vbox.addLayout(dose_options)
-        vbox.addLayout(transition_rate_options)
-        vbox.addStretch(1)
-        group.setLayout(vbox)
+        v_box = QtWidgets.QVBoxLayout()
+        v_box.addLayout(compartment_options)
+        v_box.addLayout(dose_options)
+        v_box.addLayout(transition_rate_options)
+        v_box.addStretch(1)
+        group.setLayout(v_box)
 
         return group
-
 
     def _create_compartment_options(self):
         """Creates number of compartments dropdown menu.
@@ -162,12 +160,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
             self.compartment_dropdown_menu.addItem(number)
 
         # arrange label and dropdown menu horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(label)
-        hbox.addWidget(self.compartment_dropdown_menu)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(label)
+        h_box.addWidget(self.compartment_dropdown_menu)
 
-        return hbox
-
+        return h_box
 
     def _create_dose_options(self):
         """Creates dose type dropdown menu.
@@ -188,12 +185,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
             self.dose_type_dropdown_menu.addItem(dose_type)
 
         # arrange label and dropdown menu horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(label)
-        hbox.addWidget(self.dose_type_dropdown_menu)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(label)
+        h_box.addWidget(self.dose_type_dropdown_menu)
 
-        return hbox
-
+        return h_box
 
     def _create_transition_rate_options(self):
         """Creates transition rates dropdown menu.
@@ -214,17 +210,16 @@ class HomeTab(abstractGui.AbstractHomeTab):
             self.transition_rate_dropdown_menu.addItem(transition_rate)
 
         # arrange label and dropdown menu horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(label)
-        hbox.addWidget(self.transition_rate_dropdown_menu)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(label)
+        h_box.addWidget(self.transition_rate_dropdown_menu)
 
-        return hbox
-
+        return h_box
 
     def _create_model_button_group(self):
-        """Creates model button group consisting of a 'select model', 'cancel' and 'select from file' button.
-        'select model' selects the chosen model from the libray, 'cancel' closes the window and 'select from file'
-        opens a file dialog.
+        """Creates model button group consisting of a 'select model', 'cancel' and 'select from file' button. 'select
+        model' selects the chosen model from the library, 'cancel' closes the window and 'select from file' opens a file
+        dialog.
 
         Returns:
             {QHBoxLayout} -- Returns model button group object.
@@ -242,13 +237,12 @@ class HomeTab(abstractGui.AbstractHomeTab):
         file_button.clicked.connect(self.on_model_file_click)
 
         # arrange buttons horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(select_button)
-        hbox.addWidget(cancel_button)
-        hbox.addWidget(file_button)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(select_button)
+        h_box.addWidget(cancel_button)
+        h_box.addWidget(file_button)
 
-        return hbox
-
+        return h_box
 
     def _create_model_display(self):
         """Creates display for the model .mmt file.
@@ -275,15 +269,15 @@ class HomeTab(abstractGui.AbstractHomeTab):
         scroll.setFixedHeight(height)
 
         # arrange display window horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(scroll)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(scroll)
 
-        return hbox
-
+        return h_box
 
     def _create_data_group(self):
-        """Creates the data file dialog group consisting of a label, a button that opens the file dialog, a text field that displays
-        the selected file and a check mark symbol that gives feedback whether or not the chosen file is valid.
+        """Creates the data file dialog group consisting of a label, a button that opens the file dialog, a text field
+        that displays the selected file and a check mark symbol that gives feedback whether or not the chosen file is
+        valid.
 
         Returns:
             {QGroupBox} -- Returns data group object.
@@ -301,19 +295,18 @@ class HomeTab(abstractGui.AbstractHomeTab):
         check_box_group = self._create_check_box_group()
 
         # arrange button/text and label vertically
-        vbox = QtWidgets.QVBoxLayout()
-        vbox.addLayout(data_selection_group)
-        vbox.addLayout(data_display)
-        vbox.addLayout(check_box_group)
+        v_box = QtWidgets.QVBoxLayout()
+        v_box.addLayout(data_selection_group)
+        v_box.addLayout(data_display)
+        v_box.addLayout(check_box_group)
 
-        group.setLayout(vbox)
+        group.setLayout(v_box)
 
         return group
 
-
     def _create_data_selection_group(self):
-        """Creates the data selection group consisting of a 'select data' button, that opens a file dialog, a
-        text field displaying the path to the data file and an image response to the validity of the chosen file.
+        """Creates the data selection group consisting of a 'select data' button, that opens a file dialog, a text field
+        displaying the path to the data file and an image response to the validity of the chosen file.
 
         Returns:
             {QGroupBox} -- Returns a data selection group object.
@@ -332,13 +325,12 @@ class HomeTab(abstractGui.AbstractHomeTab):
         self.data_check_mark = self._create_file_check_mark()
 
         # arrange button and text horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(button)
-        hbox.addWidget(self.data_path_text_field)
-        hbox.addWidget(self.data_check_mark)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(button)
+        h_box.addWidget(self.data_path_text_field)
+        h_box.addWidget(self.data_check_mark)
 
-        return hbox
-
+        return h_box
 
     def _create_data_display(self):
         """Creates display for the data .csv file.
@@ -365,11 +357,10 @@ class HomeTab(abstractGui.AbstractHomeTab):
         scroll.setFixedHeight(height)
 
         # arrange display window horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(scroll)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(scroll)
 
-        return hbox
-
+        return h_box
 
     def _create_check_box_group(self):
         """Creates check boxes for the presence of patient IDs and doses in the data set.
@@ -396,13 +387,12 @@ class HomeTab(abstractGui.AbstractHomeTab):
         self.dose_schedule_check_box.setEnabled(False)
 
         # arrange check boxes horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addWidget(self.patient_id_check_box)
-        hbox.addWidget(self.dose_schedule_check_box)
-        hbox.addStretch(1)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addWidget(self.patient_id_check_box)
+        h_box.addWidget(self.dose_schedule_check_box)
+        h_box.addStretch(1)
 
-        return hbox
-
+        return h_box
 
     def _create_next_button(self):
         """Creates a button to be able to switch to the simulation tab.
@@ -414,16 +404,15 @@ class HomeTab(abstractGui.AbstractHomeTab):
         button.clicked.connect(self.on_next_click)
 
         # arrange button and text horizontally
-        hbox = QtWidgets.QHBoxLayout()
-        hbox.addStretch(1)
-        hbox.addWidget(button)
+        h_box = QtWidgets.QHBoxLayout()
+        h_box.addStretch(1)
+        h_box.addWidget(button)
 
-        return hbox
-
+        return h_box
 
     def _create_file_check_mark(self):
-        """Creates a label object that indicates whether a chosen data file is valid. Default is a question mark. Upon file
-        selection the question mark is replaced by either a green check mark or a red cross.
+        """Creates a label object that indicates whether a chosen data file is valid. Default is a question mark. Upon
+        file selection the question mark is replaced by either a green check mark or a red cross.
 
         Returns:
             {QLabel} -- Returns a check mark label.
@@ -433,18 +422,16 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
         return label
 
-
     @QtCore.pyqtSlot()
     def on_select_model_click(self):
         """Reaction to clicking the 'select model' button in the home tab. Opens the model selection window.
         """
         self.model_selection_window.open()
 
-
     @QtCore.pyqtSlot()
     def on_model_select_click(self):
-        """Reaction to clicking the 'select model' button in the model selection window. Gets model file,
-        updates the model text field and the model display.
+        """Reaction to clicking the 'select model' button in the model selection window. Gets model file, updates the
+        model text field and the model display.
         """
         # mark selected file as valid
         self.is_model_file_valid = True
@@ -461,7 +448,7 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
         # update QLineEdit in the GUI to selected file
         meta_data = [
-            'No. Copmartments: ',
+            'No. Compartments: ',
             'Dose Type: ',
             'Transition Rates: '
         ]
@@ -482,21 +469,24 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # close select model window
         self.model_selection_window.close()
 
-
     @QtCore.pyqtSlot()
     def on_model_cancel_click(self):
         """Closes the model selection window.
         """
         self.model_selection_window.close()
 
-
     @QtCore.pyqtSlot()
     def on_model_file_click(self):
-        """Opens a file dialog and updates after selection the displayed path
-        directory and the check mark. Only .mmt files can be selected.
+        """Opens a file dialog and updates after selection the displayed path directory and the check mark. Only .mmt
+        files can be selected.
         """
         options = QtWidgets.QFileDialog.Options()
-        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","Model Files (*.mmt)", options=options)
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self,
+                                                             "QFileDialog.getOpenFileName()",
+                                                             "",
+                                                             "Model Files (""*.mmt)",
+                                                             options=options
+                                                             )
 
         # check format of file
         self.is_model_file_valid = self._is_model_file_valid(file_path)
@@ -520,11 +510,11 @@ class HomeTab(abstractGui.AbstractHomeTab):
             self.model_selection_window.close()
         else:
             # generate error message
-            error_message = 'The selected model file is invalid! Please, select a model from the library or choose a valid model file.'
+            error_message = 'The selected model file is invalid! Please, select a model from the library or choose a ' \
+                            'valid model file.'
             QtWidgets.QMessageBox.question(self, 'Model file invalid!', error_message, QtWidgets.QMessageBox.Yes)
 
-
-    def _is_model_file_valid(self, file_path:str) -> bool:
+    def _is_model_file_valid(self, file_path: str) -> bool:
         """Checks the validity of the chosen model file.
 
         Arguments:
@@ -539,19 +529,22 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # check format
         is_format_correct = file_path.split('.')[-1] == 'mmt'
 
-        # are both citeria satisifed
+        # are both criteria satisfied
         is_path_valid = is_file_existent and is_format_correct
 
         return is_path_valid
 
-
     @QtCore.pyqtSlot()
     def on_data_click(self):
-        """Opens a file dialog and updates after selection the displayed path directory, as well as the display window and the check mark.
-        Only .csv files can be selected.
+        """Opens a file dialog and updates after selection the displayed path directory, as well as the display window
+        and the check mark. Only .csv files can be selected.
         """
         options = QtWidgets.QFileDialog.Options()
-        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","Data Files (*.csv)", options=options)
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()",
+                                                             "",
+                                                             "Data Files (*.csv)",
+                                                             options=options
+                                                             )
 
         # check format of file
         self.is_data_file_valid = self._is_data_file_valid(file_path)
@@ -580,21 +573,28 @@ class HomeTab(abstractGui.AbstractHomeTab):
                 self._update_check_boxes()
 
                 # update data display
-                self.data_display.setModel(PandasModel(self.data_df, self.patient_id_check_box.isChecked(), self.dose_schedule_check_box.isChecked()))
+                self.data_display.setModel(PandasModel(self.data_df,
+                                                       self.patient_id_check_box.isChecked(),
+                                                       self.dose_schedule_check_box.isChecked()
+                                                       ))
 
                 # make content fill the reserved space of the table view
                 self.data_display.resizeColumnsToContents()
             else:
                 # generate error message
-                error_message = 'The selected dataset is not high dimensional enough! At least one time and one state column is expected.'
-                QtWidgets.QMessageBox.question(self, 'Dataset too low dimensional!', error_message, QtWidgets.QMessageBox.Yes)
+                error_message = 'The selected dataset is not high dimensional enough! At least one time and one state' \
+                                ' column is expected.'
+                QtWidgets.QMessageBox.question(self,
+                                               'Dataset too low dimensional!',
+                                               error_message,
+                                               QtWidgets.QMessageBox.Yes
+                                               )
         else:
             # generate error message
             error_message = 'The selected data file is invalid! Please, try again.'
             QtWidgets.QMessageBox.question(self, 'Data file invalid!', error_message, QtWidgets.QMessageBox.Yes)
 
-
-    def _is_data_file_valid(self, file_path:str) -> bool:
+    def _is_data_file_valid(self, file_path: str) -> bool:
         """Checks the validity of the chosen model file.
 
         Arguments:
@@ -609,11 +609,10 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # check format
         is_format_correct = file_path.split('.')[-1] == 'csv'
 
-        # are both citeria satisifed
+        # are both criteria satisfied
         is_path_valid = is_file_existent and is_format_correct
 
         return is_path_valid
-
 
     def _load_data(self, file_path):
         """Load csv file as pandas dataframe and remove trailing empty columns.
@@ -637,7 +636,6 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
                 # remove last column
                 self.data_df.drop(columns=[keys[-1]], inplace=True)
-
 
     def _update_check_boxes(self):
         """Updates the data check boxes based on the data's properties.
@@ -672,9 +670,9 @@ class HomeTab(abstractGui.AbstractHomeTab):
             # check for presence of doses in last column
             self._check_data_for_doses()
 
-
     def _check_data_for_patient_IDs(self):
-        """Checks whether patient IDs are provided in dataframe. Patient IDs are assumed to be present, if first column only consists of integer values.
+        """Checks whether patient IDs are provided in dataframe. Patient IDs are assumed to be present, if first column
+        only consists of integer values.
         """
         # expected data type for patient IDs
         expected_data_type = 'int64'
@@ -685,7 +683,6 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # set check box to be ticked, if data types coincide
         is_data_type_equal = expected_data_type == first_column.dtypes
         self.patient_id_check_box.setChecked(is_data_type_equal)
-
 
     def _check_data_for_doses(self):
         """Checks whether dosing schedule is provided in dataframe and removes trailing empty columns.
@@ -699,9 +696,9 @@ class HomeTab(abstractGui.AbstractHomeTab):
         # update check box
         self.dose_schedule_check_box.setChecked(is_data_format_as_expected)
 
-
     def _dose_format_check(self, last_column:pd.Series()):
-        """Hereustic method to check whether format coincides with the one expected from a dosing schedule (checks whether meaningful entries are evenly spaced).
+        """Heuristic method to check whether format coincides with the one expected from a dosing schedule (checks
+        whether meaningful entries are evenly spaced).
 
         Arguments:
             last_column {pd.Series} -- Last non-empty column of dataframe.
@@ -721,17 +718,16 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
         return is_equally_spaced
 
-
     @QtCore.pyqtSlot()
     def on_check_box_click(self):
-        """Reaction to checking either the patient ID or the dose schedule check box. Data display is updated based on the
-        provided information about the existence of patient IDs and dose.
+        """Reaction to checking either the patient ID or the dose schedule check box. Data display is updated based on
+        the provided information about the existence of patient IDs and dose.
         """
         # check whether patient ID and/or dosing schedule is provided
         are_patient_ids_provided = self.patient_id_check_box.isChecked()
         is_dosing_schedule_provided = self.dose_schedule_check_box.isChecked()
 
-        # get number dataframe's number of columns
+        # get dataframe's number of columns
         number_of_columns = self.data_df.shape[1]
 
         # if # columns = 3, patient IDs and dose schedule cannot be present simultaneously
@@ -749,7 +745,6 @@ class HomeTab(abstractGui.AbstractHomeTab):
 
         # make content fill the reserved space of the table view
         self.data_display.resizeColumnsToContents()
-
 
     @QtCore.pyqtSlot()
     def on_next_click(self):
