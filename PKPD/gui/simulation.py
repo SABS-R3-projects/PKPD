@@ -409,31 +409,16 @@ class SimulationTab(QtWidgets.QDialog):
                 self.data_model_ax.set_xlabel(self.time_label)
                 self.data_model_ax.set_ylabel(state_label)
 
-            # get dose schedule of patient no 1
-            schedule = self.dose_schedule[self.patient_ids[0]]
-
-            # get dose times
-            dose_times = schedule[0]
-
-            # add dosing times to figure
-            for time in dose_times:
-                self.data_model_ax.axvline(x=time, color='darkred', linestyle='dashed', alpha=0.5, linewidth=1)
-
             # add data label and dosing points to legend (hack)
             self.data_model_ax.scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
-            self.data_model_ax.plot([], [], color='darkred', linestyle='dashed', alpha=0.5, label="dose event")
 
+            # add dosing times as vertical lines to plot
+            self._plot_dose_times()
 
             # create legend
             self.data_model_ax.legend()
 
         else: # multi output
-            # get dose schedule of patient no 1
-            schedule = self.dose_schedule[self.patient_ids[0]]
-
-            # get dose times
-            dose_times = schedule[0]
-
             # clear figure
             self.data_model_figure.clf()
 
@@ -452,13 +437,14 @@ class SimulationTab(QtWidgets.QDialog):
                     # add ylabel for compartment
                     self.data_model_ax[dim].set_ylabel(self.state_labels[dim])
 
-                # add dosing times to figure
-                for time in dose_times:
-                    self.data_model_ax[dim].axvline(x=time, color='darkred', linestyle='dashed', alpha=0.5, linewidth=1)
-
                 # add legend and dose times to compartment subplot (hack)
                 self.data_model_ax[dim].scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
-                self.data_model_ax[dim].plot([], [], color='darkred', linestyle='dashed', alpha=0.5, label="dose event")
+
+                # add dose times as vertical lines to central compartment
+                if dim == 0: # TODO: only add vertical lines, if central compartment can be identified
+                    self._plot_dose_times()
+
+                # create legend
                 self.data_model_ax[dim].legend()
 
             # add xlabel to the bottom of the vertically stacked subplots
@@ -466,6 +452,34 @@ class SimulationTab(QtWidgets.QDialog):
 
         # refresh canvas
         self.data_model_figure_view.draw()
+
+    def _plot_dose_times(self):
+        """Add a vertical dashed line to the central compartment when dose is applied. If model is not standard, no lines are added.
+        """
+        # get dose schedule of patient no 1
+        schedule = self.dose_schedule[self.patient_ids[0]]
+
+        # get dose times
+        dose_times = schedule[0]
+
+        # single output model
+        if self.is_single_output_model:
+            # add dosing times to figure
+            for time in dose_times:
+                self.data_model_ax.axvline(x=time, color='darkred', linestyle='dashed', alpha=0.5, linewidth=1)
+
+            # dose times to legend
+            self.data_model_ax.plot([], [], color='darkred', linestyle='dashed', alpha=0.5, label="dose event")
+
+        # multi output
+        else:
+            # add dosing times to figure
+            for time in dose_times:
+                self.data_model_ax[0].axvline(x=time, color='darkred', linestyle='dashed', alpha=0.5, linewidth=1)
+
+            # dose times to legend
+            self.data_model_ax[0].plot([], [], color='darkred', linestyle='dashed', alpha=0.5, label="dose event")
+
 
 
     def _init_interactive_group(self):

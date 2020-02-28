@@ -184,7 +184,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 # filter data from time points with no information TODO: write test
                 self.simulation.filter_data()
 
-                # TODO: move data extraction from ploting
+                # TODO: 
                 # only show dashed lines for central compartment!
                 # add plot of dosing schedule
                 # add dose schedule option button
