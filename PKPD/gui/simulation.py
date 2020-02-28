@@ -398,25 +398,31 @@ class SimulationTab(QtWidgets.QDialog):
             # get state label
             state_label = self.state_labels[0]
 
+            # number of plots (1 dose profile plot + 1 central compartment plot)
+            number_of_plots = 2
+
             # create plot
-            self.data_model_ax = self.data_model_figure.subplots()
+            self.data_model_ax = self.data_model_figure.subplots(nrows=number_of_plots, sharex=True)
+            # create dose profile plot
+            self._plot_dose_profile()
+
             for patient in range(number_of_patients):
                 # create scatter plot
-                self.data_model_ax.scatter(x=self.time_data_container[patient], y=self.state_data_container[patient], marker='o', edgecolor='black',
+                self.data_model_ax[1].scatter(x=self.time_data_container[patient], y=self.state_data_container[patient], marker='o', edgecolor='black',
                                             alpha=0.5)
 
                 # add x, y labels
-                self.data_model_ax.set_xlabel(self.time_label)
-                self.data_model_ax.set_ylabel(state_label)
+                self.data_model_ax[1].set_xlabel(self.time_label)
+                self.data_model_ax[1].set_ylabel(state_label)
 
             # add data label and dosing points to legend (hack)
-            self.data_model_ax.scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
+            self.data_model_ax[1].scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
 
             # add dosing times as vertical lines to plot
             self._plot_dose_times()
 
             # create legend
-            self.data_model_ax.legend()
+            self.data_model_ax[1].legend()
 
         else: # multi output
             # clear figure
@@ -453,32 +459,86 @@ class SimulationTab(QtWidgets.QDialog):
         # refresh canvas
         self.data_model_figure_view.draw()
 
+    def _plot_dose_profile(self):
+        """Plot the dose profiles for the different patients. The profile of the first patient is highlighted.
+        """
+        # loop through patients
+        for patient, patient_id in enumerate(self.patient_ids):
+            # get schedule
+            schedule = self.dose_schedule[patient_id]
+
+            # if dose is available add to plot
+            if schedule is not None:
+
+                # get dose details
+                start_times, dose_amounts, durations = self.dose_schedule[patient_id]
+
+                # get latest time point in dataset
+                final_time = np.max([np.max(time_data) for time_data in self.time_data_container])
+
+                # compute end times of dose, truncate at final time
+                end_times = np.clip(a=start_times + durations,a_min=0, a_max=final_time)
+
+                # translate dose_amounts to dosing level (level is assumed to be homogeneous during dosing)
+                dose_levels = dose_amounts / durations
+
+                # plot dose event as two vertical and one horizontal line
+                for event_id, dose_level in enumerate(dose_levels):
+                    # get start and end time
+                    start = start_times[event_id]
+                    end = end_times[event_id]
+
+                    # plot dose events, if first patient red, else grey
+                    if patient == 0:
+                        # plot profile of first patient to first plot
+                        self.data_model_ax[0].plot([start, end], [dose_level, dose_level], color='darkred', alpha=0.7)
+
+                    else:
+                        # plot profile of any other patient to first plot
+                        self.data_model_ax[0].plot([start, end], [dose_level, dose_level], color='darkgrey', alpha=0.2)
+
+        # add ylabel
+        self.data_model_ax[0].set_ylabel('Dose [ng]')
+
+        # add dosing events of first patient to legend
+        self.data_model_ax[0].plot([], [], color='darkred', alpha=0.7, label='patient %s' % str(self.patient_ids[0]))
+
+        # add dosing events of other patients to legend
+        if len(self.patient_ids) > 1:
+            self.data_model_ax[0].plot([], [], color='darkgrey', alpha=0.2, label='other patients')
+
+        # create legend
+        self.data_model_ax[0].legend()
+
+
     def _plot_dose_times(self):
         """Add a vertical dashed line to the central compartment when dose is applied. If model is not standard, no lines are added.
         """
         # get dose schedule of patient no 1
         schedule = self.dose_schedule[self.patient_ids[0]]
 
-        # get dose times
-        dose_times = schedule[0]
+        # if dose schedule exists for the first patient, ad vertical lines
+        if schedule is not None:
+            # get dose times
+            dose_times = schedule[0]
 
-        # single output model
-        if self.is_single_output_model:
-            # add dosing times to figure
-            for time in dose_times:
-                self.data_model_ax.axvline(x=time, color='darkred', linestyle='dashed', alpha=0.5, linewidth=1)
+            # single output model
+            if self.is_single_output_model:
+                # add dosing times to figure
+                for time in dose_times:
+                    self.data_model_ax.axvline(x=time, color='darkred', linestyle='dashed', alpha=0.5, linewidth=1)
 
-            # dose times to legend
-            self.data_model_ax.plot([], [], color='darkred', linestyle='dashed', alpha=0.5, label="dose event")
+                # dose times to legend
+                self.data_model_ax.plot([], [], color='darkred', linestyle='dashed', alpha=0.5, label="dose event")
 
-        # multi output
-        else:
-            # add dosing times to figure
-            for time in dose_times:
-                self.data_model_ax[0].axvline(x=time, color='darkred', linestyle='dashed', alpha=0.5, linewidth=1)
+            # multi output
+            else:
+                # add dosing times to figure
+                for time in dose_times:
+                    self.data_model_ax[0].axvline(x=time, color='darkred', linestyle='dashed', alpha=0.5, linewidth=1)
 
-            # dose times to legend
-            self.data_model_ax[0].plot([], [], color='darkred', linestyle='dashed', alpha=0.5, label="dose event")
+                # dose times to legend
+                self.data_model_ax[0].plot([], [], color='darkred', linestyle='dashed', alpha=0.5, label="dose event")
 
 
 

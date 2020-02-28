@@ -44,18 +44,18 @@ class SingleOutputModel(AbstractModel):
         Returns:
             {np.ndarray} -- 2dim array with dose event details.
         """
-        # get dose events from protocol
-        dose_events = protocol.events()
-
-        # get number of dose events
-        number_of_dose_events = len(dose_events)
-
         # if no protocol is provided in mmt file, set mmt_dose_shedule to None
-        if number_of_dose_events == 0:
+        if protocol is None:
             return None
 
         # if protocol is provided, loop through events and safe level, start, duration, period, multiplier
         else:
+            # get dose events from protocol
+            dose_events = protocol.events()
+
+            # get number of dose events
+            number_of_dose_events = len(dose_events)
+            
             # initialise dose container
             dose_event_container = np.empty(shape=(number_of_dose_events, 5))
 
