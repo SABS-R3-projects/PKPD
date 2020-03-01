@@ -407,16 +407,22 @@ class SimulationTab(QtWidgets.QDialog):
             self._plot_dose_profile()
 
             for patient in range(number_of_patients):
+                # highligfht data of first patient
+                if patient == 0:
+                    alpha = 0.7
+                else:
+                    alpha = 0.2
+
                 # create scatter plot
                 self.data_model_ax[1].scatter(x=self.time_data_container[patient], y=self.state_data_container[patient], marker='o', edgecolor='black',
-                                            alpha=0.5)
+                                            alpha=alpha)
 
                 # add x, y labels
                 self.data_model_ax[1].set_xlabel(self.time_label)
                 self.data_model_ax[1].set_ylabel(state_label)
 
             # add data label and dosing points to legend (hack)
-            self.data_model_ax[1].scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=0.5, label='data')
+            self.data_model_ax[1].scatter(x=[], y=[], marker='o', color='darkgrey', edgecolor='black', alpha=alpha, label='data')
 
             # add dosing times as vertical lines to plot
             self._plot_dose_times()
@@ -436,6 +442,12 @@ class SimulationTab(QtWidgets.QDialog):
 
                 # color data by patient ID
                 for patient in range(number_of_patients):
+                    # highligfht data of first patient
+                    if patient == 0:
+                        alpha = 0.7
+                    else:
+                        alpha = 0.2
+
                     # create scatter plot
                     self.data_model_ax[dim].scatter(x=self.time_data_container[patient], y=self.state_data_container[patient][:, dim],
                                                     marker='o', edgecolor='black', alpha=0.5)
@@ -467,9 +479,27 @@ class SimulationTab(QtWidgets.QDialog):
             # get schedule
             schedule = self.dose_schedule[patient_id]
 
-            # if dose is available add to plot
-            if schedule is not None:
+            # set earliest time point in dataset (for effciency assume it's always 0)
+            initial_time = 0.0
 
+            # get latest time point in dataset
+            final_time = np.max([np.max(time_data) for time_data in self.time_data_container])
+
+            # if dose is not available add null line for patient
+            if schedule is None:
+                # set dose level to 0
+                dose_level = 0
+                 #plot dose events, if first patient red, else grey
+                if patient == 0:
+                    # plot profile of first patient to first plot
+                    self.data_model_ax[0].plot([initial_time, final_time], [dose_level, dose_level], color='darkred', alpha=0.7, zorder=1000)
+
+                else:
+                    # plot profile of any other patient to first plot
+                    self.data_model_ax[0].plot([initial_time, final_time], [dose_level, dose_level], color='darkgrey',linestyle='dashed', alpha=0.2)
+
+            # if dose is available, add dose profile to plot
+            else:
                 # get dose details
                 start_times, dose_amounts, durations = self.dose_schedule[patient_id]
 
@@ -482,20 +512,51 @@ class SimulationTab(QtWidgets.QDialog):
                 # translate dose_amounts to dosing level (level is assumed to be homogeneous during dosing)
                 dose_levels = dose_amounts / durations
 
+                # set pre dose time (not ideal algorithm to create block dose levels) TODO: come up with better solution!
+                pre_dose_time = initial_time
+
                 # plot dose event as two vertical and one horizontal line
                 for event_id, dose_level in enumerate(dose_levels):
-                    # get start and end time
+                    # get start and end time of dose
                     start = start_times[event_id]
                     end = end_times[event_id]
 
                     # plot dose events, if first patient red, else grey
                     if patient == 0:
+                        # plot horizontal line before dose event
+                        self.data_model_ax[0].plot([pre_dose_time, start], [0, 0], color='darkred', alpha=0.7, zorder=1000)
+
+                        # plot vertical leap to dose level
+                        self.data_model_ax[0].plot([start-1.0e-6, start+1.0e-6], [0, dose_level], color='darkred', alpha=0.7, zorder=1000)
+
                         # plot profile of first patient to first plot
-                        self.data_model_ax[0].plot([start, end], [dose_level, dose_level], color='darkred', alpha=0.7)
+                        self.data_model_ax[0].plot([start, end], [dose_level, dose_level], color='darkred', alpha=0.7, zorder=1000)
+
+                        # plot vertical decline from dose level
+                        self.data_model_ax[0].plot([end-1.0e-6, end+1.0e-6], [dose_level, 0], color='darkred', alpha=0.7, zorder=1000)
 
                     else:
-                        # plot profile of any other patient to first plot
-                        self.data_model_ax[0].plot([start, end], [dose_level, dose_level], color='darkgrey', alpha=0.2)
+                        # plot horizontal line before dose event
+                        self.data_model_ax[0].plot([pre_dose_time, start], [0, 0], color='darkgrey',linestyle='dashed', alpha=0.2)
+
+                        # plot vertical leap to dose level
+                        self.data_model_ax[0].plot([start-1.0e-6, start+1.0e-6], [0, dose_level], color='darkgrey',linestyle='dashed', alpha=0.2)
+
+                        # plot profile of first patient to first plot
+                        self.data_model_ax[0].plot([start, end], [dose_level, dose_level], color='darkgrey',linestyle='dashed', alpha=0.2)
+
+                        # plot vertical decline from dose level
+                        self.data_model_ax[0].plot([end-1.0e-6, end+1.0e-6], [dose_level, 0], color='darkgrey',linestyle='dashed', alpha=0.2)
+
+                    # set pre dose time to the end of the last dose
+                    pre_dose_time = end
+
+                # finish dose profile with horizontal null line
+                if patient == 0:
+                    self.data_model_ax[0].plot([end, final_time], [0, 0], color='darkred', alpha=0.7, zorder=1000)
+                else:
+                    self.data_model_ax[0].plot([end, final_time], [0, 0], color='darkgrey',linestyle='dashed', alpha=0.2)
+
 
         # add ylabel
         self.data_model_ax[0].set_ylabel('Dose [ng]')
@@ -505,7 +566,7 @@ class SimulationTab(QtWidgets.QDialog):
 
         # add dosing events of other patients to legend
         if len(self.patient_ids) > 1:
-            self.data_model_ax[0].plot([], [], color='darkgrey', alpha=0.2, label='other patients')
+            self.data_model_ax[0].plot([], [], color='darkgrey',linestyle='dashed', alpha=0.2, label='other patients')
 
         # create legend
         self.data_model_ax[0].legend()
