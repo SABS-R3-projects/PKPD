@@ -190,7 +190,7 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 # add that plot to graph
                 #
                 # add list doses of patient, if available
-                # allow to choose from them and update data and dose plot 
+                # allow to choose from them and update data and dose plot
 
                 # plot data in simulation tab
                 self.simulation.add_data_to_data_model_plot()

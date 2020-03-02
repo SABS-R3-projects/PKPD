@@ -1252,10 +1252,10 @@ class SimulationTab(QtWidgets.QDialog):
 
         # remove previous graph to avoid fludding the figure
         if self.enable_line_removal:
-            self.data_model_ax.lines.pop()
+            self.data_model_ax[1].lines.pop()
 
         # plot model
-        self.data_model_ax.plot(self.times, self.state_values, linestyle='dashed', color='grey')
+        self.data_model_ax[1].plot(self.times, self.state_values, linestyle='dashed', color='grey')
 
         # refresh canvas
         self.data_model_figure_view.draw()
@@ -1272,11 +1272,11 @@ class SimulationTab(QtWidgets.QDialog):
         # remove previous graphs from subplots to avoid fludding the figure
         if self.enable_line_removal:
             for dim in range(self.data_dimension):
-                self.data_model_ax[dim].lines.pop()
+                self.data_model_ax[dim+1].lines.pop()
 
         # plot model
         for dim in range(self.data_dimension):
-            self.data_model_ax[dim].plot(self.times, self.state_values[:, dim], linestyle='dashed', color='grey')
+            self.data_model_ax[dim+1].plot(self.times, self.state_values[:, dim], linestyle='dashed', color='grey')
 
         # refresh canvas
         self.data_model_figure_view.draw()
