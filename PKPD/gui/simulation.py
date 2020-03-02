@@ -625,6 +625,7 @@ class SimulationTab(QtWidgets.QDialog):
 
         # arrange widgets vertically
         vbox = QtWidgets.QVBoxLayout()
+        vbox.addWidget(dose_schedule_group)
         vbox.addWidget(slider_group)
         vbox.addLayout(plot_buttons)
         vbox.addLayout(infer_buttons)
@@ -633,7 +634,33 @@ class SimulationTab(QtWidgets.QDialog):
 
 
     def _initialise_dose_schedule_group(self):
-        pass
+        # create plot model button
+        schedule_button = QtWidgets.QPushButton('adjust dose schedule')
+        schedule_button.clicked.connect(self.on_schedule_button_click)
+
+        # intialise dose schedule window
+        self._create_dose_schedule_window()
+
+        return schedule_button
+
+
+    def _create_dose_schedule_window(self):
+        """Creates a dose schedule window to set the dosing for the simulation.
+        """
+        # create dose window
+        self.dose_schedule_window = QtWidgets.QDialog()
+        self.dose_schedule_window.setWindowTitle('Dose schedule options')
+
+        # # create apply / cancel buttons
+        # apply_cancel_buttons = self._plot_options_apply_cancel_buttons()
+
+        # # vertical layout
+        # vbox = QtWidgets.QVBoxLayout()
+        # vbox.addLayout(yaxis_options)
+        # vbox.addLayout(apply_cancel_buttons)
+
+        # # add options to window
+        # self.plot_option_window.setLayout(vbox)
 
 
     def _initialise_slider_group(self):
@@ -1212,6 +1239,14 @@ class SimulationTab(QtWidgets.QDialog):
             # Display new slider boundaries in text box
             self.slider_min_max_label_container[slider_id][0].setText(str(slider.minimum()))
             self.slider_min_max_label_container[slider_id][1].setText(str(slider.maximum()))
+
+
+    @QtCore.pyqtSlot()
+    def on_schedule_button_click(self):
+        """Reaction to left-clicking the plot 'option' button. Opens the plot option window.
+        """
+        # open schedule window
+        self.dose_schedule_window.open()
 
 
     @QtCore.pyqtSlot()
