@@ -185,11 +185,12 @@ class MainWindow(abstractGui.AbstractMainWindow):
                 self.simulation.filter_data()
 
                 # TODO:
-                # only show dashed lines for central compartment!
-                # add plot of dosing schedule
                 # add dose schedule option button
-                # list doses of patient, if available
-                # allow for adding of doses
+                # allow for customised dosing
+                # add that plot to graph
+                #
+                # add list doses of patient, if available
+                # allow to choose from them and update data and dose plot 
 
                 # plot data in simulation tab
                 self.simulation.add_data_to_data_model_plot()
