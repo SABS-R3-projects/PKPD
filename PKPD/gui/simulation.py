@@ -1378,10 +1378,10 @@ class SimulationTab(QtWidgets.QDialog):
 
                 # Quick Fix to Remove Old Plot:
                 if self.is_single_output_model:  #remove one line
-                    self.data_model_ax.lines.pop()
+                    self.data_model_ax[1].lines.pop()
                 else:
                     for dim in range(len(self.data_model_ax)):
-                        self.data_model_ax[dim].lines.pop()
+                        self.data_model_ax[dim+1].lines.pop()
                 QtWidgets.QMessageBox.question(self, 'Value error!', error_message, QtWidgets.QMessageBox.Yes)
 
 
@@ -1449,24 +1449,24 @@ class SimulationTab(QtWidgets.QDialog):
                                                        )
         if self.is_single_output_model: # single-output problem
             # remove all lines from figure
-            lines = self.data_model_ax.lines
+            lines = self.data_model_ax[1].lines
             while lines:
                 lines.pop()
 
             # plot model
-            self.data_model_ax.plot(times, state_values, color='black', label='model')
-            self.data_model_ax.legend()
+            self.data_model_ax[1].plot(times, state_values, color='black', label='model')
+            self.data_model_ax[1].legend()
         else: # multi-output problem
             # remove all lines from figure
             for dim in range(self.data_dimension):
-                lines = self.data_model_ax[dim].lines
+                lines = self.data_model_ax[dim+1].lines
                 while lines:
                     lines.pop()
 
             # plot model
             for dim in range(self.data_dimension):
-                self.data_model_ax[dim].plot(times, state_values[:, dim], color='black', label='model')
-                self.data_model_ax[dim].legend()
+                self.data_model_ax[dim+1].plot(times, state_values[:, dim], color='black', label='model')
+                self.data_model_ax[dim+1].legend()
 
         # refresh canvas
         self.data_model_figure_view.draw()
